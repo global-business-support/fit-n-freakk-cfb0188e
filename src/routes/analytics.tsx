@@ -11,7 +11,7 @@ import { BarChart, Bar, XAxis, YAxis, LineChart, Line, PieChart, Pie, Cell } fro
 export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
-      { title: "Analytics — GymForge" },
+      { title: "Analytics — Feet & Freakk" },
       { name: "description", content: "Gym analytics and insights" },
     ],
   }),

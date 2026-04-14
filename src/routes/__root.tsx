@@ -31,10 +31,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "GymForge — Gym Management App" },
+      { title: "Feet & Freakk — Gym Management App" },
       { name: "description", content: "Complete gym management with member tracking, attendance, workouts, and analytics" },
-      { name: "author", content: "GymForge" },
-      { property: "og:title", content: "GymForge — Gym Management App" },
+      { name: "author", content: "Feet & Freakk" },
+      { property: "og:title", content: "Feet & Freakk — Gym Management App" },
       { property: "og:description", content: "Complete gym management with member tracking, attendance, workouts, and analytics" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

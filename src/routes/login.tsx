@@ -8,7 +8,7 @@ import { Dumbbell, Mail, Lock, Eye, EyeOff } from "lucide-react";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Login — GymForge" },
+      { title: "Login — Feet & Freakk" },
       { name: "description", content: "Sign in to your gym account" },
     ],
   }),
@@ -35,7 +35,7 @@ function LoginPage() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
             <Dumbbell className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="mt-4 text-4xl font-heading tracking-[0.15em] text-primary">GYMFORGE</h1>
+          <h1 className="mt-4 text-4xl font-heading tracking-[0.15em] text-primary">FEET & FREAKK</h1>
           <p className="mt-1 text-sm text-muted-foreground font-body">Manage your gym like a pro</p>
         </div>
 
