@@ -39,6 +39,8 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Feet & Freakk — Gym Management App" },
+      { name: "twitter:description", content: "Complete gym management with member tracking, attendance, workouts, and analytics" },
     ],
     links: [
       {
