@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Register — GymForge" },
+      { title: "Register — Feet & Freakk" },
       { name: "description", content: "Create your gym account" },
     ],
   }),
@@ -45,7 +45,7 @@ function RegisterPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-heading tracking-wider">CREATE ACCOUNT</h1>
-            <p className="text-xs text-muted-foreground font-body">Join GymForge today</p>
+            <p className="text-xs text-muted-foreground font-body">Join Feet & Freakk today</p>
           </div>
         </div>
 

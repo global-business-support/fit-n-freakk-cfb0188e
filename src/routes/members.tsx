@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/members")({
   head: () => ({
     meta: [
-      { title: "Members — GymForge" },
+      { title: "Members — Feet & Freakk" },
       { name: "description", content: "Manage gym members" },
     ],
   }),

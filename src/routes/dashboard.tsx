@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — GymForge" },
+      { title: "Dashboard — Feet & Freakk" },
       { name: "description", content: "Gym management dashboard" },
     ],
   }),
@@ -31,7 +31,7 @@ function DashboardPage() {
         <div className="mx-auto max-w-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-heading tracking-widest text-primary">GYMFORGE</h1>
+              <h1 className="text-2xl font-heading tracking-widest text-primary">FEET & FREAKK</h1>
               <p className="text-xs text-muted-foreground font-body">Welcome back, Admin</p>
             </div>
             <button className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground">
