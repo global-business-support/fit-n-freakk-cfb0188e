@@ -114,7 +114,7 @@ function RegisterPage() {
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-wider font-body">Height</Label>
               <div className="relative">
-                <Input placeholder="5'10\"" className="bg-secondary border-border h-11 text-center" />
+                <Input placeholder={'5\'10"'} className="bg-secondary border-border h-11 text-center" />
               </div>
             </div>
             <div className="space-y-2">
