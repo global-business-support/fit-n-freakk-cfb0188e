@@ -129,6 +129,8 @@ const ChartTooltipContent = React.forwardRef<
     },
     ref
   ) => {
+    const payload = payloadProp as any[]
+    const label = labelProp as string
     const { config } = useChart()
 
     const tooltipLabel = React.useMemo(() => {
@@ -261,7 +263,7 @@ const ChartLegend = RechartsPrimitive.Legend
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> &
-    Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
+    { payload?: any[]; verticalAlign?: "top" | "bottom" | "middle" } & {
       hideIcon?: boolean
       nameKey?: string
     }
