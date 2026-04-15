@@ -11,11 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkoutsRouteImport } from './routes/workouts'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ProgressRouteImport } from './routes/progress'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MembersRouteImport } from './routes/members'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
 const WorkoutsRoute = WorkoutsRouteImport.update({
@@ -26,6 +29,16 @@ const WorkoutsRoute = WorkoutsRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgressRoute = ProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MembersRoute = MembersRouteImport.update({
@@ -53,6 +66,11 @@ const AnalyticsRoute = AnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -61,32 +79,41 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/members': typeof MembersRoute
+  '/profile': typeof ProfileRoute
+  '/progress': typeof ProgressRoute
   '/register': typeof RegisterRoute
   '/workouts': typeof WorkoutsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/members': typeof MembersRoute
+  '/profile': typeof ProfileRoute
+  '/progress': typeof ProgressRoute
   '/register': typeof RegisterRoute
   '/workouts': typeof WorkoutsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/members': typeof MembersRoute
+  '/profile': typeof ProfileRoute
+  '/progress': typeof ProgressRoute
   '/register': typeof RegisterRoute
   '/workouts': typeof WorkoutsRoute
 }
@@ -94,42 +121,54 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/analytics'
     | '/attendance'
     | '/dashboard'
     | '/login'
     | '/members'
+    | '/profile'
+    | '/progress'
     | '/register'
     | '/workouts'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/analytics'
     | '/attendance'
     | '/dashboard'
     | '/login'
     | '/members'
+    | '/profile'
+    | '/progress'
     | '/register'
     | '/workouts'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/analytics'
     | '/attendance'
     | '/dashboard'
     | '/login'
     | '/members'
+    | '/profile'
+    | '/progress'
     | '/register'
     | '/workouts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   AnalyticsRoute: typeof AnalyticsRoute
   AttendanceRoute: typeof AttendanceRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   MembersRoute: typeof MembersRoute
+  ProfileRoute: typeof ProfileRoute
+  ProgressRoute: typeof ProgressRoute
   RegisterRoute: typeof RegisterRoute
   WorkoutsRoute: typeof WorkoutsRoute
 }
@@ -148,6 +187,20 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/progress': {
+      id: '/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/members': {
@@ -185,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -197,11 +257,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   AnalyticsRoute: AnalyticsRoute,
   AttendanceRoute: AttendanceRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   MembersRoute: MembersRoute,
+  ProfileRoute: ProfileRoute,
+  ProgressRoute: ProgressRoute,
   RegisterRoute: RegisterRoute,
   WorkoutsRoute: WorkoutsRoute,
 }
