@@ -3,8 +3,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dumbbell, Camera, User, Phone, Ruler, Weight, ChevronLeft } from "lucide-react";
+import { Camera, User, Phone, ChevronLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -19,26 +21,76 @@ export const Route = createFileRoute("/register")({
 function RegisterPage() {
   const [gender, setGender] = useState<"male" | "female">("male");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [age, setAge] = useState("");
+  const [height, setHeight] = useState("");
+  const [weight, setWeight] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signUp } = useAuth();
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setPhotoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => setPhotoPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!photoFile) {
+      setError("Profile photo is mandatory!");
+      return;
+    }
+    setError("");
+    setIsLoading(true);
+
+    const { error: signUpError } = await signUp(email, password, {
+      name,
+      phone,
+      age: parseInt(age),
+      height,
+      weight: parseFloat(weight),
+      gender,
+    });
+
+    if (signUpError) {
+      setError(signUpError);
+      setIsLoading(false);
+      return;
+    }
+
+    // Upload photo after signup
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && photoFile) {
+      const ext = photoFile.name.split(".").pop();
+      const path = `${user.id}/profile.${ext}`;
+      const { data: uploadData } = await supabase.storage.from("media").upload(path, photoFile, { upsert: true });
+      if (uploadData) {
+        const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
+        await supabase.from("profiles").update({ photo_url: publicUrl }).eq("user_id", user.id);
+      }
+    }
+
     navigate({ to: "/dashboard" });
   };
 
   return (
-    <div className="min-h-screen bg-background px-4 py-6">
-      <div className="mx-auto max-w-sm space-y-6">
-        {/* Header */}
+    <div className="min-h-screen bg-background px-4 py-6 relative overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-20 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/3 -right-20 w-96 h-96 bg-ember/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1.5s" }} />
+      </div>
+
+      <div className="mx-auto max-w-sm space-y-6 relative z-10">
         <div className="flex items-center gap-3">
           <Link to="/login" className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary text-foreground">
             <ChevronLeft className="h-5 w-5" />
@@ -65,14 +117,20 @@ function RegisterPage() {
             <input type="file" accept="image/*" capture="user" className="hidden" onChange={handlePhotoChange} />
           </label>
         </div>
+        <p className="text-center text-xs text-muted-foreground font-body">Photo is mandatory *</p>
 
-        {/* Form */}
+        {error && (
+          <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive font-body">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleRegister} className="space-y-4">
           <div className="space-y-2">
             <Label className="text-xs uppercase tracking-wider font-body">Full Name</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Enter your name" className="pl-9 bg-secondary border-border h-11" />
+              <Input placeholder="Enter your name" className="pl-9 bg-secondary border-border h-11" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
           </div>
 
@@ -80,11 +138,10 @@ function RegisterPage() {
             <Label className="text-xs uppercase tracking-wider font-body">Phone Number</Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="+91 XXXXX XXXXX" className="pl-9 bg-secondary border-border h-11" />
+              <Input placeholder="+91 XXXXX XXXXX" className="pl-9 bg-secondary border-border h-11" value={phone} onChange={(e) => setPhone(e.target.value)} required />
             </div>
           </div>
 
-          {/* Gender Toggle */}
           <div className="space-y-2">
             <Label className="text-xs uppercase tracking-wider font-body">Gender</Label>
             <div className="grid grid-cols-2 gap-2">
@@ -109,34 +166,30 @@ function RegisterPage() {
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-wider font-body">Age</Label>
-              <Input placeholder="25" type="number" className="bg-secondary border-border h-11 text-center" />
+              <Input placeholder="25" type="number" className="bg-secondary border-border h-11 text-center" value={age} onChange={(e) => setAge(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-wider font-body">Height</Label>
-              <div className="relative">
-                <Input placeholder={'5\'10"'} className="bg-secondary border-border h-11 text-center" />
-              </div>
+              <Input placeholder={'5\'10"'} className="bg-secondary border-border h-11 text-center" value={height} onChange={(e) => setHeight(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-wider font-body">Weight</Label>
-              <div className="relative">
-                <Input placeholder="75kg" className="bg-secondary border-border h-11 text-center" />
-              </div>
+              <Input placeholder="75" type="number" className="bg-secondary border-border h-11 text-center" value={weight} onChange={(e) => setWeight(e.target.value)} required />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label className="text-xs uppercase tracking-wider font-body">Email</Label>
-            <Input type="email" placeholder="your@email.com" className="bg-secondary border-border h-11" />
+            <Input type="email" placeholder="your@email.com" className="bg-secondary border-border h-11" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
 
           <div className="space-y-2">
             <Label className="text-xs uppercase tracking-wider font-body">Password</Label>
-            <Input type="password" placeholder="Create a password" className="bg-secondary border-border h-11" />
+            <Input type="password" placeholder="Create a password (min 6 chars)" className="bg-secondary border-border h-11" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </div>
 
-          <Button type="submit" variant="ember" size="lg" className="w-full">
-            Create Account
+          <Button type="submit" variant="ember" size="lg" className="w-full" disabled={isLoading}>
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
           </Button>
         </form>
 

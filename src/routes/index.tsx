@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -7,10 +8,17 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    navigate({ to: "/login" });
-  }, [navigate]);
+    if (!loading) {
+      navigate({ to: user ? "/dashboard" : "/login" });
+    }
+  }, [loading, user, navigate]);
 
-  return null;
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
+  );
 }

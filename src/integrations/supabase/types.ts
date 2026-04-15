@@ -14,16 +14,210 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attendance: {
+        Row: {
+          checked_in_at: string
+          checked_out_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          checked_out_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          checked_out_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      exercises: {
+        Row: {
+          body_part: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          gender_target: string | null
+          id: string
+          name: string
+          reps: string | null
+          sets: number | null
+          thumbnail_url: string | null
+          video_url: string | null
+        }
+        Insert: {
+          body_part: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          gender_target?: string | null
+          id?: string
+          name: string
+          reps?: string | null
+          sets?: number | null
+          thumbnail_url?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          body_part?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          gender_target?: string | null
+          id?: string
+          name?: string
+          reps?: string | null
+          sets?: number | null
+          thumbnail_url?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      fees: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          created_at: string
+          id: string
+          month: string
+          notes: string | null
+          payment_date: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          approved_at?: string | null
+          created_at?: string
+          id?: string
+          month: string
+          notes?: string | null
+          payment_date?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          created_at?: string
+          id?: string
+          month?: string
+          notes?: string | null
+          payment_date?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          age: number | null
+          created_at: string
+          gender: string | null
+          height: string | null
+          id: string
+          name: string
+          phone: string | null
+          photo_url: string | null
+          updated_at: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string
+          gender?: string | null
+          height?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          photo_url?: string | null
+          updated_at?: string
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          age?: number | null
+          created_at?: string
+          gender?: string | null
+          height?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          photo_url?: string | null
+          updated_at?: string
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      weight_logs: {
+        Row: {
+          calories_burned: number | null
+          calories_consumed: number | null
+          id: string
+          logged_at: string
+          notes: string | null
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          calories_burned?: number | null
+          calories_consumed?: number | null
+          id?: string
+          logged_at?: string
+          notes?: string | null
+          user_id: string
+          weight: number
+        }
+        Update: {
+          calories_burned?: number | null
+          calories_consumed?: number | null
+          id?: string
+          logged_at?: string
+          notes?: string | null
+          user_id?: string
+          weight?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +344,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "member"],
+    },
   },
 } as const
