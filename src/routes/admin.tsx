@@ -4,9 +4,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Check, X, IndianRupee, Users, Dumbbell, Plus, Trash2 } from "lucide-react";
+import { Check, X, IndianRupee, Users, Dumbbell, Plus, Trash2, Cog, ShieldCheck, CalendarDays, Play, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -18,16 +19,37 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
+const DAY_NAMES = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
 function AdminPage() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"fees" | "members" | "exercises">("fees");
+  const [tab, setTab] = useState<"fees" | "exercises" | "machines" | "roles" | "schedules">("fees");
   const [pendingFees, setPendingFees] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [exercises, setExercises] = useState<any[]>([]);
+  const [machines, setMachines] = useState<any[]>([]);
+
+  // New exercise form
+  const [newEx, setNewEx] = useState({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gender_target: "both" });
+  const [showExForm, setShowExForm] = useState(false);
+
+  // New machine form
+  const [newMachine, setNewMachine] = useState({ name: "", description: "", how_to_use: "", image_url: "", video_url: "" });
+  const [showMachineForm, setShowMachineForm] = useState(false);
+
+  // Schedule assignment
+  const [scheduleUser, setScheduleUser] = useState("");
+  const [scheduleDay, setScheduleDay] = useState(1);
+  const [scheduleExercise, setScheduleExercise] = useState("");
+  const [userSchedules, setUserSchedules] = useState<any[]>([]);
+
+  // Role management
+  const [selectedMember, setSelectedMember] = useState("");
+  const [newRole, setNewRole] = useState<string>("manager");
 
   useEffect(() => {
-    if (!loading && (!user || role !== "admin")) navigate({ to: "/dashboard" });
+    if (!loading && (!user || (role !== "admin" && role !== "manager"))) navigate({ to: "/dashboard" });
   }, [loading, user, role, navigate]);
 
   useEffect(() => {
@@ -35,14 +57,16 @@ function AdminPage() {
   }, []);
 
   const loadData = async () => {
-    const [feesRes, profilesRes, exRes] = await Promise.all([
+    const [feesRes, profilesRes, exRes, machRes] = await Promise.all([
       supabase.from("fees").select("*").eq("status", "pending").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*"),
       supabase.from("exercises").select("*").order("body_part"),
+      supabase.from("machines").select("*").order("name"),
     ]);
     setPendingFees(feesRes.data || []);
     setMembers(profilesRes.data || []);
     setExercises(exRes.data || []);
+    setMachines(machRes.data || []);
   };
 
   const handleFeeAction = async (feeId: string, action: "approved" | "rejected") => {
@@ -50,11 +74,94 @@ function AdminPage() {
     setPendingFees((prev) => prev.filter((f) => f.id !== feeId));
   };
 
-  const getMemberName = (userId: string) => {
-    return members.find((m: any) => m.user_id === userId)?.name || "Unknown";
+  const getMemberName = (userId: string) => members.find((m: any) => m.user_id === userId)?.name || "Unknown";
+
+  const addExercise = async () => {
+    if (!newEx.name || !newEx.body_part) return;
+    await supabase.from("exercises").insert({
+      name: newEx.name,
+      body_part: newEx.body_part,
+      description: newEx.description || null,
+      sets: newEx.sets ? parseInt(newEx.sets) : null,
+      reps: newEx.reps || null,
+      video_url: newEx.video_url || null,
+      gender_target: newEx.gender_target,
+      created_by: user?.id,
+    });
+    setNewEx({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gender_target: "both" });
+    setShowExForm(false);
+    loadData();
+  };
+
+  const deleteExercise = async (id: string) => {
+    await supabase.from("exercises").delete().eq("id", id);
+    setExercises((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  const addMachine = async () => {
+    if (!newMachine.name) return;
+    await supabase.from("machines").insert({
+      name: newMachine.name,
+      description: newMachine.description || null,
+      how_to_use: newMachine.how_to_use || null,
+      image_url: newMachine.image_url || null,
+      video_url: newMachine.video_url || null,
+      created_by: user?.id,
+    });
+    setNewMachine({ name: "", description: "", how_to_use: "", image_url: "", video_url: "" });
+    setShowMachineForm(false);
+    loadData();
+  };
+
+  const deleteMachine = async (id: string) => {
+    await supabase.from("machines").delete().eq("id", id);
+    setMachines((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  const assignSchedule = async () => {
+    if (!scheduleUser || !scheduleExercise) return;
+    await supabase.from("workout_schedules").insert({
+      user_id: scheduleUser,
+      exercise_id: scheduleExercise,
+      day_of_week: scheduleDay,
+      created_by: user?.id,
+    });
+    loadUserSchedule(scheduleUser);
+  };
+
+  const loadUserSchedule = async (userId: string) => {
+    setScheduleUser(userId);
+    const { data } = await supabase.from("workout_schedules").select("*, exercises(name)").eq("user_id", userId).order("day_of_week").order("order_index");
+    setUserSchedules(data || []);
+  };
+
+  const removeSchedule = async (id: string) => {
+    await supabase.from("workout_schedules").delete().eq("id", id);
+    setUserSchedules((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const changeRole = async () => {
+    if (!selectedMember || !newRole) return;
+    await supabase.from("user_roles").update({ role: newRole }).eq("user_id", selectedMember);
+    if (newRole === "manager") {
+      // Grant default permissions
+      const perms = ["manage_members", "manage_exercises", "manage_machines"];
+      for (const p of perms) {
+        await supabase.from("manager_permissions").upsert({ user_id: selectedMember, permission: p, granted_by: user?.id }, { onConflict: "user_id,permission" });
+      }
+    }
+    setSelectedMember("");
   };
 
   if (loading) return null;
+
+  const tabs = [
+    { key: "fees" as const, label: "Fees", icon: IndianRupee, count: pendingFees.length },
+    { key: "exercises" as const, label: "Exercises", icon: Dumbbell, count: exercises.length },
+    { key: "machines" as const, label: "Machines", icon: Cog, count: machines.length },
+    { key: "schedules" as const, label: "Schedule", icon: CalendarDays, count: 0 },
+    { key: "roles" as const, label: "Roles", icon: ShieldCheck, count: 0 },
+  ];
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -67,12 +174,8 @@ function AdminPage() {
 
       <main className="mx-auto max-w-lg px-4 py-4 space-y-4">
         {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {([
-            { key: "fees" as const, label: "Fee Approvals", icon: IndianRupee, count: pendingFees.length },
-            { key: "members" as const, label: "Members", icon: Users, count: members.length },
-            { key: "exercises" as const, label: "Exercises", icon: Dumbbell, count: exercises.length },
-          ]).map((t) => (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {tabs.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
@@ -113,16 +216,10 @@ function AdminPage() {
                     {fee.notes && <p className="text-xs text-muted-foreground font-body mt-1">{fee.notes}</p>}
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => handleFeeAction(fee.id, "approved")}
-                      className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10 text-success hover:bg-success/20 transition-colors"
-                    >
+                    <button onClick={() => handleFeeAction(fee.id, "approved")} className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10 text-success hover:bg-success/20 transition-colors">
                       <Check className="h-5 w-5" />
                     </button>
-                    <button
-                      onClick={() => handleFeeAction(fee.id, "rejected")}
-                      className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
-                    >
+                    <button onClick={() => handleFeeAction(fee.id, "rejected")} className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
                       <X className="h-5 w-5" />
                     </button>
                   </div>
@@ -132,60 +229,195 @@ function AdminPage() {
           </div>
         )}
 
-        {/* Members Detail */}
-        {tab === "members" && (
+        {/* Exercises Management */}
+        {tab === "exercises" && (
           <div className="space-y-3">
-            {members.map((m: any) => (
-              <div key={m.id} className="rounded-xl border border-border bg-card p-4">
-                <div className="flex items-start gap-3">
-                  {m.photo_url ? (
-                    <img src={m.photo_url} alt={m.name} className="h-12 w-12 rounded-xl object-cover" />
-                  ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-lg font-heading">{m.name?.charAt(0)}</div>
-                  )}
+            <Button variant="ember" size="sm" onClick={() => setShowExForm(!showExForm)} className="w-full">
+              <Plus className="h-4 w-4 mr-1" /> Add Exercise
+            </Button>
+
+            {showExForm && (
+              <div className="rounded-xl border border-ember/30 bg-card p-4 space-y-3">
+                <Input placeholder="Exercise name" className="bg-secondary border-border" value={newEx.name} onChange={(e) => setNewEx({ ...newEx, name: e.target.value })} />
+                <Input placeholder="Body part (e.g. Chest, Back, Legs)" className="bg-secondary border-border" value={newEx.body_part} onChange={(e) => setNewEx({ ...newEx, body_part: e.target.value })} />
+                <Input placeholder="Description" className="bg-secondary border-border" value={newEx.description} onChange={(e) => setNewEx({ ...newEx, description: e.target.value })} />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input placeholder="Sets" type="number" className="bg-secondary border-border" value={newEx.sets} onChange={(e) => setNewEx({ ...newEx, sets: e.target.value })} />
+                  <Input placeholder="Reps (e.g. 8-12)" className="bg-secondary border-border" value={newEx.reps} onChange={(e) => setNewEx({ ...newEx, reps: e.target.value })} />
+                </div>
+                <Input placeholder="Video URL (YouTube/Drive)" className="bg-secondary border-border" value={newEx.video_url} onChange={(e) => setNewEx({ ...newEx, video_url: e.target.value })} />
+                <div className="flex gap-2">
+                  {["both", "male", "female"].map((g) => (
+                    <button key={g} onClick={() => setNewEx({ ...newEx, gender_target: g })} className={cn("rounded-lg border px-3 py-1.5 text-xs font-body uppercase", newEx.gender_target === g ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}>
+                      {g}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="ember" size="sm" onClick={addExercise}>Save</Button>
+                  <Button variant="outline" size="sm" onClick={() => setShowExForm(false)}>Cancel</Button>
+                </div>
+              </div>
+            )}
+
+            {exercises.map((ex: any) => (
+              <div key={ex.id} className="rounded-xl border border-border bg-card p-4">
+                <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="font-heading text-lg tracking-wider">{m.name}</p>
-                    <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted-foreground font-body">
-                      {m.age && <span>{m.age}y</span>}
-                      {m.height && <><span>•</span><span>{m.height}</span></>}
-                      {m.weight && <><span>•</span><span>{m.weight}kg</span></>}
-                      {m.gender && <><span>•</span><span className="capitalize">{m.gender}</span></>}
+                    <p className="font-heading text-lg tracking-wider">{ex.name}</p>
+                    <div className="flex gap-2 mt-1 flex-wrap">
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-body uppercase">{ex.body_part}</span>
+                      <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full font-body uppercase">{ex.gender_target}</span>
                     </div>
-                    {m.phone && <p className="text-xs text-muted-foreground font-body mt-1">📞 {m.phone}</p>}
+                    {ex.sets && <p className="text-xs text-primary font-body mt-1">{ex.sets} sets × {ex.reps}</p>}
+                    {ex.video_url && (
+                      <a href={ex.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-ember font-body mt-1">
+                        <Video className="h-3 w-3" /> Video
+                      </a>
+                    )}
                   </div>
+                  <button onClick={() => deleteExercise(ex.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Exercises */}
-        {tab === "exercises" && (
+        {/* Machines Management */}
+        {tab === "machines" && (
           <div className="space-y-3">
-            {exercises.map((ex: any) => (
-              <div key={ex.id} className="rounded-xl border border-border bg-card p-4">
+            <Button variant="ember" size="sm" onClick={() => setShowMachineForm(!showMachineForm)} className="w-full">
+              <Plus className="h-4 w-4 mr-1" /> Add Machine
+            </Button>
+
+            {showMachineForm && (
+              <div className="rounded-xl border border-ember/30 bg-card p-4 space-y-3">
+                <Input placeholder="Machine name" className="bg-secondary border-border" value={newMachine.name} onChange={(e) => setNewMachine({ ...newMachine, name: e.target.value })} />
+                <Input placeholder="Description" className="bg-secondary border-border" value={newMachine.description} onChange={(e) => setNewMachine({ ...newMachine, description: e.target.value })} />
+                <textarea placeholder="How to use this machine..." className="w-full rounded-lg bg-secondary border border-border p-3 text-sm font-body min-h-[80px] resize-none" value={newMachine.how_to_use} onChange={(e) => setNewMachine({ ...newMachine, how_to_use: e.target.value })} />
+                <Input placeholder="Image URL" className="bg-secondary border-border" value={newMachine.image_url} onChange={(e) => setNewMachine({ ...newMachine, image_url: e.target.value })} />
+                <Input placeholder="Video URL" className="bg-secondary border-border" value={newMachine.video_url} onChange={(e) => setNewMachine({ ...newMachine, video_url: e.target.value })} />
+                <div className="flex gap-2">
+                  <Button variant="ember" size="sm" onClick={addMachine}>Save</Button>
+                  <Button variant="outline" size="sm" onClick={() => setShowMachineForm(false)}>Cancel</Button>
+                </div>
+              </div>
+            )}
+
+            {machines.map((m: any) => (
+              <div key={m.id} className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-heading text-lg tracking-wider">{ex.name}</p>
-                    <div className="flex gap-2 mt-1">
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-body uppercase">{ex.body_part}</span>
-                      <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full font-body uppercase">{ex.gender_target}</span>
-                    </div>
-                    {ex.description && <p className="text-xs text-muted-foreground font-body mt-2">{ex.description}</p>}
-                    {ex.sets && <p className="text-xs text-primary font-body mt-1">{ex.sets} sets × {ex.reps}</p>}
+                  <div className="flex-1">
+                    <p className="font-heading text-lg tracking-wider">{m.name}</p>
+                    {m.description && <p className="text-xs text-muted-foreground font-body mt-1">{m.description}</p>}
+                    {m.video_url && (
+                      <a href={m.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-ember font-body mt-1">
+                        <Video className="h-3 w-3" /> Video
+                      </a>
+                    )}
                   </div>
-                  {ex.video_url && (
-                    <a href={ex.video_url} target="_blank" className="text-xs text-primary underline font-body">Video</a>
-                  )}
+                  <button onClick={() => deleteMachine(m.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             ))}
-            {exercises.length === 0 && (
-              <div className="py-12 text-center text-muted-foreground font-body">
-                <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p>No exercises added yet</p>
+          </div>
+        )}
+
+        {/* Schedule Assignment */}
+        {tab === "schedules" && (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+              <Label className="text-xs uppercase tracking-wider font-body">Select Member</Label>
+              <select className="w-full rounded-lg bg-secondary border border-border p-2.5 text-sm font-body" value={scheduleUser} onChange={(e) => loadUserSchedule(e.target.value)}>
+                <option value="">Choose member...</option>
+                {members.map((m: any) => (
+                  <option key={m.user_id} value={m.user_id}>{m.name}</option>
+                ))}
+              </select>
+
+              {scheduleUser && (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs uppercase tracking-wider font-body">Day</Label>
+                      <select className="w-full rounded-lg bg-secondary border border-border p-2.5 text-sm font-body" value={scheduleDay} onChange={(e) => setScheduleDay(parseInt(e.target.value))}>
+                        {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                          <option key={d} value={d}>{DAY_NAMES[d]}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label className="text-xs uppercase tracking-wider font-body">Exercise</Label>
+                      <select className="w-full rounded-lg bg-secondary border border-border p-2.5 text-sm font-body" value={scheduleExercise} onChange={(e) => setScheduleExercise(e.target.value)}>
+                        <option value="">Choose...</option>
+                        {exercises.map((ex: any) => (
+                          <option key={ex.id} value={ex.id}>{ex.name} ({ex.body_part})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <Button variant="ember" size="sm" onClick={assignSchedule} className="w-full">
+                    <Plus className="h-4 w-4 mr-1" /> Assign Exercise
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Current Schedule */}
+            {scheduleUser && userSchedules.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="font-heading text-lg tracking-wider">{getMemberName(scheduleUser)}'S SCHEDULE</h3>
+                {[1, 2, 3, 4, 5, 6, 7].map((day) => {
+                  const dayItems = userSchedules.filter((s: any) => s.day_of_week === day);
+                  if (dayItems.length === 0) return null;
+                  return (
+                    <div key={day} className="rounded-xl border border-border bg-card p-3">
+                      <p className="font-heading text-sm tracking-wider text-primary mb-2">{DAY_NAMES[day]}</p>
+                      {dayItems.map((s: any) => (
+                        <div key={s.id} className="flex items-center justify-between py-1">
+                          <span className="text-sm font-body">{s.exercises?.name || "Unknown"}</span>
+                          <button onClick={() => removeSchedule(s.id)} className="text-destructive hover:text-destructive/80">
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Role Management */}
+        {tab === "roles" && role === "admin" && (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+              <Label className="text-xs uppercase tracking-wider font-body">Promote Member</Label>
+              <select className="w-full rounded-lg bg-secondary border border-border p-2.5 text-sm font-body" value={selectedMember} onChange={(e) => setSelectedMember(e.target.value)}>
+                <option value="">Choose member...</option>
+                {members.map((m: any) => (
+                  <option key={m.user_id} value={m.user_id}>{m.name}</option>
+                ))}
+              </select>
+              <div className="flex gap-2">
+                {["manager", "member", "sub_user"].map((r) => (
+                  <button key={r} onClick={() => setNewRole(r)} className={cn("rounded-lg border px-3 py-1.5 text-xs font-body uppercase", newRole === r ? "border-ember bg-ember/10 text-ember" : "border-border text-muted-foreground")}>
+                    {r === "sub_user" ? "Viewer" : r}
+                  </button>
+                ))}
+              </div>
+              <Button variant="ember" size="sm" onClick={changeRole} disabled={!selectedMember} className="w-full">
+                <ShieldCheck className="h-4 w-4 mr-1" /> Update Role
+              </Button>
+              <p className="text-[10px] text-muted-foreground font-body">
+                Manager = can manage exercises, machines & members. Viewer = can only watch videos & browse machines.
+              </p>
+            </div>
           </div>
         )}
       </main>

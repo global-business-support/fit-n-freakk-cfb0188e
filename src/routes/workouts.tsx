@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
-import { Dumbbell, Play, ChevronRight } from "lucide-react";
+import { Dumbbell, Play, ChevronRight, CalendarDays } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,12 +16,17 @@ export const Route = createFileRoute("/workouts")({
   component: WorkoutsPage,
 });
 
+const DAY_NAMES = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
 function WorkoutsPage() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, role, loading } = useAuth();
   const navigate = useNavigate();
   const [gender, setGender] = useState<"male" | "female">("male");
   const [exercises, setExercises] = useState<any[]>([]);
+  const [schedule, setSchedule] = useState<any[]>([]);
+  const [expandedDay, setExpandedDay] = useState<number | null>(null);
   const [expandedPart, setExpandedPart] = useState<string | null>(null);
+  const [view, setView] = useState<"schedule" | "library">("schedule");
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
@@ -35,6 +40,10 @@ function WorkoutsPage() {
     loadExercises();
   }, [gender]);
 
+  useEffect(() => {
+    if (user && role !== "sub_user") loadSchedule();
+  }, [user, role]);
+
   const loadExercises = async () => {
     const { data } = await supabase
       .from("exercises")
@@ -44,44 +53,33 @@ function WorkoutsPage() {
     setExercises(data || []);
   };
 
+  const loadSchedule = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("workout_schedules")
+      .select("*, exercises(*)")
+      .eq("user_id", user.id)
+      .order("order_index");
+    setSchedule(data || []);
+  };
+
+  // Sub-users only see exercise videos
+  const isSubUser = role === "sub_user";
   const bodyParts = [...new Set(exercises.map((e: any) => e.body_part))];
 
-  // Fallback static data if no exercises in DB
-  const staticWorkouts = [
-    { part: "Chest", exercises: [
-      { name: "Bench Press", sets: 4, reps: "8-10", description: "Flat barbell bench press", video_url: null },
-      { name: "Incline Dumbbell Press", sets: 3, reps: "10-12", description: "Upper chest focus", video_url: null },
-      { name: "Cable Flyes", sets: 3, reps: "12-15", description: "Chest isolation", video_url: null },
-    ]},
-    { part: "Back", exercises: [
-      { name: "Deadlift", sets: 4, reps: "6-8", description: "Full back compound", video_url: null },
-      { name: "Pull-ups", sets: 4, reps: "8-12", description: "Lat builder", video_url: null },
-      { name: "Barbell Rows", sets: 3, reps: "10-12", description: "Mid-back thickness", video_url: null },
-    ]},
-    { part: "Legs", exercises: [
-      { name: "Squats", sets: 4, reps: "8-10", description: "King of leg exercises", video_url: null },
-      { name: "Romanian Deadlift", sets: 3, reps: "10-12", description: "Hamstring focus", video_url: null },
-      { name: "Leg Press", sets: 3, reps: "12-15", description: "Quad builder", video_url: null },
-    ]},
-    { part: "Shoulders", exercises: [
-      { name: "Overhead Press", sets: 4, reps: "8-10", description: "Deltoid strength", video_url: null },
-      { name: "Lateral Raises", sets: 4, reps: "12-15", description: "Side delt width", video_url: null },
-    ]},
-    { part: "Arms", exercises: [
-      { name: "Barbell Curls", sets: 3, reps: "10-12", description: "Bicep builder", video_url: null },
-      { name: "Tricep Dips", sets: 3, reps: "10-12", description: "Tricep mass", video_url: null },
-    ]},
-  ];
+  // Today's day (1=Mon)
+  const todayDay = new Date().getDay() || 7;
 
-  const useStatic = exercises.length === 0;
-  const displayParts = useStatic ? staticWorkouts.map(w => w.part) : bodyParts;
+  useEffect(() => {
+    if (schedule.length > 0) setExpandedDay(todayDay);
+  }, [schedule]);
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-lg px-4 py-3">
         <div className="mx-auto max-w-lg">
-          <h1 className="text-2xl font-heading tracking-wider">WORKOUTS</h1>
-          <p className="text-xs text-muted-foreground font-body">Exercise videos & plans</p>
+          <h1 className="text-2xl font-heading tracking-wider">{isSubUser ? "VIDEOS" : "WORKOUTS"}</h1>
+          <p className="text-xs text-muted-foreground font-body">{isSubUser ? "Watch exercise videos" : "Your exercise schedule & library"}</p>
         </div>
       </header>
 
@@ -104,64 +102,146 @@ function WorkoutsPage() {
           ))}
         </div>
 
-        {/* Body Parts */}
-        <div className="space-y-3">
-          {displayParts.map((part) => {
-            const partExercises = useStatic
-              ? staticWorkouts.find(w => w.part === part)?.exercises || []
-              : exercises.filter((e: any) => e.body_part === part);
+        {/* View Toggle (members only) */}
+        {!isSubUser && schedule.length > 0 && (
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setView("schedule")}
+              className={cn(
+                "rounded-lg border py-2 text-xs font-semibold uppercase tracking-wider font-body transition-all",
+                view === "schedule" ? "border-ember bg-ember/10 text-ember" : "border-border bg-card text-muted-foreground"
+              )}
+            >
+              <CalendarDays className="inline h-3.5 w-3.5 mr-1" />My Schedule
+            </button>
+            <button
+              onClick={() => setView("library")}
+              className={cn(
+                "rounded-lg border py-2 text-xs font-semibold uppercase tracking-wider font-body transition-all",
+                view === "library" ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground"
+              )}
+            >
+              <Dumbbell className="inline h-3.5 w-3.5 mr-1" />All Exercises
+            </button>
+          </div>
+        )}
 
-            return (
-              <div key={part} className="rounded-xl border border-border bg-card overflow-hidden">
-                <button
-                  onClick={() => setExpandedPart(expandedPart === part ? null : part)}
-                  className="flex w-full items-center justify-between p-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <Dumbbell className="h-5 w-5" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-heading text-lg tracking-wider">{(part as string).toUpperCase()}</p>
-                      <p className="text-xs text-muted-foreground font-body">{partExercises.length} exercises</p>
-                    </div>
-                  </div>
-                  <ChevronRight className={cn("h-5 w-5 text-muted-foreground transition-transform", expandedPart === part && "rotate-90")} />
-                </button>
-
-                {expandedPart === part && (
-                  <div className="border-t border-border px-4 pb-4 pt-2 space-y-3">
-                    {partExercises.map((exercise: any, i: number) => (
-                      <div key={i} className="rounded-lg bg-secondary/50 p-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="font-semibold text-sm font-body">{exercise.name}</p>
-                            {exercise.description && <p className="text-xs text-muted-foreground mt-0.5 font-body">{exercise.description}</p>}
-                            <div className="flex gap-3 mt-2">
-                              <span className="text-xs font-semibold text-primary font-body">{exercise.sets} sets</span>
-                              <span className="text-xs font-semibold text-ember font-body">{exercise.reps} reps</span>
-                            </div>
-                          </div>
-                          {exercise.video_url ? (
-                            <a href={exercise.video_url} target="_blank" className="flex h-8 w-8 items-center justify-center rounded-lg bg-ember/10 text-ember shrink-0">
-                              <Play className="h-4 w-4" />
-                            </a>
-                          ) : (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground/30 shrink-0">
-                              <Play className="h-4 w-4" />
-                            </div>
-                          )}
-                        </div>
+        {/* Schedule View */}
+        {!isSubUser && view === "schedule" && schedule.length > 0 && (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5, 6, 7].map((day) => {
+              const dayExercises = schedule.filter((s: any) => s.day_of_week === day);
+              if (dayExercises.length === 0) return null;
+              const isToday = day === todayDay;
+              return (
+                <div key={day} className={cn("rounded-xl border bg-card overflow-hidden", isToday ? "border-ember/50" : "border-border")}>
+                  <button
+                    onClick={() => setExpandedDay(expandedDay === day ? null : day)}
+                    className="flex w-full items-center justify-between p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg text-sm font-heading", isToday ? "bg-ember/10 text-ember" : "bg-primary/10 text-primary")}>
+                        {DAY_NAMES[day].slice(0, 3).toUpperCase()}
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <div className="text-left">
+                        <p className="font-heading text-lg tracking-wider">{DAY_NAMES[day].toUpperCase()}</p>
+                        <p className="text-xs text-muted-foreground font-body">{dayExercises.length} exercises {isToday && "• TODAY"}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className={cn("h-5 w-5 text-muted-foreground transition-transform", expandedDay === day && "rotate-90")} />
+                  </button>
+                  {expandedDay === day && (
+                    <div className="border-t border-border px-4 pb-4 pt-2 space-y-3">
+                      {dayExercises.map((s: any) => (
+                        <ExerciseCard key={s.id} exercise={s.exercises} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* No Schedule Message */}
+        {!isSubUser && view === "schedule" && schedule.length === 0 && (
+          <div className="py-12 text-center text-muted-foreground font-body">
+            <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-30" />
+            <p>No schedule assigned yet</p>
+            <p className="text-xs mt-1">Your trainer will assign exercises</p>
+          </div>
+        )}
+
+        {/* Library / Sub-user view */}
+        {(isSubUser || view === "library") && (
+          <div className="space-y-3">
+            {bodyParts.map((part) => {
+              const partExercises = exercises.filter((e: any) => e.body_part === part);
+              return (
+                <div key={part} className="rounded-xl border border-border bg-card overflow-hidden">
+                  <button
+                    onClick={() => setExpandedPart(expandedPart === part ? null : part)}
+                    className="flex w-full items-center justify-between p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Dumbbell className="h-5 w-5" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-heading text-lg tracking-wider">{part.toUpperCase()}</p>
+                        <p className="text-xs text-muted-foreground font-body">{partExercises.length} exercises</p>
+                      </div>
+                    </div>
+                    <ChevronRight className={cn("h-5 w-5 text-muted-foreground transition-transform", expandedPart === part && "rotate-90")} />
+                  </button>
+
+                  {expandedPart === part && (
+                    <div className="border-t border-border px-4 pb-4 pt-2 space-y-3">
+                      {partExercises.map((exercise: any) => (
+                        <ExerciseCard key={exercise.id} exercise={exercise} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {bodyParts.length === 0 && (
+              <div className="py-12 text-center text-muted-foreground font-body">
+                <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p>No exercises added yet</p>
               </div>
-            );
-          })}
-        </div>
+            )}
+          </div>
+        )}
       </main>
       <BottomNav />
+    </div>
+  );
+}
+
+function ExerciseCard({ exercise }: { exercise: any }) {
+  if (!exercise) return null;
+  return (
+    <div className="rounded-lg bg-secondary/50 p-3">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <p className="font-semibold text-sm font-body">{exercise.name}</p>
+          {exercise.description && <p className="text-xs text-muted-foreground mt-0.5 font-body">{exercise.description}</p>}
+          <div className="flex gap-3 mt-2">
+            {exercise.sets && <span className="text-xs font-semibold text-primary font-body">{exercise.sets} sets</span>}
+            {exercise.reps && <span className="text-xs font-semibold text-ember font-body">{exercise.reps} reps</span>}
+          </div>
+        </div>
+        {exercise.video_url ? (
+          <a href={exercise.video_url} target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-lg bg-ember/10 text-ember shrink-0">
+            <Play className="h-4 w-4" />
+          </a>
+        ) : (
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground/30 shrink-0">
+            <Play className="h-4 w-4" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

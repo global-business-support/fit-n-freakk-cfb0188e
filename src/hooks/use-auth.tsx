@@ -14,11 +14,13 @@ interface Profile {
   photo_url: string | null;
 }
 
+type AppRole = "admin" | "member" | "manager" | "sub_user";
+
 interface AuthState {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
-  role: "admin" | "member" | null;
+  role: AppRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, meta: Record<string, unknown>) => Promise<{ error: string | null }>;
@@ -31,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [role, setRole] = useState<"admin" | "member" | null>(null);
+  const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchProfileAndRole = async (userId: string) => {
@@ -40,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from("user_roles").select("role").eq("user_id", userId).single(),
     ]);
     if (profileRes.data) setProfile(profileRes.data as Profile);
-    if (roleRes.data) setRole(roleRes.data.role as "admin" | "member");
+    if (roleRes.data) setRole(roleRes.data.role as AppRole);
   };
 
   useEffect(() => {
@@ -48,7 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        // Use setTimeout to avoid Supabase deadlock
         setTimeout(() => fetchProfileAndRole(session.user.id), 0);
       } else {
         setProfile(null);
@@ -82,7 +83,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     
     if (!error && data.user) {
-      // Update profile with additional info
+      // If user_type is sub_user, update their role
+      if (meta.user_type === "sub_user") {
+        await supabase.from("user_roles").update({ role: "sub_user" }).eq("user_id", data.user.id);
+      }
+      
       await supabase.from("profiles").update({
         name: meta.name as string,
         phone: meta.phone as string,
