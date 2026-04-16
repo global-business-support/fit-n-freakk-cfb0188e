@@ -14,6 +14,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MembersRouteImport } from './routes/members'
+import { Route as MachinesRouteImport } from './routes/machines'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AttendanceRouteImport } from './routes/attendance'
@@ -44,6 +45,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const MembersRoute = MembersRouteImport.update({
   id: '/members',
   path: '/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MachinesRoute = MachinesRouteImport.update({
+  id: '/machines',
+  path: '/machines',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/machines': typeof MachinesRoute
   '/members': typeof MembersRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/machines': typeof MachinesRoute
   '/members': typeof MembersRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/machines': typeof MachinesRoute
   '/members': typeof MembersRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/dashboard'
     | '/login'
+    | '/machines'
     | '/members'
     | '/profile'
     | '/progress'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/dashboard'
     | '/login'
+    | '/machines'
     | '/members'
     | '/profile'
     | '/progress'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/dashboard'
     | '/login'
+    | '/machines'
     | '/members'
     | '/profile'
     | '/progress'
@@ -166,6 +178,7 @@ export interface RootRouteChildren {
   AttendanceRoute: typeof AttendanceRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
+  MachinesRoute: typeof MachinesRoute
   MembersRoute: typeof MembersRoute
   ProfileRoute: typeof ProfileRoute
   ProgressRoute: typeof ProgressRoute
@@ -208,6 +221,13 @@ declare module '@tanstack/react-router' {
       path: '/members'
       fullPath: '/members'
       preLoaderRoute: typeof MembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/machines': {
+      id: '/machines'
+      path: '/machines'
+      fullPath: '/machines'
+      preLoaderRoute: typeof MachinesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -262,6 +282,7 @@ const rootRouteChildren: RootRouteChildren = {
   AttendanceRoute: AttendanceRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
+  MachinesRoute: MachinesRoute,
   MembersRoute: MembersRoute,
   ProfileRoute: ProfileRoute,
   ProgressRoute: ProgressRoute,

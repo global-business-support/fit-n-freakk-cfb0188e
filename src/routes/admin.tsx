@@ -142,7 +142,7 @@ function AdminPage() {
 
   const changeRole = async () => {
     if (!selectedMember || !newRole) return;
-    await supabase.from("user_roles").update({ role: newRole }).eq("user_id", selectedMember);
+    await supabase.from("user_roles").update({ role: newRole as "admin" | "manager" | "member" | "sub_user" }).eq("user_id", selectedMember);
     if (newRole === "manager") {
       // Grant default permissions
       const perms = ["manage_members", "manage_exercises", "manage_machines"];
