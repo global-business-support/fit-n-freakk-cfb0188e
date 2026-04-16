@@ -19,6 +19,7 @@ export const Route = createFileRoute("/register")({
 });
 
 function RegisterPage() {
+  const [userType, setUserType] = useState<"member" | "sub_user">("member");
   const [gender, setGender] = useState<"male" | "female">("male");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -60,6 +61,7 @@ function RegisterPage() {
       height,
       weight: parseFloat(weight),
       gender,
+      user_type: userType,
     });
 
     if (signUpError) {
@@ -68,7 +70,6 @@ function RegisterPage() {
       return;
     }
 
-    // Upload photo after signup
     const { data: { user } } = await supabase.auth.getUser();
     if (user && photoFile) {
       const ext = photoFile.name.split(".").pop();
@@ -99,6 +100,40 @@ function RegisterPage() {
             <h1 className="text-2xl font-heading tracking-wider">CREATE ACCOUNT</h1>
             <p className="text-xs text-muted-foreground font-body">Join Feet & Freakk today</p>
           </div>
+        </div>
+
+        {/* User Type Selection */}
+        <div className="space-y-2">
+          <Label className="text-xs uppercase tracking-wider font-body">Account Type</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setUserType("member")}
+              className={cn(
+                "rounded-xl border py-3 text-sm font-semibold uppercase tracking-wider font-body transition-all",
+                userType === "member"
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-secondary text-muted-foreground hover:border-primary/30"
+              )}
+            >
+              🏋️ Member
+            </button>
+            <button
+              type="button"
+              onClick={() => setUserType("sub_user")}
+              className={cn(
+                "rounded-xl border py-3 text-sm font-semibold uppercase tracking-wider font-body transition-all",
+                userType === "sub_user"
+                  ? "border-ember bg-ember/10 text-ember"
+                  : "border-border bg-secondary text-muted-foreground hover:border-ember/30"
+              )}
+            >
+              👁️ Viewer
+            </button>
+          </div>
+          <p className="text-[10px] text-muted-foreground font-body text-center">
+            {userType === "member" ? "Full access: exercises, progress tracking, schedule" : "View-only: watch gym videos & browse machines"}
+          </p>
         </div>
 
         {/* Photo Upload */}

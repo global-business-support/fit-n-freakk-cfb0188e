@@ -1,20 +1,28 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Users, Calendar, Dumbbell, BarChart3, Shield, User } from "lucide-react";
+import { Home, Users, Calendar, Dumbbell, BarChart3, Shield, User, Cog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 
 const adminNav = [
   { to: "/dashboard", icon: Home, label: "Home" },
   { to: "/members", icon: Users, label: "Members" },
-  { to: "/attendance", icon: Calendar, label: "Attendance" },
+  { to: "/attendance", icon: Calendar, label: "Attend" },
   { to: "/admin", icon: Shield, label: "Admin" },
-  { to: "/analytics", icon: BarChart3, label: "Analytics" },
+  { to: "/analytics", icon: BarChart3, label: "Stats" },
 ] as const;
 
 const memberNav = [
   { to: "/dashboard", icon: Home, label: "Home" },
   { to: "/workouts", icon: Dumbbell, label: "Workouts" },
+  { to: "/machines", icon: Cog, label: "Machines" },
   { to: "/progress", icon: BarChart3, label: "Progress" },
+  { to: "/profile", icon: User, label: "Profile" },
+] as const;
+
+const subUserNav = [
+  { to: "/dashboard", icon: Home, label: "Home" },
+  { to: "/workouts", icon: Dumbbell, label: "Videos" },
+  { to: "/machines", icon: Cog, label: "Machines" },
   { to: "/profile", icon: User, label: "Profile" },
 ] as const;
 
@@ -22,7 +30,7 @@ export function BottomNav() {
   const location = useLocation();
   const { role } = useAuth();
 
-  const navItems = role === "admin" ? adminNav : memberNav;
+  const navItems = role === "admin" || role === "manager" ? adminNav : role === "sub_user" ? subUserNav : memberNav;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-lg">

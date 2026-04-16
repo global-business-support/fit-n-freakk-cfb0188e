@@ -113,6 +113,63 @@ export type Database = {
         }
         Relationships: []
       }
+      machines: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          how_to_use: string | null
+          id: string
+          image_url: string | null
+          name: string
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          how_to_use?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          how_to_use?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      manager_permissions: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          permission: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          permission: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          permission?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
@@ -203,6 +260,44 @@ export type Database = {
         }
         Relationships: []
       }
+      workout_schedules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          day_of_week: number
+          exercise_id: string
+          id: string
+          order_index: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          day_of_week: number
+          exercise_id: string
+          id?: string
+          order_index?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          day_of_week?: number
+          exercise_id?: string
+          id?: string
+          order_index?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_schedules_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -217,7 +312,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "member"
+      app_role: "admin" | "member" | "manager" | "sub_user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -345,7 +440,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "member"],
+      app_role: ["admin", "member", "manager", "sub_user"],
     },
   },
 } as const
