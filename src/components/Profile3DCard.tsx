@@ -32,6 +32,7 @@ export function Profile3DCard({
 }: Profile3DCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [hovering, setHovering] = useState(false);
   const initial = name?.charAt(0).toUpperCase() || "M";
   const progress = weeklyTarget > 0 ? Math.min(100, (weeklyDone / weeklyTarget) * 100) : 0;
 
@@ -41,16 +42,20 @@ export function Profile3DCard({
     const r = el.getBoundingClientRect();
     const x = ((e.clientX - r.left) / r.width - 0.5) * 2;
     const y = ((e.clientY - r.top) / r.height - 0.5) * 2;
-    setTilt({ x: x * 8, y: -y * 8 });
+    setTilt({ x: x * 10, y: -y * 10 });
   };
 
-  const reset = () => setTilt({ x: 0, y: 0 });
+  const reset = () => {
+    setHovering(false);
+    setTilt({ x: 0, y: 0 });
+  };
 
   return (
     <div
       className="relative"
-      style={{ perspective: "1200px" }}
+      style={{ perspective: "1400px" }}
       onMouseMove={handleMove}
+      onMouseEnter={() => setHovering(true)}
       onMouseLeave={reset}
     >
       {/* Backlight aura */}
@@ -63,11 +68,18 @@ export function Profile3DCard({
         }}
       />
 
+      {/* Running shine border halo */}
+      <div className="shine-border absolute -inset-[2px] rounded-[1.85rem] pointer-events-none" aria-hidden>
+        <div className="shine-border-inner" />
+      </div>
+
       <div
         ref={ref}
-        className="relative rounded-[1.75rem] overflow-hidden transition-transform duration-200 ease-out will-change-transform"
+        className={`relative rounded-[1.75rem] overflow-hidden transition-transform duration-200 ease-out will-change-transform ${
+          hovering ? "" : "animate-card-rotate"
+        }`}
         style={{
-          transform: `rotateX(${tilt.y}deg) rotateY(${tilt.x}deg)`,
+          transform: hovering ? `rotateX(${tilt.y}deg) rotateY(${tilt.x}deg)` : undefined,
           transformStyle: "preserve-3d",
           background:
             "linear-gradient(135deg, oklch(0.22 0.06 245 / 0.85) 0%, oklch(0.16 0.04 250 / 0.75) 50%, oklch(0.2 0.05 240 / 0.85) 100%)",
