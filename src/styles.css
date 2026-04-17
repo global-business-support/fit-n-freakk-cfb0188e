@@ -179,6 +179,69 @@
 .animate-pulse-glow { animation: pulse-glow 4s ease-in-out infinite; }
 .animate-ken-burns { animation: ken-burns 30s ease-in-out infinite; }
 
+/* Shining border - sweeping conic halo around the card */
+@keyframes border-spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-150%) skewX(-20deg); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateX(250%) skewX(-20deg); opacity: 0; }
+}
+
+.shine-border {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.shine-border::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 220%;
+  height: 220%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 230deg,
+    oklch(0.78 0.18 235 / 0.9) 295deg,
+    oklch(0.96 0.08 235 / 1) 325deg,
+    oklch(0.78 0.18 235 / 0.9) 355deg,
+    transparent 360deg
+  );
+  animation: border-spin 4.5s linear infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+.shine-border > * {
+  position: relative;
+  z-index: 2;
+}
+.shine-border-inner {
+  position: absolute;
+  inset: 2px;
+  border-radius: inherit;
+  background: oklch(0.1 0.04 250 / 0.7);
+  backdrop-filter: blur(24px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.animate-shimmer-sweep {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, oklch(0.95 0.08 235 / 0.35), transparent);
+  animation: shimmer-sweep 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
 .bg-gradient-primary { background-image: var(--gradient-primary); }
 .bg-gradient-card { background-image: var(--gradient-card); }
 .shadow-glow { box-shadow: var(--shadow-glow); }
