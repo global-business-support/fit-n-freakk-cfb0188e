@@ -415,27 +415,52 @@ function AdminPage() {
               )}
             </div>
 
-            {/* Current Schedule */}
-            {scheduleUser && userSchedules.length > 0 && (
+            {/* Current Schedule - day-wise visual */}
+            {scheduleUser && (
               <div className="space-y-2">
-                <h3 className="font-heading text-lg tracking-wider">{getMemberName(scheduleUser)}'S SCHEDULE</h3>
-                {[1, 2, 3, 4, 5, 6, 7].map((day) => {
-                  const dayItems = userSchedules.filter((s: any) => s.day_of_week === day);
-                  if (dayItems.length === 0) return null;
-                  return (
-                    <div key={day} className="rounded-xl border border-border bg-card p-3">
-                      <p className="font-heading text-sm tracking-wider text-primary mb-2">{DAY_NAMES[day]}</p>
-                      {dayItems.map((s: any) => (
-                        <div key={s.id} className="flex items-center justify-between py-1">
-                          <span className="text-sm font-body">{s.exercises?.name || "Unknown"}</span>
-                          <button onClick={() => removeSchedule(s.id)} className="text-destructive hover:text-destructive/80">
-                            <X className="h-4 w-4" />
-                          </button>
+                <h3 className="font-heading text-lg tracking-wider flex items-center justify-between">
+                  <span>{getMemberName(scheduleUser).toUpperCase()}'S WEEKLY PLAN</span>
+                  <span className="text-xs text-muted-foreground font-body">{userSchedules.length} total</span>
+                </h3>
+                {userSchedules.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-border bg-card/50 p-6 text-center">
+                    <CalendarDays className="h-6 w-6 mx-auto mb-2 text-muted-foreground/40" />
+                    <p className="text-xs text-muted-foreground font-body">No exercises assigned yet</p>
+                  </div>
+                ) : (
+                  [1, 2, 3, 4, 5, 6, 7].map((day) => {
+                    const dayItems = userSchedules.filter((s: any) => s.day_of_week === day);
+                    return (
+                      <div key={day} className={cn(
+                        "rounded-xl border bg-card p-3",
+                        dayItems.length > 0 ? "border-primary/30" : "border-border opacity-60"
+                      )}>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className={cn(
+                            "font-heading text-sm tracking-wider",
+                            dayItems.length > 0 ? "text-primary" : "text-muted-foreground"
+                          )}>
+                            {DAY_NAMES[day]}
+                          </p>
+                          <span className="text-[10px] uppercase tracking-wider font-body font-bold text-muted-foreground">
+                            {dayItems.length === 0 ? "Rest" : `${dayItems.length} ex`}
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  );
-                })}
+                        {dayItems.map((s: any) => (
+                          <div key={s.id} className="flex items-center justify-between rounded-lg bg-secondary/40 px-2.5 py-1.5 mb-1">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Dumbbell className="h-3.5 w-3.5 text-sky shrink-0" />
+                              <span className="text-sm font-body truncate">{s.exercises?.name || "Unknown"}</span>
+                            </div>
+                            <button onClick={() => removeSchedule(s.id)} className="text-destructive hover:text-destructive/80 shrink-0 ml-2">
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })
+                )}
               </div>
             )}
           </div>
