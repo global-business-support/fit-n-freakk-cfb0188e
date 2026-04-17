@@ -32,6 +32,8 @@ function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [memberId, setMemberId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
   const { signUp } = useAuth();
 
@@ -81,8 +83,72 @@ function RegisterPage() {
       }
     }
 
+    // Generate Member ID and show success screen before navigating
+    const id = generateMemberId(name, phone);
+    setMemberId(id);
+    setIsLoading(false);
+  };
+
+  const handleContinue = () => {
     navigate({ to: "/dashboard" });
   };
+
+  const copyMemberId = async () => {
+    if (!memberId) return;
+    await navigator.clipboard.writeText(memberId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Success screen with Member ID
+  if (memberId) {
+    return (
+      <div className="min-h-screen bg-background px-4 py-6 relative overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 -left-20 w-96 h-96 bg-primary/15 rounded-full blur-3xl animate-aurora" />
+          <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-sky/15 rounded-full blur-3xl animate-aurora-slow" />
+        </div>
+        <div className="relative z-10 w-full max-w-sm space-y-6 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-success/20 ring-4 ring-success/30">
+            <CheckCircle2 className="h-10 w-10 text-success" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-heading tracking-[0.18em] bg-gradient-primary bg-clip-text text-transparent">
+              WELCOME ABOARD
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground font-body">
+              Your account is ready. Save your Member ID below.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-sky/30 bg-card/60 backdrop-blur-xl p-6 shadow-glow space-y-3">
+            <div className="flex items-center justify-center gap-2 text-sky">
+              <BadgeCheck className="h-4 w-4" />
+              <span className="text-xs uppercase tracking-[0.2em] font-body">Your Member ID</span>
+            </div>
+            <div className="text-3xl font-heading tracking-[0.3em] text-foreground font-bold">
+              {memberId}
+            </div>
+            <button
+              type="button"
+              onClick={copyMemberId}
+              className="inline-flex items-center gap-2 text-xs text-sky hover:text-primary font-body uppercase tracking-wider"
+            >
+              {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? "Copied" : "Copy ID"}
+            </button>
+            <p className="text-[11px] text-muted-foreground font-body pt-2 border-t border-border">
+              Use this ID at the gym front desk for quick check-in. Login still uses your email.
+            </p>
+          </div>
+
+          <Button onClick={handleContinue} size="lg" className="w-full bg-gradient-primary text-primary-foreground shadow-glow">
+            Continue to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background px-4 py-6 relative overflow-hidden">
