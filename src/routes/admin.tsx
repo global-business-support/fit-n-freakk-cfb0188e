@@ -323,9 +323,7 @@ function AdminPage() {
                     </div>
                     {ex.sets && <p className="text-xs text-primary font-body mt-1">{ex.sets} sets × {ex.reps}</p>}
                     {ex.video_url && (
-                      <a href={ex.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-ember font-body mt-1">
-                        <Video className="h-3 w-3" /> Video
-                      </a>
+                      <div className="mt-2"><VideoPlayer url={ex.video_url} title={ex.name} size="sm" /></div>
                     )}
                   </div>
                   <button onClick={() => deleteExercise(ex.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
@@ -365,9 +363,7 @@ function AdminPage() {
                     <p className="font-heading text-lg tracking-wider">{m.name}</p>
                     {m.description && <p className="text-xs text-muted-foreground font-body mt-1">{m.description}</p>}
                     {m.video_url && (
-                      <a href={m.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-ember font-body mt-1">
-                        <Video className="h-3 w-3" /> Video
-                      </a>
+                      <div className="mt-2"><VideoPlayer url={m.video_url} title={m.name} size="sm" /></div>
                     )}
                   </div>
                   <button onClick={() => deleteMachine(m.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
@@ -469,6 +465,70 @@ function AdminPage() {
               <p className="text-[10px] text-muted-foreground font-body">
                 Manager = can manage exercises, machines & members. Viewer = can only watch videos & browse machines.
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Branding / Settings */}
+        {tab === "settings" && role === "admin" && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-sky/30 bg-gradient-card p-4 space-y-4 shadow-card">
+              <div>
+                <h3 className="font-heading text-lg tracking-wider text-sky mb-1">APP LOGO</h3>
+                <p className="text-xs text-muted-foreground font-body">Upload your gym logo (square image works best)</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="h-20 w-20 rounded-2xl bg-gradient-primary ring-2 ring-sky/30 overflow-hidden flex items-center justify-center shrink-0">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
+                  ) : (
+                    <ImageIcon className="h-8 w-8 text-primary-foreground" />
+                  )}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])}
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={uploadingLogo}
+                    className="w-full bg-gradient-primary text-primary-foreground"
+                  >
+                    {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ImageIcon className="h-4 w-4 mr-1" /> Upload Logo</>}
+                  </Button>
+                  {logoUrl && (
+                    <Button size="sm" variant="outline" onClick={removeLogo} className="w-full">
+                      <Trash2 className="h-4 w-4 mr-1" /> Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-sky/30 bg-gradient-card p-4 space-y-3 shadow-card">
+              <div>
+                <h3 className="font-heading text-lg tracking-wider text-sky mb-1">APP NAME</h3>
+                <p className="text-xs text-muted-foreground font-body">Shown across the app & login screen</p>
+              </div>
+              <Input
+                placeholder="e.g. Feet & Freakk"
+                className="bg-secondary/60 border-border h-11"
+                value={brandName}
+                onChange={(e) => setBrandName(e.target.value)}
+              />
+              <Button
+                size="sm"
+                onClick={saveAppName}
+                disabled={!brandName.trim() || brandName === appName}
+                className="w-full bg-gradient-primary text-primary-foreground"
+              >
+                Save Name
+              </Button>
             </div>
           </div>
         )}
