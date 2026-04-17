@@ -1,11 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Users, UserCheck, IndianRupee, TrendingUp, Bell, LogOut, Scale, Flame, Target, Timer } from "lucide-react";
+import { useBranding } from "@/hooks/use-branding";
+import { Users, UserCheck, IndianRupee, TrendingUp, Bell, LogOut, Scale, Flame, Target, Dumbbell } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { MemberCard } from "@/components/MemberCard";
 import { BottomNav } from "@/components/BottomNav";
-import { useState } from "react";
+import { LiveBackground } from "@/components/LiveBackground";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
