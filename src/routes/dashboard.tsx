@@ -11,8 +11,11 @@ import { MemberEditDialog } from "@/components/MemberEditDialog";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { HomeBackground } from "@/components/HomeBackground";
+import { AttendanceToggle } from "@/components/AttendanceToggle";
+import { WorkoutCalendar } from "@/components/WorkoutCalendar";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
+import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -291,6 +294,30 @@ function MemberDashboard() {
           weeklyTarget={weeklyTarget || 4}
           weeklyDone={weeklyDone}
         />
+
+        {/* Today's Present/Absent toggle */}
+        {user && <AttendanceToggle userId={user.id} />}
+
+        {/* AI Coach CTA */}
+        <Link
+          to="/ai-coach"
+          className="relative block overflow-hidden rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/20 via-card/60 to-sky/15 backdrop-blur-md p-4 hover:scale-[1.01] transition-transform"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
+              <Sparkles className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div className="flex-1">
+              <p className="font-heading text-lg tracking-wider text-foreground">AI FITNESS COACH</p>
+              <p className="text-xs text-muted-foreground font-body">Get a personalized workout & diet plan</p>
+            </div>
+            <span className="font-heading text-2xl text-primary">→</span>
+          </div>
+          <span className="animate-shimmer-sweep" />
+        </Link>
+
+        {/* Monthly Workout Calendar with attendance heatmap */}
+        {user && <WorkoutCalendar userId={user.id} />}
 
         {/* Today's videos — auto-embedded, play in place */}
         {user && <TodayVideoFeed userId={user.id} />}
