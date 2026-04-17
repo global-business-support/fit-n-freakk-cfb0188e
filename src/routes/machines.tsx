@@ -1,9 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
+import { LiveBackground } from "@/components/LiveBackground";
+import { VideoPlayer } from "@/components/VideoPlayer";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Cog, Play, Search } from "lucide-react";
+import { Cog, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/machines")({
@@ -37,20 +39,21 @@ function MachinesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-lg px-4 py-3">
+    <div className="relative min-h-screen pb-20 overflow-hidden">
+      <LiveBackground />
+      <header className="sticky top-0 z-40 border-b border-sky/20 bg-card/70 backdrop-blur-xl px-4 py-3">
         <div className="mx-auto max-w-lg">
-          <h1 className="text-2xl font-heading tracking-wider">MACHINES</h1>
+          <h1 className="text-2xl font-heading tracking-wider bg-gradient-primary bg-clip-text text-transparent">MACHINES</h1>
           <p className="text-xs text-muted-foreground font-body">Learn how to use gym equipment</p>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 py-4 space-y-4">
+      <main className="relative z-10 mx-auto max-w-lg px-4 py-4 space-y-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky/70" />
           <Input
             placeholder="Search machines..."
-            className="pl-9 bg-secondary border-border h-11"
+            className="pl-9 bg-secondary/60 border-border h-11"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -65,30 +68,28 @@ function MachinesPage() {
 
         <div className="space-y-3">
           {filtered.map((machine: any) => (
-            <div key={machine.id} className="rounded-xl border border-border bg-card overflow-hidden">
+            <div key={machine.id} className="rounded-2xl border border-sky/20 bg-gradient-card overflow-hidden shadow-card">
               {machine.image_url && (
-                <img src={machine.image_url} alt={machine.name} className="w-full h-40 object-cover" />
+                <img src={machine.image_url} alt={machine.name} className="w-full h-44 object-cover" />
               )}
               <div className="p-4 space-y-2">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary text-primary-foreground shrink-0">
                       <Cog className="h-5 w-5" />
                     </div>
-                    <h3 className="font-heading text-lg tracking-wider">{machine.name.toUpperCase()}</h3>
+                    <h3 className="font-heading text-lg tracking-wider truncate">{machine.name.toUpperCase()}</h3>
                   </div>
                   {machine.video_url && (
-                    <a href={machine.video_url} target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-lg bg-ember/10 text-ember shrink-0">
-                      <Play className="h-4 w-4" />
-                    </a>
+                    <VideoPlayer url={machine.video_url} title={machine.name} size="md" />
                   )}
                 </div>
                 {machine.description && (
                   <p className="text-sm text-muted-foreground font-body">{machine.description}</p>
                 )}
                 {machine.how_to_use && (
-                  <div className="rounded-lg bg-secondary/50 p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-body mb-1">How to use</p>
+                  <div className="rounded-lg bg-secondary/50 p-3 ring-1 ring-sky/10">
+                    <p className="text-[10px] uppercase tracking-wider text-sky font-body mb-1 font-bold">How to use</p>
                     <p className="text-sm font-body whitespace-pre-line">{machine.how_to_use}</p>
                   </div>
                 )}

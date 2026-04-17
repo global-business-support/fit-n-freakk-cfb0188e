@@ -1,11 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Users, UserCheck, IndianRupee, TrendingUp, Bell, LogOut, Scale, Flame, Target, Timer } from "lucide-react";
+import { useBranding } from "@/hooks/use-branding";
+import { Users, UserCheck, IndianRupee, TrendingUp, Bell, LogOut, Scale, Flame, Target, Dumbbell } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { MemberCard } from "@/components/MemberCard";
 import { BottomNav } from "@/components/BottomNav";
-import { useState } from "react";
+import { LiveBackground } from "@/components/LiveBackground";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -35,6 +36,7 @@ function DashboardPage() {
 
 function AdminDashboard() {
   const { profile, signOut } = useAuth();
+  const { appName, logoUrl } = useBranding();
   const [members, setMembers] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, todayVisitors: 0, pendingFees: 0, revenue: 0 });
 
@@ -84,25 +86,31 @@ function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-lg px-4 py-3">
+    <div className="relative min-h-screen pb-20 overflow-hidden">
+      <LiveBackground />
+      <header className="sticky top-0 z-40 border-b border-sky/20 bg-card/70 backdrop-blur-xl px-4 py-3">
         <div className="mx-auto max-w-lg flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-heading tracking-widest text-primary">FEET & FREAKK</h1>
-            <p className="text-xs text-muted-foreground font-body">Welcome, {profile?.name || "Admin"}</p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-primary shadow-glow overflow-hidden">
+              {logoUrl ? <img src={logoUrl} alt={appName} className="h-full w-full object-cover" /> : <Dumbbell className="h-6 w-6 text-primary-foreground" />}
+            </div>
+            <div>
+              <h1 className="text-2xl font-heading tracking-widest bg-gradient-primary bg-clip-text text-transparent">{appName.toUpperCase()}</h1>
+              <p className="text-xs text-muted-foreground font-body">Welcome, {profile?.name || "Admin"}</p>
+            </div>
           </div>
           <div className="flex gap-2">
-            <button className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground">
+            <button className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/60 text-sky ring-1 ring-sky/20">
               <Bell className="h-5 w-5" />
             </button>
-            <button onClick={signOut} className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground hover:text-destructive">
+            <button onClick={signOut} className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/60 text-foreground hover:text-destructive ring-1 ring-border">
               <LogOut className="h-5 w-5" />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 py-4 space-y-4">
+      <main className="relative z-10 mx-auto max-w-lg px-4 py-4 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <StatCard title="Total Members" value={stats.total} icon={Users} trend="+12 this month" variant="ember" />
           <StatCard title="Today Visitors" value={stats.todayVisitors} icon={UserCheck} variant="success" />
@@ -112,7 +120,7 @@ function AdminDashboard() {
 
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-heading tracking-wider">MEMBERS</h2>
+            <h2 className="text-xl font-heading tracking-wider text-sky">MEMBERS</h2>
             <span className="text-xs text-muted-foreground font-body">{members.length} total</span>
           </div>
           <div className="space-y-3">
@@ -156,13 +164,10 @@ function MemberDashboard() {
   const totalDue = fees.filter((f: any) => f.status === "pending").reduce((s: number, f: any) => s + Number(f.amount), 0);
 
   return (
-    <div className="min-h-screen bg-background pb-20 relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 -right-20 w-72 h-72 bg-primary/3 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/3 -left-20 w-96 h-96 bg-ember/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
-      </div>
+    <div className="relative min-h-screen pb-20 overflow-hidden">
+      <LiveBackground />
 
-      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-lg px-4 py-3">
+      <header className="sticky top-0 z-40 border-b border-sky/20 bg-card/70 backdrop-blur-xl px-4 py-3">
         <div className="mx-auto max-w-lg flex items-center justify-between">
           <div className="flex items-center gap-3">
             {profile?.photo_url ? (

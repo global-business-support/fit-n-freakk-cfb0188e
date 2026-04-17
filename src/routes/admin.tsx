@@ -1,10 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
+import { LiveBackground } from "@/components/LiveBackground";
+import { VideoPlayer } from "@/components/VideoPlayer";
 import { useAuth } from "@/hooks/use-auth";
-import { useEffect, useState } from "react";
+import { useBranding } from "@/hooks/use-branding";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Check, X, IndianRupee, Users, Dumbbell, Plus, Trash2, Cog, ShieldCheck, CalendarDays, Play, Video } from "lucide-react";
+import { Check, X, IndianRupee, Users, Dumbbell, Plus, Trash2, Cog, ShieldCheck, CalendarDays, Settings as SettingsIcon, Loader2, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,12 +26,22 @@ const DAY_NAMES = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function AdminPage() {
   const { user, role, loading } = useAuth();
+  const { appName, logoUrl, refresh: refreshBranding } = useBranding();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"fees" | "exercises" | "machines" | "roles" | "schedules">("fees");
+  const [tab, setTab] = useState<"fees" | "exercises" | "machines" | "roles" | "schedules" | "settings">("fees");
   const [pendingFees, setPendingFees] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [exercises, setExercises] = useState<any[]>([]);
   const [machines, setMachines] = useState<any[]>([]);
+
+  // Branding state
+  const [brandName, setBrandName] = useState("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setBrandName(appName);
+  }, [appName]);
 
   // New exercise form
   const [newEx, setNewEx] = useState({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gender_target: "both" });
@@ -155,24 +168,63 @@ function AdminPage() {
 
   if (loading) return null;
 
+  const saveAppName = async () => {
+    await supabase.from("app_settings").upsert(
+      { key: "app_name", value: brandName, updated_at: new Date().toISOString(), updated_by: user?.id },
+      { onConflict: "key" }
+    );
+    await refreshBranding();
+  };
+
+  const uploadLogo = async (file: File) => {
+    if (!file || !user) return;
+    setUploadingLogo(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `logo-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("branding")
+        .upload(path, file, { cacheControl: "3600", upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("branding").getPublicUrl(path);
+      await supabase.from("app_settings").upsert(
+        { key: "logo_url", value: pub.publicUrl, updated_at: new Date().toISOString(), updated_by: user.id },
+        { onConflict: "key" }
+      );
+      await refreshBranding();
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const removeLogo = async () => {
+    await supabase.from("app_settings").upsert(
+      { key: "logo_url", value: "", updated_at: new Date().toISOString(), updated_by: user?.id },
+      { onConflict: "key" }
+    );
+    await refreshBranding();
+  };
+
   const tabs = [
     { key: "fees" as const, label: "Fees", icon: IndianRupee, count: pendingFees.length },
     { key: "exercises" as const, label: "Exercises", icon: Dumbbell, count: exercises.length },
     { key: "machines" as const, label: "Machines", icon: Cog, count: machines.length },
     { key: "schedules" as const, label: "Schedule", icon: CalendarDays, count: 0 },
     { key: "roles" as const, label: "Roles", icon: ShieldCheck, count: 0 },
+    { key: "settings" as const, label: "Brand", icon: SettingsIcon, count: 0 },
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-lg px-4 py-3">
+    <div className="relative min-h-screen pb-20 overflow-hidden">
+      <LiveBackground />
+      <header className="sticky top-0 z-40 border-b border-sky/20 bg-card/70 backdrop-blur-xl px-4 py-3">
         <div className="mx-auto max-w-lg">
-          <h1 className="text-2xl font-heading tracking-wider">ADMIN PANEL</h1>
-          <p className="text-xs text-muted-foreground font-body">Manage everything</p>
+          <h1 className="text-2xl font-heading tracking-wider bg-gradient-primary bg-clip-text text-transparent">ADMIN PANEL</h1>
+          <p className="text-xs text-muted-foreground font-body">Manage everything in {appName}</p>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 py-4 space-y-4">
+      <main className="relative z-10 mx-auto max-w-lg px-4 py-4 space-y-4">
         {/* Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {tabs.map((t) => (
@@ -271,9 +323,7 @@ function AdminPage() {
                     </div>
                     {ex.sets && <p className="text-xs text-primary font-body mt-1">{ex.sets} sets × {ex.reps}</p>}
                     {ex.video_url && (
-                      <a href={ex.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-ember font-body mt-1">
-                        <Video className="h-3 w-3" /> Video
-                      </a>
+                      <div className="mt-2"><VideoPlayer url={ex.video_url} title={ex.name} size="sm" /></div>
                     )}
                   </div>
                   <button onClick={() => deleteExercise(ex.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
@@ -313,9 +363,7 @@ function AdminPage() {
                     <p className="font-heading text-lg tracking-wider">{m.name}</p>
                     {m.description && <p className="text-xs text-muted-foreground font-body mt-1">{m.description}</p>}
                     {m.video_url && (
-                      <a href={m.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-ember font-body mt-1">
-                        <Video className="h-3 w-3" /> Video
-                      </a>
+                      <div className="mt-2"><VideoPlayer url={m.video_url} title={m.name} size="sm" /></div>
                     )}
                   </div>
                   <button onClick={() => deleteMachine(m.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
@@ -417,6 +465,70 @@ function AdminPage() {
               <p className="text-[10px] text-muted-foreground font-body">
                 Manager = can manage exercises, machines & members. Viewer = can only watch videos & browse machines.
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Branding / Settings */}
+        {tab === "settings" && role === "admin" && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-sky/30 bg-gradient-card p-4 space-y-4 shadow-card">
+              <div>
+                <h3 className="font-heading text-lg tracking-wider text-sky mb-1">APP LOGO</h3>
+                <p className="text-xs text-muted-foreground font-body">Upload your gym logo (square image works best)</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="h-20 w-20 rounded-2xl bg-gradient-primary ring-2 ring-sky/30 overflow-hidden flex items-center justify-center shrink-0">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="h-full w-full object-cover" />
+                  ) : (
+                    <ImageIcon className="h-8 w-8 text-primary-foreground" />
+                  )}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])}
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={uploadingLogo}
+                    className="w-full bg-gradient-primary text-primary-foreground"
+                  >
+                    {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ImageIcon className="h-4 w-4 mr-1" /> Upload Logo</>}
+                  </Button>
+                  {logoUrl && (
+                    <Button size="sm" variant="outline" onClick={removeLogo} className="w-full">
+                      <Trash2 className="h-4 w-4 mr-1" /> Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-sky/30 bg-gradient-card p-4 space-y-3 shadow-card">
+              <div>
+                <h3 className="font-heading text-lg tracking-wider text-sky mb-1">APP NAME</h3>
+                <p className="text-xs text-muted-foreground font-body">Shown across the app & login screen</p>
+              </div>
+              <Input
+                placeholder="e.g. Feet & Freakk"
+                className="bg-secondary/60 border-border h-11"
+                value={brandName}
+                onChange={(e) => setBrandName(e.target.value)}
+              />
+              <Button
+                size="sm"
+                onClick={saveAppName}
+                disabled={!brandName.trim() || brandName === appName}
+                className="w-full bg-gradient-primary text-primary-foreground"
+              >
+                Save Name
+              </Button>
             </div>
           </div>
         )}
