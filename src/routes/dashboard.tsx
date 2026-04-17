@@ -2,15 +2,16 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/hooks/use-branding";
-import { Users, UserCheck, IndianRupee, TrendingUp, Bell, LogOut, Scale, Flame, Target, Dumbbell, Calendar as CalIcon, ChevronRight } from "lucide-react";
+import { Users, UserCheck, IndianRupee, TrendingUp, Bell, LogOut, Scale, Flame, Target, Dumbbell, Calendar as CalIcon, ChevronRight, Search } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { MemberCard } from "@/components/MemberCard";
 import { MemberHeroCard } from "@/components/MemberHeroCard";
 import { TodayWorkoutCard } from "@/components/TodayWorkoutCard";
+import { MemberEditDialog } from "@/components/MemberEditDialog";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard")({
@@ -41,17 +42,21 @@ function AdminDashboard() {
   const { profile, signOut } = useAuth();
   const { appName, logoUrl } = useBranding();
   const [members, setMembers] = useState<any[]>([]);
+  const [exercises, setExercises] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, todayVisitors: 0, pendingFees: 0, revenue: 0 });
+  const [editingMember, setEditingMember] = useState<any | null>(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
-    const [profilesRes, feesRes, attendanceRes] = await Promise.all([
+    const [profilesRes, feesRes, attendanceRes, exRes] = await Promise.all([
       supabase.from("profiles").select("*"),
       supabase.from("fees").select("*"),
       supabase.from("attendance").select("*").gte("checked_in_at", new Date().toISOString().split("T")[0]),
+      supabase.from("exercises").select("*").order("body_part"),
     ]);
 
     const profiles = profilesRes.data || [];
@@ -67,6 +72,7 @@ function AdminDashboard() {
       const due = memberFees.filter((f: any) => f.status === "pending").reduce((s: number, f: any) => s + Number(f.amount), 0);
       const lastVisit = todayAttendance.find((a: any) => a.user_id === p.user_id) ? "Today" : "—";
       return {
+        ...p,
         name: p.name,
         age: p.age || 0,
         height: p.height || "—",
@@ -80,6 +86,8 @@ function AdminDashboard() {
       };
     }));
 
+    setExercises(exRes.data || []);
+
     setStats({
       total: profiles.length,
       todayVisitors: todayAttendance.length,
@@ -87,6 +95,16 @@ function AdminDashboard() {
       revenue: approved.reduce((s: number, f: any) => s + Number(f.amount), 0),
     });
   };
+
+  const filteredMembers = members.filter((m: any) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      m.name?.toLowerCase().includes(q) ||
+      m.member_id?.toLowerCase().includes(q) ||
+      m.phone?.includes(q)
+    );
+  });
 
   return (
     <div className="relative min-h-screen pb-20 overflow-hidden">
@@ -124,20 +142,42 @@ function AdminDashboard() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-heading tracking-wider text-sky">MEMBERS</h2>
-            <span className="text-xs text-muted-foreground font-body">{members.length} total</span>
+            <span className="text-xs text-muted-foreground font-body">{filteredMembers.length} of {members.length}</span>
+          </div>
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, Member ID or phone..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 bg-card border-border h-11"
+            />
           </div>
           <div className="space-y-3">
-            {members.map((member) => (
-              <MemberCard key={member.name} {...member} />
+            {filteredMembers.map((member: any) => (
+              <MemberCard
+                key={member.user_id || member.name}
+                {...member}
+                memberId={member.member_id}
+                onEdit={() => setEditingMember(member)}
+              />
             ))}
-            {members.length === 0 && (
+            {filteredMembers.length === 0 && (
               <div className="py-12 text-center text-muted-foreground font-body">
-                <p>No members yet</p>
+                <p>{search ? "No members match your search" : "No members yet"}</p>
               </div>
             )}
           </div>
         </div>
       </main>
+      {editingMember && (
+        <MemberEditDialog
+          member={editingMember}
+          exercises={exercises}
+          onClose={() => setEditingMember(null)}
+          onSaved={loadData}
+        />
+      )}
       <BottomNav />
     </div>
   );

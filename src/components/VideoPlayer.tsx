@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Play, X } from "lucide-react";
+import { Play, X, Columns2 } from "lucide-react";
 
 /**
- * Convert any YouTube URL (watch, youtu.be, shorts, embed) to an embed URL.
- * Returns null if it's not a YouTube URL.
+ * Convert any YouTube URL to an embed URL — plays in-app, no new tab.
  */
 function toYouTubeEmbed(url: string): string | null {
   if (!url) return null;
@@ -28,7 +27,6 @@ function toYouTubeEmbed(url: string): string | null {
   }
 }
 
-/** Convert Google Drive share URL to preview/embed URL. */
 function toDriveEmbed(url: string): string | null {
   if (!url || !url.includes("drive.google.com")) return null;
   const m = url.match(/\/file\/d\/([^/]+)/) || url.match(/[?&]id=([^&]+)/);
@@ -36,19 +34,58 @@ function toDriveEmbed(url: string): string | null {
   return `https://drive.google.com/file/d/${m[1]}/preview`;
 }
 
+function getEmbedSrc(url: string): { embed: string | null; isDirect: boolean } {
+  const youtube = toYouTubeEmbed(url);
+  const drive = toDriveEmbed(url);
+  const embed = youtube ?? drive;
+  const isDirect = !embed && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+  return { embed, isDirect };
+}
+
+function VideoFrame({ url, title }: { url: string; title?: string }) {
+  const { embed, isDirect } = getEmbedSrc(url);
+  if (embed) {
+    return (
+      <iframe
+        src={embed}
+        title={title || "Video"}
+        className="absolute inset-0 h-full w-full"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+      />
+    );
+  }
+  if (isDirect) {
+    return (
+      <video
+        src={url}
+        controls
+        autoPlay
+        playsInline
+        className="absolute inset-0 h-full w-full"
+      />
+    );
+  }
+  return (
+    <div className="flex h-full items-center justify-center text-white/70 text-sm font-body p-6 text-center">
+      Unsupported video URL.
+    </div>
+  );
+}
+
 interface VideoPlayerProps {
   url: string;
   title?: string;
   trigger?: React.ReactNode;
   size?: "sm" | "md" | "lg";
+  /** Optional second video for split-screen comparison */
+  compareOptions?: Array<{ url: string; title?: string }>;
 }
 
-export function VideoPlayer({ url, title, trigger, size = "md" }: VideoPlayerProps) {
+export function VideoPlayer({ url, title, trigger, size = "md", compareOptions }: VideoPlayerProps) {
   const [open, setOpen] = useState(false);
-  const youtube = toYouTubeEmbed(url);
-  const drive = toDriveEmbed(url);
-  const embed = youtube ?? drive;
-  const isDirect = !embed && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+  const [showCompare, setShowCompare] = useState(false);
+  const [secondVideo, setSecondVideo] = useState<{ url: string; title?: string } | null>(null);
 
   if (!url) return null;
 
@@ -56,6 +93,14 @@ export function VideoPlayer({ url, title, trigger, size = "md" }: VideoPlayerPro
     size === "sm" ? "h-8 w-8" : size === "lg" ? "h-12 w-12" : "h-10 w-10";
   const iconSize =
     size === "sm" ? "h-4 w-4" : size === "lg" ? "h-6 w-6" : "h-5 w-5";
+
+  const close = () => {
+    setOpen(false);
+    setShowCompare(false);
+    setSecondVideo(null);
+  };
+
+  const availableCompares = (compareOptions || []).filter((c) => c.url && c.url !== url);
 
   return (
     <>
@@ -74,47 +119,78 @@ export function VideoPlayer({ url, title, trigger, size = "md" }: VideoPlayerPro
 
       {open && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-fade-in"
-          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-fade-in"
+          onClick={close}
         >
           <div
-            className="relative w-full max-w-3xl"
+            className="relative w-full max-w-6xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-white font-heading text-lg tracking-wider truncate">
-                {title || "VIDEO"}
+            <div className="flex items-center justify-between mb-3 gap-2">
+              <p className="text-white font-heading text-lg tracking-wider truncate flex-1">
+                {secondVideo ? `${title || "VIDEO"}  ⇄  ${secondVideo.title || "COMPARE"}` : (title || "VIDEO")}
               </p>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20"
-                aria-label="Close"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                {availableCompares.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCompare((s) => !s)}
+                    className="flex h-9 items-center gap-1.5 rounded-lg bg-sky/20 px-3 text-xs font-body uppercase tracking-wider text-sky hover:bg-sky/30"
+                  >
+                    <Columns2 className="h-4 w-4" />
+                    {secondVideo ? "Single" : "Compare"}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={close}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20"
+                  aria-label="Close"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
-            <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-primary/30 bg-black shadow-glow">
-              {embed ? (
-                <iframe
-                  src={embed}
-                  title={title || "Video"}
-                  className="absolute inset-0 h-full w-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              ) : isDirect ? (
-                <video
-                  src={url}
-                  controls
-                  autoPlay
-                  playsInline
-                  className="absolute inset-0 h-full w-full"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-white/70 text-sm font-body p-6 text-center">
-                  Unsupported video URL. Use a YouTube, Google Drive, or direct
-                  video link.
+
+            {/* Compare picker */}
+            {showCompare && availableCompares.length > 0 && (
+              <div className="mb-3 rounded-xl bg-white/5 border border-sky/20 p-2 flex gap-2 overflow-x-auto">
+                {availableCompares.map((opt, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => { setSecondVideo(opt); setShowCompare(false); }}
+                    className="shrink-0 rounded-lg bg-sky/10 hover:bg-sky/20 px-3 py-2 text-xs font-body text-white border border-sky/20"
+                  >
+                    {opt.title || `Video ${i + 1}`}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Video grid: 1 or 2 panes */}
+            <div className={`grid gap-3 ${secondVideo ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}>
+              <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-primary/30 bg-black shadow-glow">
+                <VideoFrame url={url} title={title} />
+                {secondVideo && (
+                  <div className="absolute top-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-body uppercase tracking-wider text-white">
+                    {title || "Video 1"}
+                  </div>
+                )}
+              </div>
+              {secondVideo && (
+                <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-sky/40 bg-black shadow-glow">
+                  <VideoFrame url={secondVideo.url} title={secondVideo.title} />
+                  <div className="absolute top-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-body uppercase tracking-wider text-sky">
+                    {secondVideo.title || "Video 2"}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSecondVideo(null)}
+                    className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-md bg-black/60 text-white hover:bg-black/80"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               )}
             </div>

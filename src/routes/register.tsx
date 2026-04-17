@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, User, Phone, ChevronLeft, Loader2, Copy, CheckCircle2, BadgeCheck } from "lucide-react";
+import { Camera, User, Phone, ChevronLeft, Loader2, Copy, CheckCircle2, BadgeCheck, MessageCircle, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,9 +18,9 @@ export const Route = createFileRoute("/register")({
   component: RegisterPage,
 });
 
-// Generate Member ID: first 4 letters of name (uppercase) + last 4 digits of phone
-function generateMemberId(name: string, phone: string): string {
-  const nameSlug = (name.replace(/[^a-zA-Z]/g, "").slice(0, 4) || "USER").toUpperCase().padEnd(4, "X");
+// Generate Member ID: first 4 letters of FIRST name (uppercase) + last 4 digits of phone
+function generateMemberId(firstName: string, phone: string): string {
+  const nameSlug = (firstName.replace(/[^a-zA-Z]/g, "").slice(0, 4) || "USER").toUpperCase().padEnd(4, "X");
   const digits = phone.replace(/\D/g, "");
   const phoneSlug = digits.slice(-4).padStart(4, "0");
   return `${nameSlug}${phoneSlug}`;
@@ -31,7 +31,8 @@ function RegisterPage() {
   const [gender, setGender] = useState<"male" | "female">("male");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [age, setAge] = useState("");
   const [height, setHeight] = useState("");
@@ -41,6 +42,8 @@ function RegisterPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [memberId, setMemberId] = useState<string | null>(null);
+  const [savedEmail, setSavedEmail] = useState<string>("");
+  const [savedPhone, setSavedPhone] = useState<string>("");
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
   const { signUp } = useAuth();
@@ -61,11 +64,19 @@ function RegisterPage() {
       setError("Profile photo is mandatory!");
       return;
     }
+    if (!firstName.trim() || !lastName.trim()) {
+      setError("First name and last name are required!");
+      return;
+    }
     setError("");
     setIsLoading(true);
 
+    const fullName = `${firstName.trim()} ${lastName.trim()}`;
+
     const { error: signUpError } = await signUp(email, password, {
-      name,
+      name: fullName,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
       phone,
       age: parseInt(age),
       height,
@@ -91,10 +102,9 @@ function RegisterPage() {
       }
     }
 
-    // Generate Member ID, save to profile, and show success screen before navigating
-    const id = generateMemberId(name, phone);
+    // Generate Member ID from FIRST name + last 4 digits of phone
+    const id = generateMemberId(firstName, phone);
     if (user) {
-      // Try with collision-resilient suffix if needed
       let finalId = id;
       let attempt = 0;
       while (attempt < 5) {
@@ -110,6 +120,8 @@ function RegisterPage() {
     } else {
       setMemberId(id);
     }
+    setSavedEmail(email);
+    setSavedPhone(phone);
     setIsLoading(false);
   };
 
@@ -122,6 +134,24 @@ function RegisterPage() {
     await navigator.clipboard.writeText(memberId);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareOnWhatsApp = () => {
+    if (!memberId) return;
+    const message = encodeURIComponent(
+      `🏋️ Welcome to Feet & Freakk!\n\n` +
+      `Your Member ID: *${memberId}*\n` +
+      `Login Email: ${savedEmail}\n\n` +
+      `Use your email and password to login at the app.\n` +
+      `Show this Member ID at the gym front desk for quick check-in.\n\n` +
+      `Train hard. Track smarter. 💪`
+    );
+    // Pre-fill WhatsApp with the user's own phone number so they can send to themselves
+    const cleanPhone = savedPhone.replace(/\D/g, "");
+    const url = cleanPhone
+      ? `https://wa.me/${cleanPhone}?text=${message}`
+      : `https://wa.me/?text=${message}`;
+    window.open(url, "_blank");
   };
 
   // Success screen with Member ID
@@ -141,7 +171,7 @@ function RegisterPage() {
               WELCOME ABOARD
             </h1>
             <p className="mt-2 text-sm text-muted-foreground font-body">
-              Your account is ready. Save your Member ID below.
+              {firstName}, your account is ready. Save your Member ID below.
             </p>
           </div>
 
@@ -162,7 +192,24 @@ function RegisterPage() {
               {copied ? "Copied" : "Copy ID"}
             </button>
             <p className="text-[11px] text-muted-foreground font-body pt-2 border-t border-border">
-              Use this ID at the gym front desk for quick check-in. Login still uses your email.
+              Login uses your email <span className="text-sky">{savedEmail}</span>.
+              Show this ID at the gym for quick check-in.
+            </p>
+          </div>
+
+          {/* Share to WhatsApp - so user can save credentials on their phone */}
+          <div className="space-y-2">
+            <Button
+              type="button"
+              onClick={shareOnWhatsApp}
+              size="lg"
+              className="w-full bg-success hover:bg-success/90 text-success-foreground font-semibold"
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Send to WhatsApp
+            </Button>
+            <p className="text-[10px] text-muted-foreground font-body inline-flex items-center gap-1.5">
+              <Mail className="h-3 w-3" /> Save your Member ID — you'll need it for gym check-in
             </p>
           </div>
 
@@ -251,13 +298,23 @@ function RegisterPage() {
         )}
 
         <form onSubmit={handleRegister} className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-xs uppercase tracking-wider font-body">Full Name</Label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Enter your name" className="pl-9 bg-secondary border-border h-11" value={name} onChange={(e) => setName(e.target.value)} required />
+          {/* First + Last name side-by-side */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider font-body">First Name</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Rahul" className="pl-9 bg-secondary border-border h-11" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider font-body">Last Name</Label>
+              <Input placeholder="Sharma" className="bg-secondary border-border h-11" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
             </div>
           </div>
+          <p className="text-[10px] text-sky/80 font-body -mt-2">
+            💡 Member ID = first 4 letters of first name + last 4 digits of phone
+          </p>
 
           <div className="space-y-2">
             <Label className="text-xs uppercase tracking-wider font-body">Phone Number</Label>

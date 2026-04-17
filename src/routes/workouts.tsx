@@ -156,7 +156,14 @@ function WorkoutsPage() {
                   {expandedDay === day && (
                     <div className="border-t border-border px-4 pb-4 pt-2 space-y-3">
                       {dayExercises.map((s: any) => (
-                        <ExerciseCard key={s.id} exercise={s.exercises} />
+                        <ExerciseCard
+                          key={s.id}
+                          exercise={s.exercises}
+                          compareOptions={dayExercises
+                            .map((d: any) => d.exercises)
+                            .filter((e: any) => e?.video_url && e.id !== s.exercises?.id)
+                            .map((e: any) => ({ url: e.video_url, title: e.name }))}
+                        />
                       ))}
                     </div>
                   )}
@@ -201,7 +208,13 @@ function WorkoutsPage() {
                   {expandedPart === part && (
                     <div className="border-t border-border px-4 pb-4 pt-2 space-y-3">
                       {partExercises.map((exercise: any) => (
-                        <ExerciseCard key={exercise.id} exercise={exercise} />
+                        <ExerciseCard
+                          key={exercise.id}
+                          exercise={exercise}
+                          compareOptions={partExercises
+                            .filter((e: any) => e.video_url && e.id !== exercise.id)
+                            .map((e: any) => ({ url: e.video_url, title: e.name }))}
+                        />
                       ))}
                     </div>
                   )}
@@ -222,7 +235,7 @@ function WorkoutsPage() {
   );
 }
 
-function ExerciseCard({ exercise }: { exercise: any }) {
+function ExerciseCard({ exercise, compareOptions }: { exercise: any; compareOptions?: Array<{ url: string; title?: string }> }) {
   if (!exercise) return null;
   return (
     <div className="rounded-lg bg-secondary/50 p-3">
@@ -236,7 +249,7 @@ function ExerciseCard({ exercise }: { exercise: any }) {
           </div>
         </div>
         {exercise.video_url ? (
-          <VideoPlayer url={exercise.video_url} title={exercise.name} size="sm" />
+          <VideoPlayer url={exercise.video_url} title={exercise.name} size="sm" compareOptions={compareOptions} />
         ) : (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground/30 shrink-0">
             <Play className="h-4 w-4" />
