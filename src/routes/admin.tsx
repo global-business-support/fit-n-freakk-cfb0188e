@@ -1,10 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
+import { LiveBackground } from "@/components/LiveBackground";
+import { VideoPlayer } from "@/components/VideoPlayer";
 import { useAuth } from "@/hooks/use-auth";
-import { useEffect, useState } from "react";
+import { useBranding } from "@/hooks/use-branding";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Check, X, IndianRupee, Users, Dumbbell, Plus, Trash2, Cog, ShieldCheck, CalendarDays, Play, Video } from "lucide-react";
+import { Check, X, IndianRupee, Users, Dumbbell, Plus, Trash2, Cog, ShieldCheck, CalendarDays, Settings as SettingsIcon, Loader2, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,12 +26,22 @@ const DAY_NAMES = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function AdminPage() {
   const { user, role, loading } = useAuth();
+  const { appName, logoUrl, refresh: refreshBranding } = useBranding();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"fees" | "exercises" | "machines" | "roles" | "schedules">("fees");
+  const [tab, setTab] = useState<"fees" | "exercises" | "machines" | "roles" | "schedules" | "settings">("fees");
   const [pendingFees, setPendingFees] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [exercises, setExercises] = useState<any[]>([]);
   const [machines, setMachines] = useState<any[]>([]);
+
+  // Branding state
+  const [brandName, setBrandName] = useState("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setBrandName(appName);
+  }, [appName]);
 
   // New exercise form
   const [newEx, setNewEx] = useState({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gender_target: "both" });
