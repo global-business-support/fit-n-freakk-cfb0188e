@@ -242,6 +242,18 @@
   pointer-events: none;
 }
 
+/* Slow continuous Y-axis 3D rotation for the profile card */
+@keyframes card-rotate-y {
+  0%   { transform: rotateY(-8deg) rotateX(2deg); }
+  50%  { transform: rotateY(8deg)  rotateX(-2deg); }
+  100% { transform: rotateY(-8deg) rotateX(2deg); }
+}
+.animate-card-rotate {
+  animation: card-rotate-y 9s ease-in-out infinite;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
 .bg-gradient-primary { background-image: var(--gradient-primary); }
 .bg-gradient-card { background-image: var(--gradient-card); }
 .shadow-glow { box-shadow: var(--shadow-glow); }
