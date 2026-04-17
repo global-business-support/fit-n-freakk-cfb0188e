@@ -11,8 +11,11 @@ import { MemberEditDialog } from "@/components/MemberEditDialog";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { HomeBackground } from "@/components/HomeBackground";
+import { AttendanceToggle } from "@/components/AttendanceToggle";
+import { WorkoutCalendar } from "@/components/WorkoutCalendar";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
+import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
