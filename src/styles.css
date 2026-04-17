@@ -167,10 +167,17 @@
   50% { opacity: 0.8; }
 }
 
+@keyframes ken-burns {
+  0% { transform: scale(1.1) translate(0, 0); }
+  50% { transform: scale(1.18) translate(-2%, -1%); }
+  100% { transform: scale(1.1) translate(0, 0); }
+}
+
 .animate-aurora { animation: aurora-drift 18s ease-in-out infinite; }
 .animate-aurora-slow { animation: aurora-drift-2 24s ease-in-out infinite; }
 .animate-float-slow { animation: float-slow 12s ease-in-out infinite; }
 .animate-pulse-glow { animation: pulse-glow 4s ease-in-out infinite; }
+.animate-ken-burns { animation: ken-burns 30s ease-in-out infinite; }
 
 .bg-gradient-primary { background-image: var(--gradient-primary); }
 .bg-gradient-card { background-image: var(--gradient-card); }
