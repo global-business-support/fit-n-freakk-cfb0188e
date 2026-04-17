@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, User, Phone, ChevronLeft, Loader2 } from "lucide-react";
+import { Camera, User, Phone, ChevronLeft, Loader2, Copy, CheckCircle2, BadgeCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,14 @@ export const Route = createFileRoute("/register")({
   }),
   component: RegisterPage,
 });
+
+// Generate Member ID: first 4 letters of name (uppercase) + last 4 digits of phone
+function generateMemberId(name: string, phone: string): string {
+  const nameSlug = (name.replace(/[^a-zA-Z]/g, "").slice(0, 4) || "USER").toUpperCase().padEnd(4, "X");
+  const digits = phone.replace(/\D/g, "");
+  const phoneSlug = digits.slice(-4).padStart(4, "0");
+  return `${nameSlug}${phoneSlug}`;
+}
 
 function RegisterPage() {
   const [userType, setUserType] = useState<"member" | "sub_user">("member");
