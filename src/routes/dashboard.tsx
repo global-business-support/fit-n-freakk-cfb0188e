@@ -42,17 +42,21 @@ function AdminDashboard() {
   const { profile, signOut } = useAuth();
   const { appName, logoUrl } = useBranding();
   const [members, setMembers] = useState<any[]>([]);
+  const [exercises, setExercises] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, todayVisitors: 0, pendingFees: 0, revenue: 0 });
+  const [editingMember, setEditingMember] = useState<any | null>(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
-    const [profilesRes, feesRes, attendanceRes] = await Promise.all([
+    const [profilesRes, feesRes, attendanceRes, exRes] = await Promise.all([
       supabase.from("profiles").select("*"),
       supabase.from("fees").select("*"),
       supabase.from("attendance").select("*").gte("checked_in_at", new Date().toISOString().split("T")[0]),
+      supabase.from("exercises").select("*").order("body_part"),
     ]);
 
     const profiles = profilesRes.data || [];
@@ -68,6 +72,7 @@ function AdminDashboard() {
       const due = memberFees.filter((f: any) => f.status === "pending").reduce((s: number, f: any) => s + Number(f.amount), 0);
       const lastVisit = todayAttendance.find((a: any) => a.user_id === p.user_id) ? "Today" : "—";
       return {
+        ...p,
         name: p.name,
         age: p.age || 0,
         height: p.height || "—",
@@ -81,6 +86,8 @@ function AdminDashboard() {
       };
     }));
 
+    setExercises(exRes.data || []);
+
     setStats({
       total: profiles.length,
       todayVisitors: todayAttendance.length,
@@ -88,6 +95,16 @@ function AdminDashboard() {
       revenue: approved.reduce((s: number, f: any) => s + Number(f.amount), 0),
     });
   };
+
+  const filteredMembers = members.filter((m: any) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      m.name?.toLowerCase().includes(q) ||
+      m.member_id?.toLowerCase().includes(q) ||
+      m.phone?.includes(q)
+    );
+  });
 
   return (
     <div className="relative min-h-screen pb-20 overflow-hidden">
