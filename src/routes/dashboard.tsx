@@ -164,13 +164,10 @@ function MemberDashboard() {
   const totalDue = fees.filter((f: any) => f.status === "pending").reduce((s: number, f: any) => s + Number(f.amount), 0);
 
   return (
-    <div className="min-h-screen bg-background pb-20 relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 -right-20 w-72 h-72 bg-primary/3 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/3 -left-20 w-96 h-96 bg-ember/3 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
-      </div>
+    <div className="relative min-h-screen pb-20 overflow-hidden">
+      <LiveBackground />
 
-      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-lg px-4 py-3">
+      <header className="sticky top-0 z-40 border-b border-sky/20 bg-card/70 backdrop-blur-xl px-4 py-3">
         <div className="mx-auto max-w-lg flex items-center justify-between">
           <div className="flex items-center gap-3">
             {profile?.photo_url ? (
