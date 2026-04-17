@@ -3,16 +3,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dumbbell, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Dumbbell, BadgeCheck, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/hooks/use-branding";
+import { supabase } from "@/integrations/supabase/client";
 import loginBg from "@/assets/login-bg.jpg";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Login — Feet & Freakk" },
-      { name: "description", content: "Sign in to your gym account" },
+      { title: "Member Login — Feet & Freakk" },
+      { name: "description", content: "Sign in with your Member ID" },
     ],
   }),
   component: LoginPage,
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const [memberId, setMemberId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -32,25 +33,55 @@ function LoginPage() {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    const { error } = await signIn(email, password);
-    if (error) {
-      setError(error);
+
+    const cleaned = memberId.trim();
+    if (!cleaned) {
+      setError("Please enter your Member ID");
       setIsLoading(false);
-    } else {
-      navigate({ to: "/dashboard" });
+      return;
+    }
+
+    try {
+      let emailToUse: string | null = null;
+
+      // If user typed an email (admin), use it directly
+      if (cleaned.includes("@")) {
+        emailToUse = cleaned;
+      } else {
+        // Otherwise treat as Member ID and look up the email
+        const { data, error: rpcErr } = await supabase.rpc("get_email_by_member_id", {
+          _member_id: cleaned,
+        });
+        if (rpcErr || !data) {
+          setError("Member ID not found. Please check and try again.");
+          setIsLoading(false);
+          return;
+        }
+        emailToUse = data as string;
+      }
+
+      const { error: signErr } = await signIn(emailToUse, password);
+      if (signErr) {
+        setError("Wrong password. Please try again.");
+        setIsLoading(false);
+      } else {
+        navigate({ to: "/dashboard" });
+      }
+    } catch (err: any) {
+      setError(err?.message || "Login failed. Please try again.");
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center px-4 overflow-hidden">
-      {/* Gym girl screensaver background */}
+      {/* Cinematic gym background */}
       <div className="fixed inset-0 z-0">
         <img
           src={loginBg}
           alt="Athletic woman training in dark gym"
           className="absolute inset-0 h-full w-full object-cover scale-110 animate-ken-burns"
         />
-        {/* Cinematic dark blue gradient overlay */}
         <div
           className="absolute inset-0"
           style={{
@@ -58,7 +89,6 @@ function LoginPage() {
               "linear-gradient(180deg, oklch(0.08 0.04 250 / 0.55) 0%, oklch(0.1 0.05 250 / 0.75) 50%, oklch(0.06 0.03 250 / 0.95) 100%)",
           }}
         />
-        {/* Animated glow accents */}
         <div className="absolute top-1/4 -left-20 h-96 w-96 rounded-full bg-primary/30 blur-[140px] animate-aurora" />
         <div className="absolute bottom-0 -right-20 h-96 w-96 rounded-full bg-sky/20 blur-[140px] animate-aurora-slow" />
       </div>
@@ -94,25 +124,28 @@ function LoginPage() {
             onSubmit={handleLogin}
             className="relative space-y-4 rounded-2xl p-6 overflow-hidden"
           >
-            {/* Sweeping shimmer line */}
             <div className="animate-shimmer-sweep" />
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs uppercase tracking-wider font-body text-sky-200">
-                Email
+              <Label htmlFor="memberId" className="text-xs uppercase tracking-wider font-body text-sky-200">
+                Member ID
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-300/80" />
+                <BadgeCheck className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-300/80" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  className="pl-9 bg-white/5 border-sky-300/20 text-white placeholder:text-sky-200/40 h-11"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="memberId"
+                  type="text"
+                  placeholder="e.g. NAME1234"
+                  className="pl-9 bg-white/5 border-sky-300/20 text-white placeholder:text-sky-200/40 h-11 uppercase tracking-wider font-body"
+                  value={memberId}
+                  onChange={(e) => setMemberId(e.target.value)}
+                  autoComplete="username"
                   required
                 />
               </div>
+              <p className="text-[10px] text-sky-200/60 font-body">
+                Admin? Use your email address instead.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -136,6 +169,7 @@ function LoginPage() {
                   className="pl-9 pr-10 bg-white/5 border-sky-300/20 text-white placeholder:text-sky-200/40 h-11"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                   required
                 />
                 <button
@@ -148,16 +182,21 @@ function LoginPage() {
               </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full bg-gradient-primary text-white font-semibold tracking-wider shadow-glow hover:opacity-90" disabled={isLoading}>
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full bg-gradient-primary text-white font-semibold tracking-wider shadow-glow hover:opacity-90"
+              disabled={isLoading}
+            >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "SIGN IN"}
             </Button>
           </form>
         </div>
 
         <p className="text-center text-sm text-sky-200/80 font-body">
-          Don't have an account?{" "}
+          New here?{" "}
           <Link to="/register" className="text-white hover:text-sky-300 underline-offset-4 hover:underline font-semibold">
-            Register
+            Register as Member
           </Link>
         </p>
       </div>
