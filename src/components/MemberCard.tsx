@@ -33,10 +33,12 @@ export function MemberCard({
   const initial = name.charAt(0).toUpperCase();
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-sky/20 bg-gradient-card p-4 shadow-card transition-all duration-300 hover:border-sky/50 hover:shadow-glow hover:-translate-y-0.5">
-      {/* Subtle light-blue glow */}
-      <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-sky/15 blur-2xl pointer-events-none" />
-      <div className="absolute -bottom-16 -left-12 h-32 w-32 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
+    <div className="group relative rounded-2xl shine-border p-[2px] transition-all duration-300 hover:-translate-y-0.5 shadow-card hover:shadow-glow">
+      <div className="shine-border-inner rounded-2xl" />
+      <div className="relative z-[2] rounded-2xl bg-gradient-card p-4 overflow-hidden">
+        {/* Soft halo glows around the card */}
+        <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-sky/20 blur-2xl pointer-events-none animate-pulse-glow" />
+        <div className="absolute -bottom-16 -left-12 h-32 w-32 rounded-full bg-primary/15 blur-2xl pointer-events-none animate-pulse-glow" style={{ animationDelay: "1.5s" }} />
 
       <div className="relative flex items-start gap-3">
         {/* Avatar */}
