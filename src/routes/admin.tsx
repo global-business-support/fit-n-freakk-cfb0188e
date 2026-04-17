@@ -155,24 +155,63 @@ function AdminPage() {
 
   if (loading) return null;
 
+  const saveAppName = async () => {
+    await supabase.from("app_settings").upsert(
+      { key: "app_name", value: brandName, updated_at: new Date().toISOString(), updated_by: user?.id },
+      { onConflict: "key" }
+    );
+    await refreshBranding();
+  };
+
+  const uploadLogo = async (file: File) => {
+    if (!file || !user) return;
+    setUploadingLogo(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `logo-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("branding")
+        .upload(path, file, { cacheControl: "3600", upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("branding").getPublicUrl(path);
+      await supabase.from("app_settings").upsert(
+        { key: "logo_url", value: pub.publicUrl, updated_at: new Date().toISOString(), updated_by: user.id },
+        { onConflict: "key" }
+      );
+      await refreshBranding();
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const removeLogo = async () => {
+    await supabase.from("app_settings").upsert(
+      { key: "logo_url", value: "", updated_at: new Date().toISOString(), updated_by: user?.id },
+      { onConflict: "key" }
+    );
+    await refreshBranding();
+  };
+
   const tabs = [
     { key: "fees" as const, label: "Fees", icon: IndianRupee, count: pendingFees.length },
     { key: "exercises" as const, label: "Exercises", icon: Dumbbell, count: exercises.length },
     { key: "machines" as const, label: "Machines", icon: Cog, count: machines.length },
     { key: "schedules" as const, label: "Schedule", icon: CalendarDays, count: 0 },
     { key: "roles" as const, label: "Roles", icon: ShieldCheck, count: 0 },
+    { key: "settings" as const, label: "Brand", icon: SettingsIcon, count: 0 },
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-lg px-4 py-3">
+    <div className="relative min-h-screen pb-20 overflow-hidden">
+      <LiveBackground />
+      <header className="sticky top-0 z-40 border-b border-sky/20 bg-card/70 backdrop-blur-xl px-4 py-3">
         <div className="mx-auto max-w-lg">
-          <h1 className="text-2xl font-heading tracking-wider">ADMIN PANEL</h1>
-          <p className="text-xs text-muted-foreground font-body">Manage everything</p>
+          <h1 className="text-2xl font-heading tracking-wider bg-gradient-primary bg-clip-text text-transparent">ADMIN PANEL</h1>
+          <p className="text-xs text-muted-foreground font-body">Manage everything in {appName}</p>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 py-4 space-y-4">
+      <main className="relative z-10 mx-auto max-w-lg px-4 py-4 space-y-4">
         {/* Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {tabs.map((t) => (
