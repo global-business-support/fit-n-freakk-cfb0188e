@@ -2,15 +2,16 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/hooks/use-branding";
-import { Users, UserCheck, IndianRupee, TrendingUp, Bell, LogOut, Scale, Flame, Target, Dumbbell, Calendar as CalIcon, ChevronRight } from "lucide-react";
+import { Users, UserCheck, IndianRupee, TrendingUp, Bell, LogOut, Scale, Flame, Target, Dumbbell, Calendar as CalIcon, ChevronRight, Search } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { MemberCard } from "@/components/MemberCard";
 import { MemberHeroCard } from "@/components/MemberHeroCard";
 import { TodayWorkoutCard } from "@/components/TodayWorkoutCard";
+import { MemberEditDialog } from "@/components/MemberEditDialog";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard")({
