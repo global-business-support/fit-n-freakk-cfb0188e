@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
+import { LiveBackground } from "@/components/LiveBackground";
+import { VideoPlayer } from "@/components/VideoPlayer";
 import { Dumbbell, Play, ChevronRight, CalendarDays } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -75,15 +77,16 @@ function WorkoutsPage() {
   }, [schedule]);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-lg px-4 py-3">
+    <div className="relative min-h-screen pb-20 overflow-hidden">
+      <LiveBackground />
+      <header className="sticky top-0 z-40 border-b border-sky/20 bg-card/70 backdrop-blur-xl px-4 py-3">
         <div className="mx-auto max-w-lg">
-          <h1 className="text-2xl font-heading tracking-wider">{isSubUser ? "VIDEOS" : "WORKOUTS"}</h1>
+          <h1 className="text-2xl font-heading tracking-wider bg-gradient-primary bg-clip-text text-transparent">{isSubUser ? "VIDEOS" : "WORKOUTS"}</h1>
           <p className="text-xs text-muted-foreground font-body">{isSubUser ? "Watch exercise videos" : "Your exercise schedule & library"}</p>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 py-4 space-y-4">
+      <main className="relative z-10 mx-auto max-w-lg px-4 py-4 space-y-4">
         {/* Gender Toggle */}
         <div className="grid grid-cols-2 gap-2">
           {(["male", "female"] as const).map((g) => (
@@ -233,9 +236,7 @@ function ExerciseCard({ exercise }: { exercise: any }) {
           </div>
         </div>
         {exercise.video_url ? (
-          <a href={exercise.video_url} target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-lg bg-ember/10 text-ember shrink-0">
-            <Play className="h-4 w-4" />
-          </a>
+          <VideoPlayer url={exercise.video_url} title={exercise.name} size="sm" />
         ) : (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground/30 shrink-0">
             <Play className="h-4 w-4" />
