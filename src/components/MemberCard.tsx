@@ -148,6 +148,7 @@ export function MemberCard({
           </div>
         </div>
       </div>
+      </div>
     </div>
   );
 }
