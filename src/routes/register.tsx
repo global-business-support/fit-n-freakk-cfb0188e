@@ -91,9 +91,25 @@ function RegisterPage() {
       }
     }
 
-    // Generate Member ID and show success screen before navigating
+    // Generate Member ID, save to profile, and show success screen before navigating
     const id = generateMemberId(name, phone);
-    setMemberId(id);
+    if (user) {
+      // Try with collision-resilient suffix if needed
+      let finalId = id;
+      let attempt = 0;
+      while (attempt < 5) {
+        const { error: idErr } = await supabase
+          .from("profiles")
+          .update({ member_id: finalId })
+          .eq("user_id", user.id);
+        if (!idErr) break;
+        attempt++;
+        finalId = `${id}${Math.floor(Math.random() * 90 + 10)}`;
+      }
+      setMemberId(finalId);
+    } else {
+      setMemberId(id);
+    }
     setIsLoading(false);
   };
 

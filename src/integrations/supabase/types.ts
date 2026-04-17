@@ -201,6 +201,7 @@ export type Database = {
           gender: string | null
           height: string | null
           id: string
+          member_id: string | null
           name: string
           phone: string | null
           photo_url: string | null
@@ -214,6 +215,7 @@ export type Database = {
           gender?: string | null
           height?: string | null
           id?: string
+          member_id?: string | null
           name: string
           phone?: string | null
           photo_url?: string | null
@@ -227,6 +229,7 @@ export type Database = {
           gender?: string | null
           height?: string | null
           id?: string
+          member_id?: string | null
           name?: string
           phone?: string | null
           photo_url?: string | null

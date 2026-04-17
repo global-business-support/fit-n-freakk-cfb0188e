@@ -73,83 +73,90 @@ function LoginPage() {
               <Dumbbell className="h-10 w-10 text-primary-foreground" />
             )}
           </div>
-          <h1 className="mt-5 text-4xl font-heading tracking-[0.18em] bg-gradient-primary bg-clip-text text-transparent drop-shadow-[0_2px_20px_rgba(120,180,255,0.5)]">
+          <h1 className="mt-5 text-4xl font-heading tracking-[0.18em] text-white drop-shadow-[0_2px_24px_rgba(125,211,252,0.7)]">
             {appName.toUpperCase()}
           </h1>
-          <p className="mt-1 text-sm text-sky/90 font-body tracking-wider">
+          <p className="mt-1 text-sm text-sky-200/90 font-body tracking-wider">
             Train hard. Track smarter.
           </p>
         </div>
 
         {error && (
-          <div className="rounded-xl bg-destructive/20 border border-destructive/40 backdrop-blur-md px-4 py-3 text-sm text-destructive-foreground font-body">
+          <div className="rounded-xl bg-destructive/20 border border-destructive/40 backdrop-blur-md px-4 py-3 text-sm text-white font-body">
             {error}
           </div>
         )}
 
-        <form
-          onSubmit={handleLogin}
-          className="space-y-4 rounded-2xl border border-sky/30 bg-card/40 backdrop-blur-2xl p-6 shadow-card"
-        >
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-xs uppercase tracking-wider font-body text-sky">
-              Email
-            </Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky/70" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                className="pl-9 bg-secondary/60 border-border h-11"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-          </div>
+        {/* Shining border wrapper */}
+        <div className="shine-border rounded-2xl">
+          <div className="shine-border-inner" />
+          <form
+            onSubmit={handleLogin}
+            className="relative space-y-4 rounded-2xl p-6 overflow-hidden"
+          >
+            {/* Sweeping shimmer line */}
+            <div className="animate-shimmer-sweep" />
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-xs uppercase tracking-wider font-body text-sky">
-                Password
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-xs uppercase tracking-wider font-body text-sky-200">
+                Email
               </Label>
-              <Link
-                to="/forgot-password"
-                className="text-[11px] text-sky hover:text-primary font-body uppercase tracking-wider hover:underline"
-              >
-                Forgot?
-              </Link>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-300/80" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  className="pl-9 bg-white/5 border-sky-300/20 text-white placeholder:text-sky-200/40 h-11"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
             </div>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky/70" />
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                className="pl-9 pr-10 bg-secondary/60 border-border h-11"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-sky"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-xs uppercase tracking-wider font-body text-sky-200">
+                  Password
+                </Label>
+                <Link
+                  to="/forgot-password"
+                  className="text-[11px] text-sky-300 hover:text-white font-body uppercase tracking-wider hover:underline"
+                >
+                  Forgot?
+                </Link>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-300/80" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="pl-9 pr-10 bg-white/5 border-sky-300/20 text-white placeholder:text-sky-200/40 h-11"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-sky-300/70 hover:text-white"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
-          </div>
 
-          <Button type="submit" size="lg" className="w-full bg-gradient-primary text-primary-foreground shadow-glow hover:opacity-90" disabled={isLoading}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
-          </Button>
-        </form>
+            <Button type="submit" size="lg" className="w-full bg-gradient-primary text-white font-semibold tracking-wider shadow-glow hover:opacity-90" disabled={isLoading}>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "SIGN IN"}
+            </Button>
+          </form>
+        </div>
 
-        <p className="text-center text-sm text-muted-foreground font-body">
+        <p className="text-center text-sm text-sky-200/80 font-body">
           Don't have an account?{" "}
-          <Link to="/register" className="text-sky hover:underline font-semibold">
+          <Link to="/register" className="text-white hover:text-sky-300 underline-offset-4 hover:underline font-semibold">
             Register
           </Link>
         </p>
