@@ -12,6 +12,7 @@ interface Profile {
   weight: number | null;
   gender: string | null;
   photo_url: string | null;
+  member_id: string | null;
 }
 
 type AppRole = "admin" | "member" | "manager" | "sub_user";
