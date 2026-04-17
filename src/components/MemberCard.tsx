@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Calendar, IndianRupee, TrendingUp } from "lucide-react";
+import { Calendar, IndianRupee, TrendingUp, Pencil, BadgeCheck } from "lucide-react";
 
 interface MemberCardProps {
   name: string;
@@ -12,6 +12,8 @@ interface MemberCardProps {
   status: "active" | "inactive";
   photoUrl?: string;
   gender: "male" | "female";
+  memberId?: string | null;
+  onEdit?: () => void;
 }
 
 export function MemberCard({
@@ -25,6 +27,8 @@ export function MemberCard({
   status,
   photoUrl,
   gender,
+  memberId,
+  onEdit,
 }: MemberCardProps) {
   const initial = name.charAt(0).toUpperCase();
 
@@ -59,17 +63,33 @@ export function MemberCard({
             <h3 className="font-heading text-xl tracking-wider truncate text-foreground">
               {name.toUpperCase()}
             </h3>
-            <span
-              className={cn(
-                "shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest font-body",
-                status === "active"
-                  ? "bg-success/15 text-success ring-1 ring-success/30"
-                  : "bg-muted text-muted-foreground"
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span
+                className={cn(
+                  "rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest font-body",
+                  status === "active"
+                    ? "bg-success/15 text-success ring-1 ring-success/30"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                {status}
+              </span>
+              {onEdit && (
+                <button
+                  onClick={onEdit}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky/15 text-sky hover:bg-sky/25 ring-1 ring-sky/30 transition-colors"
+                  aria-label="Edit member"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
               )}
-            >
-              {status}
-            </span>
+            </div>
           </div>
+          {memberId && (
+            <p className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-sky/90 font-body uppercase tracking-[0.2em]">
+              <BadgeCheck className="h-3 w-3" /> {memberId}
+            </p>
+          )}
 
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground font-body">
             <span className="font-semibold text-sky">{age}y</span>
