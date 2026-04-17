@@ -125,20 +125,42 @@ function AdminDashboard() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-heading tracking-wider text-sky">MEMBERS</h2>
-            <span className="text-xs text-muted-foreground font-body">{members.length} total</span>
+            <span className="text-xs text-muted-foreground font-body">{filteredMembers.length} of {members.length}</span>
+          </div>
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, Member ID or phone..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 bg-card border-border h-11"
+            />
           </div>
           <div className="space-y-3">
-            {members.map((member) => (
-              <MemberCard key={member.name} {...member} />
+            {filteredMembers.map((member: any) => (
+              <MemberCard
+                key={member.user_id || member.name}
+                {...member}
+                memberId={member.member_id}
+                onEdit={() => setEditingMember(member)}
+              />
             ))}
-            {members.length === 0 && (
+            {filteredMembers.length === 0 && (
               <div className="py-12 text-center text-muted-foreground font-body">
-                <p>No members yet</p>
+                <p>{search ? "No members match your search" : "No members yet"}</p>
               </div>
             )}
           </div>
         </div>
       </main>
+      {editingMember && (
+        <MemberEditDialog
+          member={editingMember}
+          exercises={exercises}
+          onClose={() => setEditingMember(null)}
+          onSaved={loadData}
+        />
+      )}
       <BottomNav />
     </div>
   );
