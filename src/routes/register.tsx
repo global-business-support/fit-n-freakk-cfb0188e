@@ -347,6 +347,32 @@ function RegisterPage() {
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label className="text-xs uppercase tracking-wider font-body">Fitness Level</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {(["beginner", "intermediate", "advanced"] as const).map((lvl) => (
+                <button
+                  key={lvl}
+                  type="button"
+                  onClick={() => setFitnessLevel(lvl)}
+                  className={cn(
+                    "rounded-lg border py-2.5 text-xs font-semibold uppercase tracking-wider font-body transition-all",
+                    fitnessLevel === lvl
+                      ? "border-ember bg-ember/10 text-ember"
+                      : "border-border bg-secondary text-muted-foreground hover:border-ember/30"
+                  )}
+                >
+                  {lvl}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground font-body">
+              {fitnessLevel === "beginner" && "🌱 New to gym — light weights & basics"}
+              {fitnessLevel === "intermediate" && "💪 6+ months experience — moderate intensity"}
+              {fitnessLevel === "advanced" && "🔥 1+ year — heavy weights & complex moves"}
+            </p>
+          </div>
+
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-wider font-body">Age</Label>
