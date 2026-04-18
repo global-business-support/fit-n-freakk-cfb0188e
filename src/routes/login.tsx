@@ -137,6 +137,7 @@ function LoginPage() {
                 <BadgeCheck className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-300/80" />
                 <Input
                   id="memberId"
+                  ref={memberIdInputRef}
                   type="text"
                   placeholder="e.g. NAME1234"
                   className="pl-9 bg-white/5 border-sky-300/20 text-white placeholder:text-sky-200/40 h-11 uppercase tracking-wider font-body"
@@ -202,6 +203,19 @@ function LoginPage() {
             Register as Member
           </Link>
         </p>
+        <p className="text-center text-sm text-sky-200/80 font-body">
+          New here?{" "}
+          <Link to="/register" className="text-white hover:text-sky-300 underline-offset-4 hover:underline font-semibold">
+            Register as Member
+          </Link>
+        </p>
+
+        <p className="text-center text-xs text-sky-200/60 font-body">
+          <Link to="/explore" className="hover:text-white underline-offset-4 hover:underline">
+            ← Back to public exercise library
+          </Link>
+        </p>
+        </div>
       </div>
     </div>
   );
