@@ -203,12 +203,6 @@ function LoginPage() {
             Register as Member
           </Link>
         </p>
-        <p className="text-center text-sm text-sky-200/80 font-body">
-          New here?{" "}
-          <Link to="/register" className="text-white hover:text-sky-300 underline-offset-4 hover:underline font-semibold">
-            Register as Member
-          </Link>
-        </p>
 
         <p className="text-center text-xs text-sky-200/60 font-body">
           <Link to="/explore" className="hover:text-white underline-offset-4 hover:underline">
@@ -220,3 +214,4 @@ function LoginPage() {
     </div>
   );
 }
+
