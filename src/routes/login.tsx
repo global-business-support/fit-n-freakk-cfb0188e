@@ -30,6 +30,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const { signIn } = useAuth();
   const { appName, logoUrl } = useBranding();
+  const memberIdInputRef = useRef<HTMLInputElement>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
