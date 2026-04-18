@@ -83,6 +83,7 @@ function RegisterPage() {
       height,
       weight: parseFloat(weight),
       gender,
+      fitness_level: fitnessLevel,
       user_type: userType,
     });
 
