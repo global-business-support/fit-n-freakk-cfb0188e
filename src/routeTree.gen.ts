@@ -18,12 +18,14 @@ import { Route as MembersRouteImport } from './routes/members'
 import { Route as MachinesRouteImport } from './routes/machines'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AiCoachRouteImport } from './routes/ai-coach'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ExerciseIdRouteImport } from './routes/exercise.$id'
 import { Route as AdminMemberIdRouteImport } from './routes/admin.member.$id'
 
 const WorkoutsRoute = WorkoutsRouteImport.update({
@@ -71,6 +73,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -101,6 +108,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExerciseIdRoute = ExerciseIdRouteImport.update({
+  id: '/exercise/$id',
+  path: '/exercise/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminMemberIdRoute = AdminMemberIdRouteImport.update({
   id: '/member/$id',
   path: '/member/$id',
@@ -114,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AnalyticsRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
+  '/explore': typeof ExploreRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/machines': typeof MachinesRoute
@@ -123,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/workouts': typeof WorkoutsRoute
+  '/exercise/$id': typeof ExerciseIdRoute
   '/admin/member/$id': typeof AdminMemberIdRoute
 }
 export interface FileRoutesByTo {
@@ -132,6 +146,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
+  '/explore': typeof ExploreRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/machines': typeof MachinesRoute
@@ -141,6 +156,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/workouts': typeof WorkoutsRoute
+  '/exercise/$id': typeof ExerciseIdRoute
   '/admin/member/$id': typeof AdminMemberIdRoute
 }
 export interface FileRoutesById {
@@ -151,6 +167,7 @@ export interface FileRoutesById {
   '/analytics': typeof AnalyticsRoute
   '/attendance': typeof AttendanceRoute
   '/dashboard': typeof DashboardRoute
+  '/explore': typeof ExploreRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/machines': typeof MachinesRoute
@@ -160,6 +177,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/workouts': typeof WorkoutsRoute
+  '/exercise/$id': typeof ExerciseIdRoute
   '/admin/member/$id': typeof AdminMemberIdRoute
 }
 export interface FileRouteTypes {
@@ -171,6 +189,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/attendance'
     | '/dashboard'
+    | '/explore'
     | '/forgot-password'
     | '/login'
     | '/machines'
@@ -180,6 +199,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/workouts'
+    | '/exercise/$id'
     | '/admin/member/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -189,6 +209,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/attendance'
     | '/dashboard'
+    | '/explore'
     | '/forgot-password'
     | '/login'
     | '/machines'
@@ -198,6 +219,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/workouts'
+    | '/exercise/$id'
     | '/admin/member/$id'
   id:
     | '__root__'
@@ -207,6 +229,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/attendance'
     | '/dashboard'
+    | '/explore'
     | '/forgot-password'
     | '/login'
     | '/machines'
@@ -216,6 +239,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/workouts'
+    | '/exercise/$id'
     | '/admin/member/$id'
   fileRoutesById: FileRoutesById
 }
@@ -226,6 +250,7 @@ export interface RootRouteChildren {
   AnalyticsRoute: typeof AnalyticsRoute
   AttendanceRoute: typeof AttendanceRoute
   DashboardRoute: typeof DashboardRoute
+  ExploreRoute: typeof ExploreRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   MachinesRoute: typeof MachinesRoute
@@ -235,6 +260,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   WorkoutsRoute: typeof WorkoutsRoute
+  ExerciseIdRoute: typeof ExerciseIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -302,6 +328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -344,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/exercise/$id': {
+      id: '/exercise/$id'
+      path: '/exercise/$id'
+      fullPath: '/exercise/$id'
+      preLoaderRoute: typeof ExerciseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/member/$id': {
       id: '/admin/member/$id'
       path: '/member/$id'
@@ -371,6 +411,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyticsRoute: AnalyticsRoute,
   AttendanceRoute: AttendanceRoute,
   DashboardRoute: DashboardRoute,
+  ExploreRoute: ExploreRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   MachinesRoute: MachinesRoute,
@@ -380,6 +421,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   WorkoutsRoute: WorkoutsRoute,
+  ExerciseIdRoute: ExerciseIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
