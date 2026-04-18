@@ -591,6 +591,70 @@ function AdminPage() {
                 Save Name
               </Button>
             </div>
+
+            {/* Auto-logout settings */}
+            <div className="rounded-2xl border border-sky/30 bg-gradient-card p-4 space-y-3 shadow-card">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-heading text-lg tracking-wider text-sky mb-1">AUTO-LOGOUT</h3>
+                  <p className="text-xs text-muted-foreground font-body">
+                    Sign out members automatically after a period of inactivity
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAutoLogoutEnabled((v) => !v)}
+                  className={cn(
+                    "relative h-7 w-12 shrink-0 rounded-full transition-colors",
+                    autoLogoutEnabled ? "bg-gradient-primary" : "bg-secondary border border-border"
+                  )}
+                  aria-pressed={autoLogoutEnabled}
+                  aria-label="Toggle auto-logout"
+                >
+                  <span
+                    className={cn(
+                      "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-md transition-all",
+                      autoLogoutEnabled ? "left-[22px]" : "left-0.5"
+                    )}
+                  />
+                </button>
+              </div>
+
+              <div className={cn("space-y-2", !autoLogoutEnabled && "opacity-50 pointer-events-none")}>
+                <Label className="text-xs uppercase tracking-wider font-body text-sky-200">
+                  Inactivity duration
+                </Label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {["2", "5", "10", "30"].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setAutoLogoutMinutes(m)}
+                      className={cn(
+                        "rounded-lg py-2 text-xs font-body uppercase tracking-wider transition border",
+                        autoLogoutMinutes === m
+                          ? "bg-gradient-primary text-white border-transparent shadow-glow"
+                          : "border-sky/20 text-sky-200/80 bg-secondary/40 hover:border-sky/50"
+                      )}
+                    >
+                      {m} min
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                size="sm"
+                onClick={saveAutoLogout}
+                disabled={savingLogout}
+                className="w-full bg-gradient-primary text-primary-foreground"
+              >
+                {savingLogout ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Auto-Logout"}
+              </Button>
+              <p className="text-[10px] text-muted-foreground font-body">
+                Admins are exempt. Members will be signed out after {autoLogoutMinutes} min of no activity.
+              </p>
+            </div>
           </div>
         )}
       </main>
