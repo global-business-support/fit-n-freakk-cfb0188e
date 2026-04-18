@@ -12,7 +12,8 @@ function Index() {
 
   useEffect(() => {
     if (!loading) {
-      navigate({ to: user ? "/dashboard" : "/login" });
+      // Logged-in users go to dashboard, everyone else lands on the public explore page
+      navigate({ to: user ? "/dashboard" : "/explore" });
     }
   }, [loading, user, navigate]);
 

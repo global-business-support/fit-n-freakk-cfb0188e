@@ -8,6 +8,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/hooks/use-branding";
 import { supabase } from "@/integrations/supabase/client";
 import loginBg from "@/assets/login-bg.jpg";
+import { LoginMascot } from "@/components/LoginMascot";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -28,6 +30,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const { signIn } = useAuth();
   const { appName, logoUrl } = useBranding();
+  const memberIdInputRef = useRef<HTMLInputElement>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +96,11 @@ function LoginPage() {
         <div className="absolute bottom-0 -right-20 h-96 w-96 rounded-full bg-sky/20 blur-[140px] animate-aurora-slow" />
       </div>
 
-      <div className="w-full max-w-sm space-y-8 relative z-10">
+      <div className="w-full max-w-5xl flex items-center justify-center gap-6 md:gap-10 relative z-10">
+        <LoginMascot onClick={() => memberIdInputRef.current?.focus()} />
+
+        <div className="w-full max-w-sm space-y-8">
+
         {/* Logo */}
         <div className="text-center">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-primary shadow-glow ring-1 ring-sky/30 overflow-hidden">
@@ -134,6 +141,7 @@ function LoginPage() {
                 <BadgeCheck className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-300/80" />
                 <Input
                   id="memberId"
+                  ref={memberIdInputRef}
                   type="text"
                   placeholder="e.g. NAME1234"
                   className="pl-9 bg-white/5 border-sky-300/20 text-white placeholder:text-sky-200/40 h-11 uppercase tracking-wider font-body"
@@ -199,7 +207,15 @@ function LoginPage() {
             Register as Member
           </Link>
         </p>
+
+        <p className="text-center text-xs text-sky-200/60 font-body">
+          <Link to="/explore" className="hover:text-white underline-offset-4 hover:underline">
+            ← Back to public exercise library
+          </Link>
+        </p>
+        </div>
       </div>
     </div>
   );
 }
+

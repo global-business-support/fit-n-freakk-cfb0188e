@@ -258,3 +258,32 @@
 .bg-gradient-card { background-image: var(--gradient-card); }
 .shadow-glow { box-shadow: var(--shadow-glow); }
 .shadow-card { box-shadow: var(--shadow-card); }
+
+/* Login mascot */
+@keyframes mascot-pulse {
+  0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 35px oklch(0.7 0.18 240 / 0.55)); }
+  50%      { transform: translateY(-8px) scale(1.015); filter: drop-shadow(0 0 60px oklch(0.78 0.2 235 / 0.85)); }
+}
+@keyframes mascot-glow {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 0.95; transform: scale(1.08); }
+}
+@keyframes mascot-bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-4px) rotate(2deg); }
+}
+.animate-mascot-pulse { animation: mascot-pulse 3.6s ease-in-out infinite; }
+.animate-mascot-glow  { animation: mascot-glow 4.2s ease-in-out infinite; }
+.animate-mascot-bob   { animation: mascot-bob 2.4s ease-in-out infinite; }
+
+/* 3D detail page rotation (continuous) */
+@keyframes detail-rotate {
+  0%   { transform: perspective(1400px) rotateY(-12deg) rotateX(3deg); }
+  50%  { transform: perspective(1400px) rotateY(12deg)  rotateX(-3deg); }
+  100% { transform: perspective(1400px) rotateY(-12deg) rotateX(3deg); }
+}
+.animate-detail-rotate {
+  animation: detail-rotate 12s ease-in-out infinite;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
