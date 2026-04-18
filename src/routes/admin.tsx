@@ -39,6 +39,23 @@ function AdminPage() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  // Auto-logout state
+  const [autoLogoutEnabled, setAutoLogoutEnabled] = useState(false);
+  const [autoLogoutMinutes, setAutoLogoutMinutes] = useState("2");
+  const [savingLogout, setSavingLogout] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from("app_settings")
+      .select("key,value")
+      .in("key", ["auto_logout_enabled", "auto_logout_minutes"])
+      .then(({ data }) => {
+        const map = Object.fromEntries((data ?? []).map((r: any) => [r.key, r.value]));
+        setAutoLogoutEnabled(map.auto_logout_enabled === "true");
+        if (map.auto_logout_minutes) setAutoLogoutMinutes(map.auto_logout_minutes);
+      });
+  }, []);
+
   useEffect(() => {
     setBrandName(appName);
   }, [appName]);
@@ -203,6 +220,25 @@ function AdminPage() {
       { onConflict: "key" }
     );
     await refreshBranding();
+  };
+
+  const saveAutoLogout = async () => {
+    if (!user) return;
+    setSavingLogout(true);
+    try {
+      await Promise.all([
+        supabase.from("app_settings").upsert(
+          { key: "auto_logout_enabled", value: autoLogoutEnabled ? "true" : "false", updated_at: new Date().toISOString(), updated_by: user.id },
+          { onConflict: "key" }
+        ),
+        supabase.from("app_settings").upsert(
+          { key: "auto_logout_minutes", value: autoLogoutMinutes, updated_at: new Date().toISOString(), updated_by: user.id },
+          { onConflict: "key" }
+        ),
+      ]);
+    } finally {
+      setSavingLogout(false);
+    }
   };
 
   const tabs = [

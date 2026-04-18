@@ -13,6 +13,7 @@ import { LiveBackground } from "@/components/LiveBackground";
 import { HomeBackground } from "@/components/HomeBackground";
 import { AttendanceToggle } from "@/components/AttendanceToggle";
 import { WeekDayStrip } from "@/components/WeekDayStrip";
+import { useInactivityLogout } from "@/hooks/use-inactivity-logout";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Sparkles } from "lucide-react";
@@ -214,6 +215,8 @@ function MemberDashboard() {
   const [attendance, setAttendance] = useState<any[]>([]);
   const [weeklyDone, setWeeklyDone] = useState(0);
   const [weeklyTarget, setWeeklyTarget] = useState(0);
+
+  useInactivityLogout();
 
   useEffect(() => {
     if (!user) return;
