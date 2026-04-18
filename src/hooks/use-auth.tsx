@@ -96,7 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         height: meta.height as string,
         weight: meta.weight as number,
         gender: meta.gender as string,
-      }).eq("user_id", data.user.id);
+        ...(meta.fitness_level ? { fitness_level: meta.fitness_level as string } : {}),
+      } as any).eq("user_id", data.user.id);
     }
     
     return { error: error?.message ?? null };

@@ -29,6 +29,7 @@ function generateMemberId(firstName: string, phone: string): string {
 function RegisterPage() {
   const [userType, setUserType] = useState<"member" | "sub_user">("member");
   const [gender, setGender] = useState<"male" | "female">("male");
+  const [fitnessLevel, setFitnessLevel] = useState<"beginner" | "intermediate" | "advanced">("beginner");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [firstName, setFirstName] = useState("");
@@ -82,6 +83,7 @@ function RegisterPage() {
       height,
       weight: parseFloat(weight),
       gender,
+      fitness_level: fitnessLevel,
       user_type: userType,
     });
 
@@ -343,6 +345,32 @@ function RegisterPage() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs uppercase tracking-wider font-body">Fitness Level</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {(["beginner", "intermediate", "advanced"] as const).map((lvl) => (
+                <button
+                  key={lvl}
+                  type="button"
+                  onClick={() => setFitnessLevel(lvl)}
+                  className={cn(
+                    "rounded-lg border py-2.5 text-xs font-semibold uppercase tracking-wider font-body transition-all",
+                    fitnessLevel === lvl
+                      ? "border-ember bg-ember/10 text-ember"
+                      : "border-border bg-secondary text-muted-foreground hover:border-ember/30"
+                  )}
+                >
+                  {lvl}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground font-body">
+              {fitnessLevel === "beginner" && "🌱 New to gym — light weights & basics"}
+              {fitnessLevel === "intermediate" && "💪 6+ months experience — moderate intensity"}
+              {fitnessLevel === "advanced" && "🔥 1+ year — heavy weights & complex moves"}
+            </p>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
