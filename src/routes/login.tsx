@@ -8,6 +8,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/hooks/use-branding";
 import { supabase } from "@/integrations/supabase/client";
 import loginBg from "@/assets/login-bg.jpg";
+import { LoginMascot } from "@/components/LoginMascot";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
