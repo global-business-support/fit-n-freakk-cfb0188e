@@ -96,7 +96,11 @@ function LoginPage() {
         <div className="absolute bottom-0 -right-20 h-96 w-96 rounded-full bg-sky/20 blur-[140px] animate-aurora-slow" />
       </div>
 
-      <div className="w-full max-w-sm space-y-8 relative z-10">
+      <div className="w-full max-w-5xl flex items-center justify-center gap-6 md:gap-10 relative z-10">
+        <LoginMascot onClick={() => memberIdInputRef.current?.focus()} />
+
+        <div className="w-full max-w-sm space-y-8">
+
         {/* Logo */}
         <div className="text-center">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-primary shadow-glow ring-1 ring-sky/30 overflow-hidden">
