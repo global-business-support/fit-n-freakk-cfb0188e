@@ -29,6 +29,7 @@ function generateMemberId(firstName: string, phone: string): string {
 function RegisterPage() {
   const [userType, setUserType] = useState<"member" | "sub_user">("member");
   const [gender, setGender] = useState<"male" | "female">("male");
+  const [fitnessLevel, setFitnessLevel] = useState<"beginner" | "intermediate" | "advanced">("beginner");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [firstName, setFirstName] = useState("");
