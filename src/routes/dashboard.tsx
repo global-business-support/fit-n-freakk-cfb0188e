@@ -12,7 +12,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { HomeBackground } from "@/components/HomeBackground";
 import { AttendanceToggle } from "@/components/AttendanceToggle";
-import { WorkoutCalendar } from "@/components/WorkoutCalendar";
+import { WeekDayStrip } from "@/components/WeekDayStrip";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Sparkles } from "lucide-react";
@@ -316,8 +316,8 @@ function MemberDashboard() {
           <span className="animate-shimmer-sweep" />
         </Link>
 
-        {/* Monthly Workout Calendar with attendance heatmap */}
-        {user && <WorkoutCalendar userId={user.id} />}
+        {/* Mon-Sun day strip with editable exercises per day */}
+        {user && <WeekDayStrip userId={user.id} />}
 
         {/* Today's videos — auto-embedded, play in place */}
         {user && <TodayVideoFeed userId={user.id} />}
