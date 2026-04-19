@@ -179,6 +179,19 @@
 .animate-pulse-glow { animation: pulse-glow 4s ease-in-out infinite; }
 .animate-ken-burns { animation: ken-burns 30s ease-in-out infinite; }
 
+/* Animated workout tile wall on login */
+@keyframes tile-float {
+  0%, 100% { transform: translateY(0) rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg)); }
+  50% { transform: translateY(-10px) rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg)); }
+}
+@keyframes tile-pan {
+  0% { transform: scale(1.1) translate(0, 0); }
+  50% { transform: scale(1.18) translate(-3%, -2%); }
+  100% { transform: scale(1.1) translate(0, 0); }
+}
+.animate-tile-float { animation: tile-float 6s ease-in-out infinite; }
+.animate-tile-pan { animation: tile-pan 14s ease-in-out infinite; }
+
 /* Shining border - sweeping conic halo around the card */
 @keyframes border-spin {
   0% { transform: translate(-50%, -50%) rotate(0deg); }
