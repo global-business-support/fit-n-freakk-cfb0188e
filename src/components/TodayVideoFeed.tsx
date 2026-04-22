@@ -74,9 +74,18 @@ export function TodayVideoFeed({ userId }: TodayVideoFeedProps) {
               >
                 {/* Exercise header */}
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/30">
-                    <Dumbbell className="h-5 w-5" />
-                  </div>
+                  {ex.thumbnail_url ? (
+                    <img
+                      src={ex.thumbnail_url}
+                      alt={ex.name}
+                      className="h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-primary/30 shadow-glow"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/30">
+                      <Dumbbell className="h-5 w-5" />
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-heading text-lg tracking-wider truncate">{ex.name}</p>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground font-body uppercase tracking-wider">

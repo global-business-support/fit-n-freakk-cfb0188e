@@ -251,6 +251,14 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
                 >
                   {done && <CheckCircle2 className="h-4 w-4" />}
                 </button>
+                {s.exercises?.thumbnail_url && (
+                  <img
+                    src={s.exercises.thumbnail_url}
+                    alt={s.exercises?.name || "Exercise"}
+                    className="h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-sky/30 shadow-glow"
+                    loading="lazy"
+                  />
+                )}
                 <div className="min-w-0 flex-1">
                   <p className={`text-sm font-bold font-body truncate ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
                     {s.exercises?.name}
