@@ -93,7 +93,7 @@ function ExplorePage() {
               {featured.map((ex) => (
                 <TiltCard key={ex.id}>
                   <div className="rounded-2xl border border-sky/30 bg-gradient-card overflow-hidden shadow-card">
-                    <InlineVideoPlayer url={ex.video_url!} title={ex.name} thumbnailUrl={ex.thumbnail_url} />
+                    <InlineVideoPlayer url={ex.video_url!} title={ex.name} thumbnailUrl={ex.thumbnail_url} previewSeconds={30} />
                     <div className="p-3">
                       <p className="font-heading text-lg tracking-wider text-white">{ex.name.toUpperCase()}</p>
                       <p className="text-xs font-body text-sky-200/70 uppercase tracking-wider">{ex.body_part}</p>
@@ -128,7 +128,7 @@ function ExplorePage() {
                   <Link to="/exercise/$id" params={{ id: ex.id }} className="block">
                     <div className="rounded-2xl border border-sky/30 bg-gradient-card p-3 space-y-3 shadow-card hover:border-sky/60 transition">
                       {ex.video_url ? (
-                        <InlineVideoPlayer url={ex.video_url} title={ex.name} thumbnailUrl={ex.thumbnail_url} />
+                        <InlineVideoPlayer url={ex.video_url} title={ex.name} thumbnailUrl={ex.thumbnail_url} previewSeconds={30} />
                       ) : (
                         <div className="aspect-video rounded-xl bg-secondary/60 flex items-center justify-center">
                           <Dumbbell className="h-10 w-10 text-sky/50" />

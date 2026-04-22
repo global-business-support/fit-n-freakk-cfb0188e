@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Play, Pause } from "lucide-react";
 
-function toYouTubeEmbed(url: string): string | null {
+function toYouTubeEmbed(url: string, opts?: { previewSeconds?: number }): string | null {
   if (!url) return null;
   try {
     const u = new URL(url);
@@ -15,7 +15,9 @@ function toYouTubeEmbed(url: string): string | null {
       else if (u.pathname.startsWith("/v/")) id = u.pathname.split("/")[2];
     }
     if (!id) return null;
-    return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+    const end = opts?.previewSeconds;
+    const endParam = end ? `&start=0&end=${end}` : "";
+    return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1${endParam}`;
   } catch {
     return null;
   }
@@ -48,17 +50,28 @@ interface InlineVideoPlayerProps {
   title?: string;
   thumbnailUrl?: string | null;
   className?: string;
+  /** If set, video stops after this many seconds (preview mode for public/login pages) */
+  previewSeconds?: number;
 }
 
 /**
  * Inline video that plays right in place when clicked — no popups, no new tabs.
  * Shows thumbnail with play button, replaces with embedded iframe on click.
  */
-export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "" }: InlineVideoPlayerProps) {
+export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", previewSeconds }: InlineVideoPlayerProps) {
   const [playing, setPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Hard-cut: when previewSeconds is set, stop playback after that many seconds
+  useEffect(() => {
+    if (!playing || !previewSeconds) return;
+    const t = setTimeout(() => setPlaying(false), previewSeconds * 1000);
+    return () => clearTimeout(t);
+  }, [playing, previewSeconds]);
+
   if (!url) return null;
 
-  const youtube = toYouTubeEmbed(url);
+  const youtube = toYouTubeEmbed(url, { previewSeconds });
   const drive = toDriveEmbed(url);
   const embed = youtube ?? drive;
   const isDirect = !embed && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
@@ -109,7 +122,20 @@ export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "" }: 
           allowFullScreen
         />
       ) : isDirect ? (
-        <video src={url} controls autoPlay playsInline className="absolute inset-0 h-full w-full" />
+        <video
+          ref={videoRef}
+          src={url}
+          controls
+          autoPlay
+          playsInline
+          className="absolute inset-0 h-full w-full"
+          onTimeUpdate={(e) => {
+            if (previewSeconds && e.currentTarget.currentTime >= previewSeconds) {
+              e.currentTarget.pause();
+              setPlaying(false);
+            }
+          }}
+        />
       ) : (
         <div className="flex h-full items-center justify-center text-white/70 text-sm font-body p-6 text-center">
           Unsupported video URL.
