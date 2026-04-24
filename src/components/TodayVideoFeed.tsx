@@ -16,16 +16,30 @@ export function TodayVideoFeed({ userId }: TodayVideoFeedProps) {
 
   useEffect(() => {
     if (!userId) return;
-    supabase
-      .from("workout_schedules")
-      .select("*, exercises(*)")
-      .eq("user_id", userId)
-      .eq("day_of_week", todayDay)
-      .order("order_index")
-      .then(({ data }) => {
-        setExercises(data || []);
-        setLoading(false);
+    (async () => {
+      // Load user's gender to filter exercises
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("gender")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const gender = (profile?.gender || "both").toLowerCase();
+
+      const { data } = await supabase
+        .from("workout_schedules")
+        .select("*, exercises(*)")
+        .eq("user_id", userId)
+        .eq("day_of_week", todayDay)
+        .order("order_index");
+
+      // Filter out exercises whose gender_target doesn't match this user
+      const filtered = (data || []).filter((s: any) => {
+        const t = (s.exercises?.gender_target || "both").toLowerCase();
+        return t === "both" || t === gender;
       });
+      setExercises(filtered);
+      setLoading(false);
+    })();
   }, [userId, todayDay]);
 
   return (
@@ -112,6 +126,7 @@ export function TodayVideoFeed({ userId }: TodayVideoFeedProps) {
                     url={ex.video_url}
                     title={ex.name}
                     thumbnailUrl={ex.thumbnail_url}
+                    previewSeconds={30}
                   />
                 ) : (
                   <div className="aspect-video rounded-xl bg-secondary/40 flex items-center justify-center text-muted-foreground text-xs font-body">

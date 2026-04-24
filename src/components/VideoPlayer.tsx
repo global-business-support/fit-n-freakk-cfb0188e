@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Play, X, Columns2 } from "lucide-react";
+
+/** All previews across the app are capped at 30 seconds. */
+const PREVIEW_SECONDS = 30;
 
 /**
  * Convert any YouTube URL to an embed URL — plays in-app, no new tab.
+ * Hard-cuts playback at PREVIEW_SECONDS using the YouTube &end= param.
  */
 function toYouTubeEmbed(url: string): string | null {
   if (!url) return null;
@@ -21,7 +25,7 @@ function toYouTubeEmbed(url: string): string | null {
     }
 
     if (!id) return null;
-    return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+    return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&start=0&end=${PREVIEW_SECONDS}`;
   } catch {
     return null;
   }
@@ -42,8 +46,15 @@ function getEmbedSrc(url: string): { embed: string | null; isDirect: boolean } {
   return { embed, isDirect };
 }
 
-function VideoFrame({ url, title }: { url: string; title?: string }) {
+function VideoFrame({ url, title, onEnded }: { url: string; title?: string; onEnded?: () => void }) {
   const { embed, isDirect } = getEmbedSrc(url);
+  // Hard-cut timer for iframe embeds (YouTube/Drive) — YouTube's &end= isn't always respected for ad-less clips.
+  useEffect(() => {
+    if (!embed) return;
+    const t = setTimeout(() => { onEnded?.(); }, PREVIEW_SECONDS * 1000 + 500);
+    return () => clearTimeout(t);
+  }, [embed, onEnded]);
+
   if (embed) {
     return (
       <iframe
@@ -63,6 +74,12 @@ function VideoFrame({ url, title }: { url: string; title?: string }) {
         autoPlay
         playsInline
         className="absolute inset-0 h-full w-full"
+        onTimeUpdate={(e) => {
+          if (e.currentTarget.currentTime >= PREVIEW_SECONDS) {
+            e.currentTarget.pause();
+            onEnded?.();
+          }
+        }}
       />
     );
   }

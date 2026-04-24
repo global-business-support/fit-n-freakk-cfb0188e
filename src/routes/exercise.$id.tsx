@@ -88,7 +88,7 @@ function ExerciseDetailPage() {
         <div className="[perspective:1400px]">
           <div className="rounded-3xl border border-sky/40 bg-gradient-card overflow-hidden shadow-glow animate-detail-rotate">
             {ex.video_url ? (
-              <InlineVideoPlayer url={ex.video_url} title={ex.name} thumbnailUrl={ex.thumbnail_url} />
+              <InlineVideoPlayer url={ex.video_url} title={ex.name} thumbnailUrl={ex.thumbnail_url} previewSeconds={30} />
             ) : (
               <div className="aspect-video flex items-center justify-center bg-secondary/60">
                 <Dumbbell className="h-16 w-16 text-sky/50" />

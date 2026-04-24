@@ -65,14 +65,24 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
     loadDay();
   }, [userId, selectedDay]);
 
-  // Load all exercises for picker
+  // Load all exercises for picker — filtered by user's gender
   useEffect(() => {
-    supabase
-      .from("exercises")
-      .select("*")
-      .order("body_part")
-      .then(({ data }) => setAllExercises(data || []));
-  }, []);
+    if (!userId) return;
+    (async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("gender")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const gender = (profile?.gender || "both").toLowerCase();
+      const { data } = await supabase
+        .from("exercises")
+        .select("*")
+        .or(`gender_target.eq.both,gender_target.eq.${gender}`)
+        .order("body_part");
+      setAllExercises(data || []);
+    })();
+  }, [userId]);
 
   // Load this week attendance to highlight present days
   useEffect(() => {
