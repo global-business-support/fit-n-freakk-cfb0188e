@@ -63,7 +63,6 @@ function AICoachPage() {
   }, [user, profile]);
 
   const handleGenerate = async () => {
-    if (!user) return;
     if (!form.current_weight || !form.target_weight || !form.height_cm || !form.age) {
       toast.error("Please fill all fields");
       return;
@@ -85,26 +84,29 @@ function AICoachPage() {
       if (error) throw error;
       if (!data?.plan) throw new Error("No plan returned");
 
-      const { data: saved, error: saveErr } = await supabase
-        .from("ai_fitness_plans")
-        .insert({
-          user_id: user.id,
-          goal: form.goal,
-          current_weight: Number(form.current_weight),
-          target_weight: Number(form.target_weight),
-          height_cm: Number(form.height_cm),
-          age: Number(form.age),
-          gender: form.gender,
-          activity_level: form.activity_level,
-          duration_days: Number(form.duration_days),
-          plan_data: data.plan,
-        })
-        .select()
-        .single();
-      if (saveErr) throw saveErr;
       setPlan(data.plan);
-      setPlanRow(saved);
-      toast.success("Your personalized plan is ready! 🔥");
+
+      // Only persist for logged-in users
+      if (user) {
+        const { data: saved, error: saveErr } = await supabase
+          .from("ai_fitness_plans")
+          .insert({
+            user_id: user.id,
+            goal: form.goal,
+            current_weight: Number(form.current_weight),
+            target_weight: Number(form.target_weight),
+            height_cm: Number(form.height_cm),
+            age: Number(form.age),
+            gender: form.gender,
+            activity_level: form.activity_level,
+            duration_days: Number(form.duration_days),
+            plan_data: data.plan,
+          })
+          .select()
+          .single();
+        if (!saveErr) setPlanRow(saved);
+      }
+      toast.success(user ? "Your personalized plan is ready! 🔥" : "Plan ready! Sign in to save it.");
     } catch (e: any) {
       toast.error(e.message || "Failed to generate plan");
     } finally {
@@ -112,7 +114,7 @@ function AICoachPage() {
     }
   };
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
