@@ -34,9 +34,7 @@ function AICoachPage() {
     duration_days: 60,
   });
 
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-  }, [loading, user, navigate]);
+  // Public access: anyone can generate a plan; saving requires login (handled in handleGenerate)
 
   useEffect(() => {
     if (!user) return;
