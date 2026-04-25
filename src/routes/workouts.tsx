@@ -30,10 +30,7 @@ function WorkoutsPage() {
   const [expandedPart, setExpandedPart] = useState<string | null>(null);
   const [view, setView] = useState<"schedule" | "library">("schedule");
 
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-  }, [loading, user, navigate]);
-
+  // Public access: no login required. If user is logged in, prefill their gender.
   useEffect(() => {
     if (profile?.gender) setGender(profile.gender as "male" | "female");
   }, [profile]);
