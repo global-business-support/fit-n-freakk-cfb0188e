@@ -19,14 +19,8 @@ export const Route = createFileRoute("/machines")({
 });
 
 function MachinesPage() {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
   const [machines, setMachines] = useState<any[]>([]);
   const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-  }, [loading, user, navigate]);
 
   useEffect(() => {
     supabase.from("machines").select("*").order("name").then(({ data }) => {
