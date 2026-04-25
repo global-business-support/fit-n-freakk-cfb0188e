@@ -127,7 +127,7 @@ function AICoachPage() {
       <LiveBackground />
       <header className="sticky top-0 z-40 border-b border-sky/20 bg-card/70 backdrop-blur-xl px-4 py-3">
         <div className="mx-auto max-w-lg flex items-center gap-3">
-          <Link to="/dashboard" className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/60">
+          <Link to={user ? "/dashboard" : "/explore"} className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/60">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="flex items-center gap-2">
