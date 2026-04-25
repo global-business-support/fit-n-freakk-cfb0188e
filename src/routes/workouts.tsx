@@ -77,9 +77,18 @@ function WorkoutsPage() {
     <div className="relative min-h-screen pb-20 overflow-hidden">
       <LiveBackground />
       <header className="sticky top-0 z-40 border-b border-sky/20 bg-card/70 backdrop-blur-xl px-4 py-3">
-        <div className="mx-auto max-w-lg">
-          <h1 className="text-2xl font-heading tracking-wider bg-gradient-primary bg-clip-text text-transparent">{isSubUser ? "VIDEOS" : "WORKOUTS"}</h1>
-          <p className="text-xs text-muted-foreground font-body">{isSubUser ? "Watch exercise videos" : "Your exercise schedule & library"}</p>
+        <div className="mx-auto max-w-lg flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-heading tracking-wider bg-gradient-primary bg-clip-text text-transparent truncate">{isSubUser ? "VIDEOS" : "WORKOUTS"}</h1>
+            <p className="text-xs text-muted-foreground font-body">{isSubUser ? "Watch exercise videos" : user ? "Your exercise schedule & library" : "Free preview · Sign in to save your plan"}</p>
+          </div>
+          {!user && (
+            <Link to="/login">
+              <Button size="sm" className="bg-gradient-primary text-white shadow-glow shrink-0 h-9 px-3">
+                <LogIn className="h-4 w-4 mr-1" /> Sign In
+              </Button>
+            </Link>
+          )}
         </div>
       </header>
 
