@@ -22,8 +22,7 @@ export const Route = createFileRoute("/workouts")({
 const DAY_NAMES = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 function WorkoutsPage() {
-  const { user, profile, role, loading } = useAuth();
-  const navigate = useNavigate();
+  const { user, profile, role, loading: _loading } = useAuth();
   const [gender, setGender] = useState<"male" | "female">("male");
   const [exercises, setExercises] = useState<any[]>([]);
   const [schedule, setSchedule] = useState<any[]>([]);
