@@ -5,8 +5,9 @@ import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
 import { TiltCard } from "@/components/TiltCard";
 import { useBranding } from "@/hooks/use-branding";
-import { Dumbbell, Lock, LogIn, Eye } from "lucide-react";
+import { Dumbbell, Lock, LogIn, Eye, Sparkles, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BottomNav } from "@/components/BottomNav";
 
 export const Route = createFileRoute("/explore")({
   head: () => ({
