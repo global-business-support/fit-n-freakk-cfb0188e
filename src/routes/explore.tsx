@@ -199,6 +199,7 @@ function ExplorePage() {
           </div>
         </section>
       </main>
+      <BottomNav />
     </div>
   );
 }
