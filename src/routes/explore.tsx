@@ -5,8 +5,9 @@ import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
 import { TiltCard } from "@/components/TiltCard";
 import { useBranding } from "@/hooks/use-branding";
-import { Dumbbell, Lock, LogIn, Eye } from "lucide-react";
+import { Dumbbell, Lock, LogIn, Eye, Sparkles, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BottomNav } from "@/components/BottomNav";
 
 export const Route = createFileRoute("/explore")({
   head: () => ({
@@ -51,10 +52,10 @@ function ExplorePage() {
   const featured = exercises.filter((e) => e.video_url).slice(0, 3);
 
   return (
-    <div className="relative min-h-screen pb-16">
+    <div className="relative min-h-screen pb-24">
       <LiveBackground />
 
-      {/* Top bar */}
+      {/* Top bar — small login icon top-right */}
       <header className="sticky top-0 z-30 border-b border-sky/20 bg-background/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
@@ -63,10 +64,13 @@ function ExplorePage() {
             </div>
             <span className="font-heading text-xl tracking-[0.18em] text-white">{appName.toUpperCase()}</span>
           </Link>
-          <Link to="/login">
-            <Button size="sm" className="bg-gradient-primary text-white shadow-glow">
-              <LogIn className="h-4 w-4 mr-1.5" /> Sign In
-            </Button>
+          <Link to="/login" aria-label="Sign in">
+            <button
+              type="button"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow ring-1 ring-white/10 hover:scale-105 transition-transform"
+            >
+              <LogIn className="h-4 w-4" />
+            </button>
           </Link>
         </div>
       </header>
@@ -81,8 +85,29 @@ function ExplorePage() {
             TRAIN HARDER. <span className="text-sky">SMARTER.</span>
           </h1>
           <p className="mx-auto max-w-xl text-sm md:text-base font-body text-sky-100/80">
-            Watch our exercise library, then sign in to unlock your personal plan, sets, reps & AI coach.
+            Browse workouts, generate an AI plan and explore gym machines — all without signing in.
           </p>
+          {/* Quick-access tiles */}
+          <div className="grid grid-cols-3 gap-2 max-w-md mx-auto pt-4">
+            <Link to="/workouts" className="flex flex-col items-center gap-1.5 rounded-2xl border border-sky/30 bg-card/60 backdrop-blur-md p-3 hover:border-sky/60 transition">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
+                <Dumbbell className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-[10px] font-body uppercase tracking-wider text-white">Workouts</span>
+            </Link>
+            <Link to="/ai-coach" className="flex flex-col items-center gap-1.5 rounded-2xl border border-sky/30 bg-card/60 backdrop-blur-md p-3 hover:border-sky/60 transition">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
+                <Sparkles className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-[10px] font-body uppercase tracking-wider text-white">AI Coach</span>
+            </Link>
+            <Link to="/machines" className="flex flex-col items-center gap-1.5 rounded-2xl border border-sky/30 bg-card/60 backdrop-blur-md p-3 hover:border-sky/60 transition">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
+                <Cog className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-[10px] font-body uppercase tracking-wider text-white">Machines</span>
+            </Link>
+          </div>
         </section>
 
         {/* Featured auto-running videos */}
@@ -174,6 +199,7 @@ function ExplorePage() {
           </div>
         </section>
       </main>
+      <BottomNav />
     </div>
   );
 }

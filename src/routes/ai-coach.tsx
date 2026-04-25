@@ -34,9 +34,7 @@ function AICoachPage() {
     duration_days: 60,
   });
 
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-  }, [loading, user, navigate]);
+  // Public access: anyone can generate a plan; saving requires login (handled in handleGenerate)
 
   useEffect(() => {
     if (!user) return;
@@ -65,7 +63,6 @@ function AICoachPage() {
   }, [user, profile]);
 
   const handleGenerate = async () => {
-    if (!user) return;
     if (!form.current_weight || !form.target_weight || !form.height_cm || !form.age) {
       toast.error("Please fill all fields");
       return;
@@ -87,26 +84,29 @@ function AICoachPage() {
       if (error) throw error;
       if (!data?.plan) throw new Error("No plan returned");
 
-      const { data: saved, error: saveErr } = await supabase
-        .from("ai_fitness_plans")
-        .insert({
-          user_id: user.id,
-          goal: form.goal,
-          current_weight: Number(form.current_weight),
-          target_weight: Number(form.target_weight),
-          height_cm: Number(form.height_cm),
-          age: Number(form.age),
-          gender: form.gender,
-          activity_level: form.activity_level,
-          duration_days: Number(form.duration_days),
-          plan_data: data.plan,
-        })
-        .select()
-        .single();
-      if (saveErr) throw saveErr;
       setPlan(data.plan);
-      setPlanRow(saved);
-      toast.success("Your personalized plan is ready! 🔥");
+
+      // Only persist for logged-in users
+      if (user) {
+        const { data: saved, error: saveErr } = await supabase
+          .from("ai_fitness_plans")
+          .insert({
+            user_id: user.id,
+            goal: form.goal,
+            current_weight: Number(form.current_weight),
+            target_weight: Number(form.target_weight),
+            height_cm: Number(form.height_cm),
+            age: Number(form.age),
+            gender: form.gender,
+            activity_level: form.activity_level,
+            duration_days: Number(form.duration_days),
+            plan_data: data.plan,
+          })
+          .select()
+          .single();
+        if (!saveErr) setPlanRow(saved);
+      }
+      toast.success(user ? "Your personalized plan is ready! 🔥" : "Plan ready! Sign in to save it.");
     } catch (e: any) {
       toast.error(e.message || "Failed to generate plan");
     } finally {
@@ -114,7 +114,7 @@ function AICoachPage() {
     }
   };
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -127,7 +127,7 @@ function AICoachPage() {
       <LiveBackground />
       <header className="sticky top-0 z-40 border-b border-sky/20 bg-card/70 backdrop-blur-xl px-4 py-3">
         <div className="mx-auto max-w-lg flex items-center gap-3">
-          <Link to="/dashboard" className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/60">
+          <Link to={user ? "/dashboard" : "/explore"} className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/60">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="flex items-center gap-2">

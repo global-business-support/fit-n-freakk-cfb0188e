@@ -1,12 +1,13 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { VideoPlayer } from "@/components/VideoPlayer";
-import { Dumbbell, Play, ChevronRight, CalendarDays } from "lucide-react";
+import { Dumbbell, Play, ChevronRight, CalendarDays, LogIn } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/workouts")({
   head: () => ({
@@ -21,8 +22,7 @@ export const Route = createFileRoute("/workouts")({
 const DAY_NAMES = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 function WorkoutsPage() {
-  const { user, profile, role, loading } = useAuth();
-  const navigate = useNavigate();
+  const { user, profile, role, loading: _loading } = useAuth();
   const [gender, setGender] = useState<"male" | "female">("male");
   const [exercises, setExercises] = useState<any[]>([]);
   const [schedule, setSchedule] = useState<any[]>([]);
@@ -30,10 +30,7 @@ function WorkoutsPage() {
   const [expandedPart, setExpandedPart] = useState<string | null>(null);
   const [view, setView] = useState<"schedule" | "library">("schedule");
 
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-  }, [loading, user, navigate]);
-
+  // Public access: no login required. If user is logged in, prefill their gender.
   useEffect(() => {
     if (profile?.gender) setGender(profile.gender as "male" | "female");
   }, [profile]);
@@ -80,9 +77,18 @@ function WorkoutsPage() {
     <div className="relative min-h-screen pb-20 overflow-hidden">
       <LiveBackground />
       <header className="sticky top-0 z-40 border-b border-sky/20 bg-card/70 backdrop-blur-xl px-4 py-3">
-        <div className="mx-auto max-w-lg">
-          <h1 className="text-2xl font-heading tracking-wider bg-gradient-primary bg-clip-text text-transparent">{isSubUser ? "VIDEOS" : "WORKOUTS"}</h1>
-          <p className="text-xs text-muted-foreground font-body">{isSubUser ? "Watch exercise videos" : "Your exercise schedule & library"}</p>
+        <div className="mx-auto max-w-lg flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-heading tracking-wider bg-gradient-primary bg-clip-text text-transparent truncate">{isSubUser ? "VIDEOS" : "WORKOUTS"}</h1>
+            <p className="text-xs text-muted-foreground font-body">{isSubUser ? "Watch exercise videos" : user ? "Your exercise schedule & library" : "Free preview · Sign in to save your plan"}</p>
+          </div>
+          {!user && (
+            <Link to="/login">
+              <Button size="sm" className="bg-gradient-primary text-white shadow-glow shrink-0 h-9 px-3">
+                <LogIn className="h-4 w-4 mr-1" /> Sign In
+              </Button>
+            </Link>
+          )}
         </div>
       </header>
 

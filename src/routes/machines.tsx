@@ -1,8 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { VideoPlayer } from "@/components/VideoPlayer";
-import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Cog, Search } from "lucide-react";
@@ -19,14 +18,8 @@ export const Route = createFileRoute("/machines")({
 });
 
 function MachinesPage() {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
   const [machines, setMachines] = useState<any[]>([]);
   const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-  }, [loading, user, navigate]);
 
   useEffect(() => {
     supabase.from("machines").select("*").order("name").then(({ data }) => {
