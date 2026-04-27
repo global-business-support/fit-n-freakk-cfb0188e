@@ -149,6 +149,11 @@ export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", pr
           Unsupported video URL.
         </div>
       )}
+      {/* 30s preview badge */}
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-body uppercase tracking-wider text-sky-100 backdrop-blur-sm">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        {cap}s preview
+      </div>
       <button
         type="button"
         onClick={() => setPlaying(false)}
