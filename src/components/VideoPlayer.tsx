@@ -71,9 +71,11 @@ function VideoFrame({ url, title, onEnded }: { url: string; title?: string; onEn
     return (
       <video
         src={url}
-        controls
         autoPlay
         playsInline
+        controlsList="nodownload noplaybackrate noremoteplayback"
+        disablePictureInPicture
+        onContextMenu={(e) => e.preventDefault()}
         className="absolute inset-0 h-full w-full"
         onTimeUpdate={(e) => {
           if (e.currentTarget.currentTime >= PREVIEW_SECONDS) {
