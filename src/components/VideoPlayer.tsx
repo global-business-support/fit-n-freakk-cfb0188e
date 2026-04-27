@@ -25,7 +25,8 @@ function toYouTubeEmbed(url: string): string | null {
     }
 
     if (!id) return null;
-    return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&start=0&end=${PREVIEW_SECONDS}`;
+    // controls=0 hides progress bar so users cannot skip past 30s; disablekb=1 blocks keyboard seek; fs=0 hides fullscreen.
+    return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&start=0&end=${PREVIEW_SECONDS}`;
   } catch {
     return null;
   }
