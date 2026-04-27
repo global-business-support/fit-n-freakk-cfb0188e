@@ -130,12 +130,15 @@ export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", pr
         <video
           ref={videoRef}
           src={url}
-          controls
           autoPlay
           playsInline
+          controlsList="nodownload noplaybackrate noremoteplayback"
+          disablePictureInPicture
+          onContextMenu={(e) => e.preventDefault()}
           className="absolute inset-0 h-full w-full"
           onTimeUpdate={(e) => {
-            if (previewSeconds && e.currentTarget.currentTime >= previewSeconds) {
+            // Hard cap at 30s — also block forward seeking past cap
+            if (e.currentTarget.currentTime >= cap) {
               e.currentTarget.pause();
               setPlaying(false);
             }
