@@ -34,6 +34,7 @@ function ExplorePage() {
   const { appName, logoUrl } = useBranding();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [filter, setFilter] = useState<string>("all");
+  const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,9 +48,12 @@ function ExplorePage() {
       });
   }, []);
 
-  const bodyParts = Array.from(new Set(exercises.map((e) => e.body_part))).sort();
-  const visible = filter === "all" ? exercises : exercises.filter((e) => e.body_part === filter);
-  const featured = exercises.filter((e) => e.video_url).slice(0, 3);
+  // By default only show exercises that have a working video — no broken thumbnails.
+  const playable = exercises.filter((e) => !!e.video_url);
+  const pool = showAll ? exercises : playable;
+  const bodyParts = Array.from(new Set(pool.map((e) => e.body_part))).sort();
+  const visible = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
+  const featured = playable.slice(0, 3);
 
   return (
     <div className="relative min-h-screen pb-24">
