@@ -55,6 +55,19 @@ function MachinesPage() {
           />
         </div>
 
+        <div className="flex items-center justify-between gap-2 px-1">
+          <span className="text-[10px] uppercase tracking-wider font-body text-sky-200/80">
+            {filtered.length} {showAll ? "total" : "with video"}
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowAll((s) => !s)}
+            className="rounded-full border border-sky/40 bg-card/60 px-3 py-1 text-[10px] uppercase tracking-wider font-body text-sky-100 hover:border-sky/70 transition"
+          >
+            {showAll ? "Videos only" : "Show all"}
+          </button>
+        </div>
+
         {filtered.length === 0 && (
           <div className="py-12 text-center text-muted-foreground font-body">
             <Cog className="h-8 w-8 mx-auto mb-2 opacity-30" />
