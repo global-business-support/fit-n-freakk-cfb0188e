@@ -34,6 +34,7 @@ function ExplorePage() {
   const { appName, logoUrl } = useBranding();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [filter, setFilter] = useState<string>("all");
+  const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,9 +48,12 @@ function ExplorePage() {
       });
   }, []);
 
-  const bodyParts = Array.from(new Set(exercises.map((e) => e.body_part))).sort();
-  const visible = filter === "all" ? exercises : exercises.filter((e) => e.body_part === filter);
-  const featured = exercises.filter((e) => e.video_url).slice(0, 3);
+  // By default only show exercises that have a working video — no broken thumbnails.
+  const playable = exercises.filter((e) => !!e.video_url);
+  const pool = showAll ? exercises : playable;
+  const bodyParts = Array.from(new Set(pool.map((e) => e.body_part))).sort();
+  const visible = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
+  const featured = playable.slice(0, 3);
 
   return (
     <div className="relative min-h-screen pb-24">
@@ -132,14 +136,26 @@ function ExplorePage() {
 
         {/* Filters */}
         <section className="space-y-3">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <h2 className="font-heading text-2xl tracking-wider text-sky">EXERCISE LIBRARY</h2>
-            <div className="flex gap-1.5 overflow-x-auto">
-              <FilterPill active={filter === "all"} onClick={() => setFilter("all")}>All</FilterPill>
-              {bodyParts.map((bp) => (
-                <FilterPill key={bp} active={filter === bp} onClick={() => setFilter(bp)}>{bp}</FilterPill>
-              ))}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h2 className="font-heading text-2xl tracking-wider text-sky">EXERCISE LIBRARY</h2>
+              <span className="rounded-full bg-sky/15 border border-sky/30 px-2 py-0.5 text-[10px] uppercase tracking-wider font-body text-sky-100">
+                {visible.length} {showAll ? "total" : "with video"}
+              </span>
             </div>
+            <button
+              type="button"
+              onClick={() => setShowAll((s) => !s)}
+              className="rounded-full border border-sky/40 bg-card/60 px-3 py-1 text-[10px] uppercase tracking-wider font-body text-sky-100 hover:border-sky/70 transition"
+            >
+              {showAll ? "Show videos only" : "Show all exercises"}
+            </button>
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            <FilterPill active={filter === "all"} onClick={() => setFilter("all")}>All</FilterPill>
+            {bodyParts.map((bp) => (
+              <FilterPill key={bp} active={filter === bp} onClick={() => setFilter(bp)}>{bp}</FilterPill>
+            ))}
           </div>
 
           {loading ? (

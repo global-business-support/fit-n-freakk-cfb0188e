@@ -20,6 +20,7 @@ export const Route = createFileRoute("/machines")({
 function MachinesPage() {
   const [machines, setMachines] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     supabase.from("machines").select("*").order("name").then(({ data }) => {
@@ -27,7 +28,9 @@ function MachinesPage() {
     });
   }, []);
 
-  const filtered = machines.filter((m: any) =>
+  const playable = machines.filter((m: any) => !!m.video_url);
+  const pool = showAll ? machines : playable;
+  const filtered = pool.filter((m: any) =>
     m.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -50,6 +53,19 @@ function MachinesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
+
+        <div className="flex items-center justify-between gap-2 px-1">
+          <span className="text-[10px] uppercase tracking-wider font-body text-sky-200/80">
+            {filtered.length} {showAll ? "total" : "with video"}
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowAll((s) => !s)}
+            className="rounded-full border border-sky/40 bg-card/60 px-3 py-1 text-[10px] uppercase tracking-wider font-body text-sky-100 hover:border-sky/70 transition"
+          >
+            {showAll ? "Videos only" : "Show all"}
+          </button>
         </div>
 
         {filtered.length === 0 && (
