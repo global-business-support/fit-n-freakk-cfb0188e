@@ -119,9 +119,14 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          description_hi: string | null
           gender_target: string | null
+          how_to_use: string | null
+          how_to_use_hi: string | null
           id: string
+          image_urls: Json | null
           name: string
+          name_hi: string | null
           reps: string | null
           sets: number | null
           thumbnail_url: string | null
@@ -132,9 +137,14 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          description_hi?: string | null
           gender_target?: string | null
+          how_to_use?: string | null
+          how_to_use_hi?: string | null
           id?: string
+          image_urls?: Json | null
           name: string
+          name_hi?: string | null
           reps?: string | null
           sets?: number | null
           thumbnail_url?: string | null
@@ -145,9 +155,14 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          description_hi?: string | null
           gender_target?: string | null
+          how_to_use?: string | null
+          how_to_use_hi?: string | null
           id?: string
+          image_urls?: Json | null
           name?: string
+          name_hi?: string | null
           reps?: string | null
           sets?: number | null
           thumbnail_url?: string | null
@@ -196,30 +211,39 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          description_hi: string | null
           how_to_use: string | null
+          how_to_use_hi: string | null
           id: string
           image_url: string | null
           name: string
+          name_hi: string | null
           video_url: string | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          description_hi?: string | null
           how_to_use?: string | null
+          how_to_use_hi?: string | null
           id?: string
           image_url?: string | null
           name: string
+          name_hi?: string | null
           video_url?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          description_hi?: string | null
           how_to_use?: string | null
+          how_to_use_hi?: string | null
           id?: string
           image_url?: string | null
           name?: string
+          name_hi?: string | null
           video_url?: string | null
         }
         Relationships: []
