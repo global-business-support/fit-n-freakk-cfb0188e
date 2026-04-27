@@ -64,17 +64,19 @@ interface InlineVideoPlayerProps {
 export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", previewSeconds }: InlineVideoPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  // Always cap at MAX_PREVIEW_SECONDS — never honor a higher value
+  const cap = Math.min(previewSeconds ?? MAX_PREVIEW_SECONDS, MAX_PREVIEW_SECONDS);
 
-  // Hard-cut: when previewSeconds is set, stop playback after that many seconds
+  // Hard-cut: stop playback after cap seconds (works for iframes too — JS-level kill)
   useEffect(() => {
-    if (!playing || !previewSeconds) return;
-    const t = setTimeout(() => setPlaying(false), previewSeconds * 1000);
+    if (!playing) return;
+    const t = setTimeout(() => setPlaying(false), cap * 1000 + 200);
     return () => clearTimeout(t);
-  }, [playing, previewSeconds]);
+  }, [playing, cap]);
 
   if (!url) return null;
 
-  const youtube = toYouTubeEmbed(url, { previewSeconds });
+  const youtube = toYouTubeEmbed(url, { previewSeconds: cap });
   const drive = toDriveEmbed(url);
   const embed = youtube ?? drive;
   const isDirect = !embed && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
