@@ -20,6 +20,7 @@ export const Route = createFileRoute("/machines")({
 function MachinesPage() {
   const [machines, setMachines] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     supabase.from("machines").select("*").order("name").then(({ data }) => {
@@ -27,7 +28,9 @@ function MachinesPage() {
     });
   }, []);
 
-  const filtered = machines.filter((m: any) =>
+  const playable = machines.filter((m: any) => !!m.video_url);
+  const pool = showAll ? machines : playable;
+  const filtered = pool.filter((m: any) =>
     m.name.toLowerCase().includes(search.toLowerCase())
   );
 
