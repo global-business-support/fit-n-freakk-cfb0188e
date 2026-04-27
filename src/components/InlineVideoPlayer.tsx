@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause } from "lucide-react";
 
+/** ALL videos in the app are capped at 30s — no exceptions. */
+const MAX_PREVIEW_SECONDS = 30;
+
 function toYouTubeEmbed(url: string, opts?: { previewSeconds?: number }): string | null {
   if (!url) return null;
   try {
@@ -15,9 +18,9 @@ function toYouTubeEmbed(url: string, opts?: { previewSeconds?: number }): string
       else if (u.pathname.startsWith("/v/")) id = u.pathname.split("/")[2];
     }
     if (!id) return null;
-    const end = opts?.previewSeconds;
-    const endParam = end ? `&start=0&end=${end}` : "";
-    return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1${endParam}`;
+    const end = Math.min(opts?.previewSeconds ?? MAX_PREVIEW_SECONDS, MAX_PREVIEW_SECONDS);
+    // controls=0 hides bar so users can't skip; disablekb=1 disables keyboard seek; fs=0 hides fullscreen; iv_load_policy=3 hides annotations.
+    return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&start=0&end=${end}`;
   } catch {
     return null;
   }
