@@ -68,14 +68,17 @@ function ExplorePage() {
             </div>
             <span className="font-heading text-xl tracking-[0.18em] text-white">{appName.toUpperCase()}</span>
           </Link>
-          <Link to="/login" aria-label="Sign in">
-            <button
-              type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow ring-1 ring-white/10 hover:scale-105 transition-transform"
-            >
-              <LogIn className="h-4 w-4" />
-            </button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <LanguageToggle />
+            <Link to="/login" aria-label="Sign in">
+              <button
+                type="button"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow ring-1 ring-white/10 hover:scale-105 transition-transform"
+              >
+                <LogIn className="h-4 w-4" />
+              </button>
+            </Link>
+          </div>
         </div>
       </header>
 

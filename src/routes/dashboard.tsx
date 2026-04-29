@@ -270,7 +270,8 @@ function MemberDashboard() {
               FEET & FREAKK
             </h1>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            <LanguageToggle />
             <button className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-md text-sky ring-1 ring-sky/30">
               <Bell className="h-5 w-5" />
             </button>
