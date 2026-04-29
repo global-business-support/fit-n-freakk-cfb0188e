@@ -25,6 +25,7 @@ export type Database = {
           goal: string
           height_cm: number
           id: string
+          is_active: boolean
           plan_data: Json
           target_weight: number
           updated_at: string
@@ -40,6 +41,7 @@ export type Database = {
           goal: string
           height_cm: number
           id?: string
+          is_active?: boolean
           plan_data: Json
           target_weight: number
           updated_at?: string
@@ -55,6 +57,7 @@ export type Database = {
           goal?: string
           height_cm?: number
           id?: string
+          is_active?: boolean
           plan_data?: Json
           target_weight?: number
           updated_at?: string
@@ -272,6 +275,45 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          in_stock: boolean
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean
+          name: string
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
@@ -317,6 +359,39 @@ export type Database = {
           updated_at?: string
           user_id?: string
           weight?: number | null
+        }
+        Relationships: []
+      }
+      salaries: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          month: string
+          notes: string | null
+          paid_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month: string
+          notes?: string | null
+          paid_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month?: string
+          notes?: string | null
+          paid_at?: string
+          user_id?: string
         }
         Relationships: []
       }
