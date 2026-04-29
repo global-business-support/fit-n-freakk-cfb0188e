@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/hooks/use-branding";
 import { Users, UserCheck, IndianRupee, TrendingUp, Bell, LogOut, Dumbbell, Search } from "lucide-react";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { StatCard } from "@/components/StatCard";
 import { MemberCard } from "@/components/MemberCard";
 import { Profile3DCard } from "@/components/Profile3DCard";
