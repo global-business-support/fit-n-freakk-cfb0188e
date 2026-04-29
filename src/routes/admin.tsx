@@ -7,10 +7,12 @@ import { useBranding } from "@/hooks/use-branding";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Check, X, IndianRupee, Users, Dumbbell, Plus, Trash2, Cog, ShieldCheck, CalendarDays, Settings as SettingsIcon, Loader2, Image as ImageIcon } from "lucide-react";
+import { Check, X, IndianRupee, Users, Dumbbell, Plus, Trash2, Cog, ShieldCheck, CalendarDays, Settings as SettingsIcon, Loader2, Image as ImageIcon, Package, Salad, Wallet, Download, Power } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { downloadAdminExcel } from "@/lib/excel-export";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -28,11 +30,22 @@ function AdminPage() {
   const { user, role, loading } = useAuth();
   const { appName, logoUrl, refresh: refreshBranding } = useBranding();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"fees" | "exercises" | "machines" | "roles" | "schedules" | "settings">("fees");
+  const [tab, setTab] = useState<"fees" | "exercises" | "machines" | "roles" | "schedules" | "settings" | "products" | "plans" | "salary" | "export">("fees");
   const [pendingFees, setPendingFees] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [exercises, setExercises] = useState<any[]>([]);
   const [machines, setMachines] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [plans, setPlans] = useState<any[]>([]);
+  const [salaries, setSalaries] = useState<any[]>([]);
+  const [downloading, setDownloading] = useState(false);
+
+  // Product form
+  const [newProd, setNewProd] = useState({ name: "", description: "", price: "", image_url: "", category: "" });
+  const [showProdForm, setShowProdForm] = useState(false);
+
+  // Salary form
+  const [newSal, setNewSal] = useState({ user_id: "", amount: "", month: "", notes: "" });
 
   // Branding state
   const [brandName, setBrandName] = useState("");
@@ -87,16 +100,83 @@ function AdminPage() {
   }, []);
 
   const loadData = async () => {
-    const [feesRes, profilesRes, exRes, machRes] = await Promise.all([
+    const [feesRes, profilesRes, exRes, machRes, prodRes, planRes, salRes] = await Promise.all([
       supabase.from("fees").select("*").eq("status", "pending").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*"),
       supabase.from("exercises").select("*").order("body_part"),
       supabase.from("machines").select("*").order("name"),
+      supabase.from("products").select("*").order("created_at", { ascending: false }),
+      supabase.from("ai_fitness_plans").select("*").order("created_at", { ascending: false }),
+      supabase.from("salaries").select("*").order("paid_at", { ascending: false }),
     ]);
     setPendingFees(feesRes.data || []);
     setMembers(profilesRes.data || []);
     setExercises(exRes.data || []);
     setMachines(machRes.data || []);
+    setProducts(prodRes.data || []);
+    setPlans(planRes.data || []);
+    setSalaries(salRes.data || []);
+  };
+
+  // ───── Products ─────
+  const addProduct = async () => {
+    if (!newProd.name || !newProd.price) return;
+    await supabase.from("products").insert({
+      name: newProd.name,
+      description: newProd.description || null,
+      price: parseFloat(newProd.price),
+      image_url: newProd.image_url || null,
+      category: newProd.category || null,
+      created_by: user?.id,
+    });
+    setNewProd({ name: "", description: "", price: "", image_url: "", category: "" });
+    setShowProdForm(false);
+    loadData();
+  };
+
+  const deleteProduct = async (id: string) => {
+    await supabase.from("products").delete().eq("id", id);
+    setProducts((p) => p.filter((x) => x.id !== id));
+  };
+
+  // ───── Diet Plans ─────
+  const togglePlan = async (planId: string, isActive: boolean) => {
+    await supabase.from("ai_fitness_plans").update({ is_active: !isActive }).eq("id", planId);
+    setPlans((p) => p.map((x) => (x.id === planId ? { ...x, is_active: !isActive } : x)));
+  };
+
+  const deletePlan = async (planId: string) => {
+    await supabase.from("ai_fitness_plans").delete().eq("id", planId);
+    setPlans((p) => p.filter((x) => x.id !== planId));
+  };
+
+  // ───── Salary ─────
+  const addSalary = async () => {
+    if (!newSal.user_id || !newSal.amount || !newSal.month) return;
+    await supabase.from("salaries").insert({
+      user_id: newSal.user_id,
+      amount: parseFloat(newSal.amount),
+      month: newSal.month,
+      notes: newSal.notes || null,
+      created_by: user?.id,
+    });
+    setNewSal({ user_id: "", amount: "", month: "", notes: "" });
+    loadData();
+  };
+
+  const deleteSalary = async (id: string) => {
+    await supabase.from("salaries").delete().eq("id", id);
+    setSalaries((s) => s.filter((x) => x.id !== id));
+  };
+
+  // ───── Excel Export ─────
+  const handleExport = async () => {
+    setDownloading(true);
+    try {
+      await downloadAdminExcel();
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleFeeAction = async (feeId: string, action: "approved" | "rejected") => {
