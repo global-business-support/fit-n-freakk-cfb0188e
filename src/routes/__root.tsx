@@ -1,6 +1,8 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/hooks/use-auth";
 import { BrandingProvider } from "@/hooks/use-branding";
+import { LanguageProvider } from "@/hooks/use-language";
+import { GenderThemeApplier } from "@/components/GenderThemeApplier";
 
 import appCss from "../styles.css?url";
 
@@ -57,10 +59,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <BrandingProvider>
-      <AuthProvider>
-        <Outlet />
-      </AuthProvider>
-    </BrandingProvider>
+    <LanguageProvider>
+      <BrandingProvider>
+        <AuthProvider>
+          <GenderThemeApplier />
+          <Outlet />
+        </AuthProvider>
+      </BrandingProvider>
+    </LanguageProvider>
   );
 }
