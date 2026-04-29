@@ -8,6 +8,7 @@ import { useBranding } from "@/hooks/use-branding";
 import { Dumbbell, Lock, LogIn, Eye, Sparkles, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
 export const Route = createFileRoute("/explore")({
   head: () => ({
