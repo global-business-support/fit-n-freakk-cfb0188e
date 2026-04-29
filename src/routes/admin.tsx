@@ -601,7 +601,7 @@ function AdminPage() {
                 ))}
               </select>
               <div className="flex gap-2">
-                {["manager", "member", "sub_user"].map((r) => (
+                {["admin", "manager", "member", "sub_user"].map((r) => (
                   <button key={r} onClick={() => setNewRole(r)} className={cn("rounded-lg border px-3 py-1.5 text-xs font-body uppercase", newRole === r ? "border-ember bg-ember/10 text-ember" : "border-border text-muted-foreground")}>
                     {r === "sub_user" ? "Viewer" : r}
                   </button>
