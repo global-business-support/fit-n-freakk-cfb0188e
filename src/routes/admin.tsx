@@ -325,8 +325,12 @@ function AdminPage() {
     { key: "fees" as const, label: "Fees", icon: IndianRupee, count: pendingFees.length },
     { key: "exercises" as const, label: "Exercises", icon: Dumbbell, count: exercises.length },
     { key: "machines" as const, label: "Machines", icon: Cog, count: machines.length },
+    { key: "products" as const, label: "Products", icon: Package, count: products.length },
+    { key: "plans" as const, label: "Diet", icon: Salad, count: plans.length },
+    { key: "salary" as const, label: "Salary", icon: Wallet, count: salaries.length },
     { key: "schedules" as const, label: "Schedule", icon: CalendarDays, count: 0 },
     { key: "roles" as const, label: "Roles", icon: ShieldCheck, count: 0 },
+    { key: "export" as const, label: "Export", icon: Download, count: 0 },
     { key: "settings" as const, label: "Brand", icon: SettingsIcon, count: 0 },
   ];
 
@@ -334,9 +338,12 @@ function AdminPage() {
     <div className="relative min-h-screen pb-20 overflow-hidden">
       <LiveBackground />
       <header className="sticky top-0 z-40 border-b border-sky/20 bg-card/70 backdrop-blur-xl px-4 py-3">
-        <div className="mx-auto max-w-lg">
-          <h1 className="text-2xl font-heading tracking-wider bg-gradient-primary bg-clip-text text-transparent">ADMIN PANEL</h1>
-          <p className="text-xs text-muted-foreground font-body">Manage everything in {appName}</p>
+        <div className="mx-auto max-w-lg flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-heading tracking-wider bg-gradient-primary bg-clip-text text-transparent">ADMIN PANEL</h1>
+            <p className="text-xs text-muted-foreground font-body">Manage everything in {appName}</p>
+          </div>
+          <LanguageToggle />
         </div>
       </header>
 
