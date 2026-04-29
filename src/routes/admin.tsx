@@ -617,7 +617,151 @@ function AdminPage() {
           </div>
         )}
 
-        {/* Branding / Settings */}
+        {/* PRODUCTS Management */}
+        {tab === "products" && (
+          <div className="space-y-3">
+            <Button variant="ember" size="sm" onClick={() => setShowProdForm(!showProdForm)} className="w-full">
+              <Plus className="h-4 w-4 mr-1" /> Add Product
+            </Button>
+            {showProdForm && (
+              <div className="rounded-xl border border-ember/30 bg-card p-4 space-y-3">
+                <Input placeholder="Product name" className="bg-secondary border-border" value={newProd.name} onChange={(e) => setNewProd({ ...newProd, name: e.target.value })} />
+                <Input placeholder="Category (Supplements, Apparel...)" className="bg-secondary border-border" value={newProd.category} onChange={(e) => setNewProd({ ...newProd, category: e.target.value })} />
+                <Input placeholder="Price (₹)" type="number" className="bg-secondary border-border" value={newProd.price} onChange={(e) => setNewProd({ ...newProd, price: e.target.value })} />
+                <Input placeholder="Image URL" className="bg-secondary border-border" value={newProd.image_url} onChange={(e) => setNewProd({ ...newProd, image_url: e.target.value })} />
+                <textarea placeholder="Description" className="w-full rounded-lg bg-secondary border border-border p-3 text-sm font-body min-h-[60px] resize-none" value={newProd.description} onChange={(e) => setNewProd({ ...newProd, description: e.target.value })} />
+                <div className="flex gap-2">
+                  <Button variant="ember" size="sm" onClick={addProduct}>Save</Button>
+                  <Button variant="outline" size="sm" onClick={() => setShowProdForm(false)}>Cancel</Button>
+                </div>
+              </div>
+            )}
+            {products.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground font-body">
+                <Package className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p>No products yet</p>
+              </div>
+            ) : products.map((p: any) => (
+              <div key={p.id} className="rounded-xl border border-border bg-card p-4 flex gap-3">
+                {p.image_url ? (
+                  <img src={p.image_url} alt={p.name} className="h-16 w-16 rounded-lg object-cover ring-1 ring-border" />
+                ) : (
+                  <div className="h-16 w-16 rounded-lg bg-secondary flex items-center justify-center"><Package className="h-6 w-6 text-muted-foreground" /></div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-heading text-base tracking-wider truncate">{p.name}</p>
+                  {p.category && <p className="text-[10px] text-muted-foreground font-body uppercase">{p.category}</p>}
+                  <p className="text-sm text-primary font-heading">₹{p.price}</p>
+                </div>
+                <button onClick={() => deleteProduct(p.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 self-start">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* DIET PLANS — activate / cancel */}
+        {tab === "plans" && (
+          <div className="space-y-3">
+            {plans.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground font-body">
+                <Salad className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p>No diet plans created yet</p>
+                <p className="text-[10px] mt-1">Members generate plans via AI Coach</p>
+              </div>
+            ) : plans.map((p: any) => (
+              <div key={p.id} className="rounded-xl border border-border bg-card p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-heading text-base tracking-wider truncate">{getMemberName(p.user_id)}</p>
+                    <p className="text-[10px] text-muted-foreground font-body uppercase">{p.goal} · {p.duration_days}d</p>
+                    <span className={cn("inline-block mt-1 rounded-full px-2 py-0.5 text-[10px] font-body uppercase tracking-wider",
+                      p.is_active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
+                    )}>
+                      {p.is_active ? "Active" : "Cancelled"}
+                    </span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button onClick={() => togglePlan(p.id, p.is_active)} className={cn("flex h-8 w-8 items-center justify-center rounded-lg",
+                      p.is_active ? "bg-warning/10 text-warning hover:bg-warning/20" : "bg-success/10 text-success hover:bg-success/20"
+                    )} title={p.is_active ? "Cancel plan" : "Activate plan"}>
+                      <Power className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => deletePlan(p.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* SALARY */}
+        {tab === "salary" && (
+          <div className="space-y-3">
+            <div className="rounded-xl border border-ember/30 bg-card p-4 space-y-3">
+              <Label className="text-xs uppercase tracking-wider font-body">Add salary payment</Label>
+              <select className="w-full rounded-lg bg-secondary border border-border p-2.5 text-sm font-body" value={newSal.user_id} onChange={(e) => setNewSal({ ...newSal, user_id: e.target.value })}>
+                <option value="">Choose staff member...</option>
+                {members.map((m: any) => (<option key={m.user_id} value={m.user_id}>{m.name}</option>))}
+              </select>
+              <div className="grid grid-cols-2 gap-2">
+                <Input placeholder="Amount ₹" type="number" className="bg-secondary border-border" value={newSal.amount} onChange={(e) => setNewSal({ ...newSal, amount: e.target.value })} />
+                <Input placeholder="Month e.g. April 2026" className="bg-secondary border-border" value={newSal.month} onChange={(e) => setNewSal({ ...newSal, month: e.target.value })} />
+              </div>
+              <Input placeholder="Notes (optional)" className="bg-secondary border-border" value={newSal.notes} onChange={(e) => setNewSal({ ...newSal, notes: e.target.value })} />
+              <Button variant="ember" size="sm" onClick={addSalary} className="w-full"><Plus className="h-4 w-4 mr-1" /> Record Payment</Button>
+            </div>
+            {salaries.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground font-body">
+                <Wallet className="h-8 w-8 mx-auto mb-2 opacity-30" /><p>No salary records yet</p>
+              </div>
+            ) : salaries.map((s: any) => (
+              <div key={s.id} className="rounded-xl border border-border bg-card p-3 flex items-center justify-between">
+                <div>
+                  <p className="font-heading text-base tracking-wider">{getMemberName(s.user_id)}</p>
+                  <p className="text-[10px] text-muted-foreground font-body uppercase">{s.month}</p>
+                  {s.notes && <p className="text-[10px] text-muted-foreground font-body">{s.notes}</p>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-heading text-success">₹{s.amount}</p>
+                  <button onClick={() => deleteSalary(s.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* EXPORT */}
+        {tab === "export" && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-sky/30 bg-gradient-card p-5 space-y-3 shadow-card">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
+                  <Download className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-heading text-xl tracking-wider text-sky">DATA EXPORT</h3>
+                  <p className="text-xs text-muted-foreground font-body">Download everything as Excel (.xlsx)</p>
+                </div>
+              </div>
+              <ul className="text-xs text-muted-foreground font-body space-y-1 pl-1">
+                <li>• Members, Roles, Attendance</li>
+                <li>• Fees, Salary, Diet Plans</li>
+                <li>• Products, Exercises, Machines</li>
+              </ul>
+              <Button onClick={handleExport} disabled={downloading} className="w-full bg-gradient-primary text-primary-foreground" size="lg">
+                {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="h-4 w-4 mr-2" /> Download Excel</>}
+              </Button>
+              <p className="text-[10px] text-muted-foreground font-body">File downloads to your device. Refresh anytime to pull latest data.</p>
+            </div>
+          </div>
+        )}
+
         {tab === "settings" && role === "admin" && (
           <div className="space-y-4">
             <div className="rounded-2xl border border-sky/30 bg-gradient-card p-4 space-y-4 shadow-card">
