@@ -123,6 +123,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           description_hi: string | null
+          difficulty: string | null
           gender_target: string | null
           how_to_use: string | null
           how_to_use_hi: string | null
@@ -141,6 +142,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           description_hi?: string | null
+          difficulty?: string | null
           gender_target?: string | null
           how_to_use?: string | null
           how_to_use_hi?: string | null
@@ -159,6 +161,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           description_hi?: string | null
+          difficulty?: string | null
           gender_target?: string | null
           how_to_use?: string | null
           how_to_use_hi?: string | null
@@ -271,6 +274,48 @@ export type Database = {
           granted_by?: string | null
           id?: string
           permission?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      member_posts: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          caption: string | null
+          created_at: string
+          id: string
+          media_url: string | null
+          progress_data: Json | null
+          status: Database["public"]["Enums"]["post_status"]
+          type: Database["public"]["Enums"]["post_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          caption?: string | null
+          created_at?: string
+          id?: string
+          media_url?: string | null
+          progress_data?: Json | null
+          status?: Database["public"]["Enums"]["post_status"]
+          type: Database["public"]["Enums"]["post_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          caption?: string | null
+          created_at?: string
+          id?: string
+          media_url?: string | null
+          progress_data?: Json | null
+          status?: Database["public"]["Enums"]["post_status"]
+          type?: Database["public"]["Enums"]["post_type"]
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -497,6 +542,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "member" | "manager" | "sub_user"
+      post_status: "pending" | "approved" | "rejected"
+      post_type: "photo" | "reel" | "progress"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -625,6 +672,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "member", "manager", "sub_user"],
+      post_status: ["pending", "approved", "rejected"],
+      post_type: ["photo", "reel", "progress"],
     },
   },
 } as const
