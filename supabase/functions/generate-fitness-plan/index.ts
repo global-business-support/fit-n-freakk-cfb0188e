@@ -2,11 +2,17 @@
 // 6-day workout split + diet guidance based on the member's goals & stats.
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Simple in-memory rate limiter (per user, per isolate)
+const rateMap = new Map<string, number[]>();
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const RATE_MAX = 5; // 5 generations per user per hour
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -14,6 +20,41 @@ serve(async (req) => {
   }
 
   try {
+    // Require authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseClient = createClient(supabaseUrl, supabaseAnon, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: userData, error: userErr } = await supabaseClient.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Per-user rate limit
+    const uid = userData.user.id;
+    const now = Date.now();
+    const hits = (rateMap.get(uid) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
+    if (hits.length >= RATE_MAX) {
+      return new Response(JSON.stringify({ error: "Rate limit exceeded. Try again later." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    hits.push(now);
+    rateMap.set(uid, hits);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
