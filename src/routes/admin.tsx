@@ -327,9 +327,13 @@ function AdminPage() {
     }
   };
 
+  const pendingPostsCount = posts.filter((p) => p.status === "pending").length;
   const tabs = [
+    { key: "posts" as const, label: "Posts", icon: ImagePlus, count: pendingPostsCount },
     { key: "fees" as const, label: "Fees", icon: IndianRupee, count: pendingFees.length },
+    { key: "attendance" as const, label: "Attend.", icon: CalendarDays, count: 0 },
     { key: "exercises" as const, label: "Exercises", icon: Dumbbell, count: exercises.length },
+    { key: "chart" as const, label: "Chart", icon: BookOpen, count: 0 },
     { key: "machines" as const, label: "Machines", icon: Cog, count: machines.length },
     { key: "products" as const, label: "Products", icon: Package, count: products.length },
     { key: "plans" as const, label: "Diet", icon: Salad, count: plans.length },
