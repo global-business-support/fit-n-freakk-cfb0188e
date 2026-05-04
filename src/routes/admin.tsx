@@ -105,7 +105,7 @@ function AdminPage() {
   }, [loading, user, role, navigate]);
 
   const loadData = async () => {
-    const [feesRes, profilesRes, exRes, machRes, prodRes, planRes, salRes] = await Promise.all([
+    const [feesRes, profilesRes, exRes, machRes, prodRes, planRes, salRes, postsRes] = await Promise.all([
       supabase.from("fees").select("*").eq("status", "pending").order("created_at", { ascending: false }),
       supabase.from("profiles").select("*"),
       supabase.from("exercises").select("*").order("body_part"),
@@ -113,6 +113,7 @@ function AdminPage() {
       supabase.from("products").select("*").order("created_at", { ascending: false }),
       supabase.from("ai_fitness_plans").select("*").order("created_at", { ascending: false }),
       supabase.from("salaries").select("*").order("paid_at", { ascending: false }),
+      supabase.from("member_posts" as any).select("*").order("created_at", { ascending: false }).limit(100),
     ]);
     setPendingFees(feesRes.data || []);
     setMembers(profilesRes.data || []);
@@ -121,6 +122,33 @@ function AdminPage() {
     setProducts(prodRes.data || []);
     setPlans(planRes.data || []);
     setSalaries(salRes.data || []);
+    setPosts((postsRes as any).data || []);
+  };
+
+  const setPostStatus = async (id: string, status: "approved" | "rejected") => {
+    await supabase.from("member_posts" as any).update({ status, approved_by: user?.id, approved_at: new Date().toISOString() } as any).eq("id", id);
+    setPosts((arr) => arr.map((p) => (p.id === id ? { ...p, status } : p)));
+  };
+  const deletePost = async (id: string) => {
+    await supabase.from("member_posts" as any).delete().eq("id", id);
+    setPosts((arr) => arr.filter((p) => p.id !== id));
+  };
+
+  const loadAttendanceMonth = async (uid: string, ym: string) => {
+    setAttMember(uid);
+    setAttMonth(ym);
+    if (!uid) { setAttRows([]); return; }
+    const start = new Date(`${ym}-01T00:00:00`);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+    const { data } = await supabase
+      .from("attendance")
+      .select("*")
+      .eq("user_id", uid)
+      .gte("checked_in_at", start.toISOString())
+      .lt("checked_in_at", end.toISOString())
+      .order("checked_in_at");
+    setAttRows(data || []);
   };
 
   // ───── Products ─────
