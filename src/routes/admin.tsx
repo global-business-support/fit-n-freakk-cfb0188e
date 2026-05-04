@@ -30,7 +30,7 @@ function AdminPage() {
   const { user, role, loading } = useAuth();
   const { appName, logoUrl, refresh: refreshBranding } = useBranding();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"fees" | "exercises" | "machines" | "roles" | "schedules" | "settings" | "products" | "plans" | "salary" | "export">("fees");
+  const [tab, setTab] = useState<"fees" | "exercises" | "machines" | "roles" | "schedules" | "settings" | "products" | "plans" | "salary" | "export" | "posts" | "attendance" | "chart">("fees");
   const [pendingFees, setPendingFees] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [exercises, setExercises] = useState<any[]>([]);
@@ -38,6 +38,10 @@ function AdminPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [plans, setPlans] = useState<any[]>([]);
   const [salaries, setSalaries] = useState<any[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [attMember, setAttMember] = useState<string>("");
+  const [attMonth, setAttMonth] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [attRows, setAttRows] = useState<any[]>([]);
   const [downloading, setDownloading] = useState(false);
 
   // Product form
