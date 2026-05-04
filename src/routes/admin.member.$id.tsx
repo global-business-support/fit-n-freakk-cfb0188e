@@ -48,14 +48,13 @@ function AdminMemberView() {
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    if (!loading && (!user || (role !== "admin" && role !== "manager"))) {
+    if (loading) return;
+    if (!user || (role !== "admin" && role !== "manager")) {
       navigate({ to: "/dashboard" });
+      return;
     }
-  }, [loading, user, role, navigate]);
-
-  useEffect(() => {
     if (id) loadAll();
-  }, [id]);
+  }, [loading, user, role, id, navigate]);
 
   const loadAll = async () => {
     setLoadingData(true);

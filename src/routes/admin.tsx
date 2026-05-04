@@ -92,12 +92,13 @@ function AdminPage() {
   const [newRole, setNewRole] = useState<string>("manager");
 
   useEffect(() => {
-    if (!loading && (!user || (role !== "admin" && role !== "manager"))) navigate({ to: "/dashboard" });
-  }, [loading, user, role, navigate]);
-
-  useEffect(() => {
+    if (loading) return;
+    if (!user || (role !== "admin" && role !== "manager")) {
+      navigate({ to: "/dashboard" });
+      return;
+    }
     loadData();
-  }, []);
+  }, [loading, user, role, navigate]);
 
   const loadData = async () => {
     const [feesRes, profilesRes, exRes, machRes, prodRes, planRes, salRes] = await Promise.all([
