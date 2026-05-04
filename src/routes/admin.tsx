@@ -358,29 +358,174 @@ function AdminPage() {
       </header>
 
       <main className="relative z-10 mx-auto max-w-lg px-4 py-4 space-y-4">
-        {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        {/* 3D Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {tabs.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={cn(
-                "shrink-0 flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider font-body transition-all",
+                "shrink-0 flex items-center gap-1.5 rounded-2xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider font-body transition-all duration-200",
                 tab === t.key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground hover:text-foreground"
+                  ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[0_8px_20px_-8px_hsl(var(--primary)/0.7),inset_0_1px_0_rgba(255,255,255,0.3)] -translate-y-0.5"
+                  : "bg-gradient-to-br from-secondary/80 to-secondary/40 text-muted-foreground border border-white/5 shadow-[0_4px_10px_-4px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.06)] hover:text-foreground hover:-translate-y-0.5"
               )}
             >
               <t.icon className="h-3.5 w-3.5" />
               {t.label}
               {t.count > 0 && (
-                <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-background/20 text-[10px]">
+                <span className="ml-0.5 flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-background/40 text-[10px] ring-1 ring-white/10">
                   {t.count}
                 </span>
               )}
             </button>
           ))}
         </div>
+
+        {/* Posts moderation */}
+        {tab === "posts" && (
+          <div className="space-y-3">
+            {posts.length === 0 && (
+              <div className="py-12 text-center text-muted-foreground font-body">
+                <ImagePlus className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p>No member posts yet</p>
+              </div>
+            )}
+            {posts.map((p: any) => (
+              <div key={p.id} className={cn("rounded-2xl border bg-card/80 backdrop-blur-md overflow-hidden",
+                p.status === "pending" ? "border-warning/40" : p.status === "approved" ? "border-success/30" : "border-destructive/30")}>
+                <div className="flex items-center justify-between p-3">
+                  <div>
+                    <p className="font-heading text-base tracking-wider">{getMemberName(p.user_id)}</p>
+                    <p className="text-[10px] uppercase tracking-wider font-body text-muted-foreground">{p.type} · {new Date(p.created_at).toLocaleString()}</p>
+                  </div>
+                  <span className={cn("rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider font-body font-bold",
+                    p.status === "approved" ? "bg-success/15 text-success" : p.status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning")}>
+                    {p.status}
+                  </span>
+                </div>
+                {p.media_url && (p.type === "reel"
+                  ? <video src={p.media_url} controls className="w-full max-h-72 bg-black" />
+                  : <img src={p.media_url} alt="post" className="w-full max-h-72 object-cover" />)}
+                {p.type === "progress" && p.progress_data && (
+                  <div className="grid grid-cols-4 gap-2 p-3 bg-secondary/30 text-center">
+                    {["weight", "waist", "chest", "arms"].map((k) => (
+                      <div key={k}>
+                        <p className="text-[9px] uppercase font-body text-muted-foreground">{k}</p>
+                        <p className="font-heading text-sm text-primary">{p.progress_data[k] || "—"}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {p.caption && <p className="p-3 text-sm font-body text-foreground/90">{p.caption}</p>}
+                <div className="flex gap-2 p-3 pt-0">
+                  {p.status !== "approved" && (
+                    <Button variant="ember" size="sm" onClick={() => setPostStatus(p.id, "approved")} className="flex-1">
+                      <Check className="h-4 w-4 mr-1" /> Approve
+                    </Button>
+                  )}
+                  {p.status !== "rejected" && (
+                    <Button variant="outline" size="sm" onClick={() => setPostStatus(p.id, "rejected")} className="flex-1">
+                      <X className="h-4 w-4 mr-1" /> Reject
+                    </Button>
+                  )}
+                  <button onClick={() => deletePost(p.id)} className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Monthly attendance grid */}
+        {tab === "attendance" && (
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-sky/30 bg-card/80 backdrop-blur-md p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs uppercase tracking-wider font-body">Member</Label>
+                  <select className="w-full mt-1 rounded-lg bg-secondary border border-border p-2.5 text-sm font-body" value={attMember} onChange={(e) => loadAttendanceMonth(e.target.value, attMonth)}>
+                    <option value="">Choose...</option>
+                    {members.map((m: any) => <option key={m.user_id} value={m.user_id}>{m.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider font-body">Month</Label>
+                  <input type="month" className="w-full mt-1 rounded-lg bg-secondary border border-border p-2.5 text-sm font-body" value={attMonth} onChange={(e) => loadAttendanceMonth(attMember, e.target.value)} />
+                </div>
+              </div>
+            </div>
+            {attMember && (() => {
+              const [y, m] = attMonth.split("-").map(Number);
+              const daysInMonth = new Date(y, m, 0).getDate();
+              const firstDow = new Date(y, m - 1, 1).getDay();
+              const byDay: Record<number, any> = {};
+              attRows.forEach((r) => {
+                const d = new Date(r.checked_in_at).getDate();
+                byDay[d] = r;
+              });
+              const totalPresent = Object.values(byDay).filter((r: any) => r.status !== "absent").length;
+              const totalOff = Object.values(byDay).filter((r: any) => r.status === "absent").length;
+              return (
+                <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-md p-4">
+                  <div className="flex justify-between mb-3">
+                    <p className="font-heading tracking-wider">{getMemberName(attMember)}</p>
+                    <p className="text-xs font-body"><span className="text-success">Present {totalPresent}</span> · <span className="text-destructive">Off {totalOff}</span></p>
+                  </div>
+                  <div className="grid grid-cols-7 gap-1.5">
+                    {["S","M","T","W","T","F","S"].map((d, i) => <p key={i} className="text-[10px] text-center font-body text-muted-foreground">{d}</p>)}
+                    {Array.from({ length: firstDow }).map((_, i) => <div key={`b${i}`} />)}
+                    {Array.from({ length: daysInMonth }).map((_, i) => {
+                      const day = i + 1;
+                      const r = byDay[day];
+                      const isPresent = r && r.status !== "absent";
+                      const isOff = r && r.status === "absent";
+                      return (
+                        <div key={day} className={cn(
+                          "aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-body border",
+                          isPresent && "bg-success/20 text-success border-success/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]",
+                          isOff && "bg-destructive/20 text-destructive border-destructive/40",
+                          !r && "bg-secondary/30 text-muted-foreground border-border/50"
+                        )}>
+                          <span className="font-bold">{day}</span>
+                          {r && <span className="text-[8px]">{isPresent ? "✓" : "off"}</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* Beginner chart */}
+        {tab === "chart" && (
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-sky/30 bg-card/80 backdrop-blur-md p-4">
+              <p className="font-heading text-lg tracking-wider text-sky">BEGINNER STARTER CHART</p>
+              <p className="text-xs text-muted-foreground font-body">Body-part wise exercises tagged "beginner". Tag exercises in the Exercises tab.</p>
+            </div>
+            {Array.from(new Set(exercises.map((e: any) => e.body_part))).map((bp) => {
+              const list = exercises.filter((e: any) => e.body_part === bp && (e.difficulty === "beginner" || !e.difficulty));
+              if (list.length === 0) return null;
+              return (
+                <div key={bp as string} className="rounded-2xl border border-border bg-card/80 backdrop-blur-md p-4">
+                  <p className="font-heading text-base tracking-wider text-primary mb-2">{(bp as string).toUpperCase()} <span className="text-xs text-muted-foreground">({list.length})</span></p>
+                  <div className="space-y-1.5">
+                    {list.map((ex: any) => (
+                      <div key={ex.id} className="flex items-center justify-between rounded-lg bg-secondary/40 px-3 py-2">
+                        <span className="text-sm font-body">{ex.name}</span>
+                        {ex.sets && <span className="text-xs text-ember font-body">{ex.sets}×{ex.reps}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Fee Approvals */}
         {tab === "fees" && (
