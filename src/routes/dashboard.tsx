@@ -14,6 +14,8 @@ import { LiveBackground } from "@/components/LiveBackground";
 import { HomeBackground } from "@/components/HomeBackground";
 import { AttendanceToggle } from "@/components/AttendanceToggle";
 import { WeekDayStrip } from "@/components/WeekDayStrip";
+import { MemberPostUpload } from "@/components/MemberPostUpload";
+import { CommunityFeed } from "@/components/CommunityFeed";
 import { useInactivityLogout } from "@/hooks/use-inactivity-logout";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
