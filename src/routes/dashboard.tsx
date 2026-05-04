@@ -328,6 +328,10 @@ function MemberDashboard() {
 
         {/* Today's videos — auto-embedded, play in place */}
         {user && <TodayVideoFeed userId={user.id} />}
+
+        {/* Member post upload + community feed */}
+        {user && <MemberPostUpload userId={user.id} />}
+        {user && <CommunityFeed currentUserId={user.id} />}
       </main>
       <BottomNav />
     </div>
