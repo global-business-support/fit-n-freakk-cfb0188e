@@ -201,9 +201,10 @@ function AdminPage() {
       reps: newEx.reps || null,
       video_url: newEx.video_url || null,
       gender_target: newEx.gender_target,
+      difficulty: newEx.difficulty,
       created_by: user?.id,
-    });
-    setNewEx({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gender_target: "both" });
+    } as any);
+    setNewEx({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gender_target: "both", difficulty: "beginner" });
     setShowExForm(false);
     loadData();
   };
