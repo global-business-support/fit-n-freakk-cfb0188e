@@ -1,1 +1,4 @@
 project_id = "vqszzhhvppognftjmnpd"
+
+[functions.generate-fitness-plan]
+verify_jwt = true
