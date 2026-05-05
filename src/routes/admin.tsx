@@ -623,7 +623,34 @@ function AdminPage() {
                   <Input placeholder="Sets" type="number" className="bg-secondary border-border" value={newEx.sets} onChange={(e) => setNewEx({ ...newEx, sets: e.target.value })} />
                   <Input placeholder="Reps (e.g. 8-12)" className="bg-secondary border-border" value={newEx.reps} onChange={(e) => setNewEx({ ...newEx, reps: e.target.value })} />
                 </div>
-                <Input placeholder="Video URL (YouTube/Drive)" className="bg-secondary border-border" value={newEx.video_url} onChange={(e) => setNewEx({ ...newEx, video_url: e.target.value })} />
+                <div className="space-y-2">
+                  <Input placeholder="Video URL (YouTube / Drive / direct .mp4)" className="bg-secondary border-border" value={newEx.video_url} onChange={(e) => setNewEx({ ...newEx, video_url: e.target.value })} />
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-body">or upload</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                  <input
+                    ref={exVideoInputRef}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadExerciseVideo(f); }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exVideoInputRef.current?.click()}
+                    disabled={exVideoUploading}
+                    className="w-full"
+                  >
+                    {exVideoUploading ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> Upload Video File</>)}
+                  </Button>
+                  {newEx.video_url && (
+                    <p className="text-[10px] text-success font-body truncate">✓ Video set: {newEx.video_url.slice(0, 60)}...</p>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   {["both", "male", "female"].map((g) => (
                     <button key={g} onClick={() => setNewEx({ ...newEx, gender_target: g })} className={cn("rounded-lg border px-3 py-1.5 text-xs font-body uppercase", newEx.gender_target === g ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}>
