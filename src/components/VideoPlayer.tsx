@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Play, X, Columns2 } from "lucide-react";
 
-/** All previews across the app are capped at 30 seconds. */
-const PREVIEW_SECONDS = 30;
+/** Default preview cap (used only on locked/public surfaces). Logged-in views play full-length. */
+const PREVIEW_SECONDS = 0; // 0 = no cap, full video with seek controls
 
 /**
  * Convert any YouTube URL to an embed URL — plays in-app, no new tab.
