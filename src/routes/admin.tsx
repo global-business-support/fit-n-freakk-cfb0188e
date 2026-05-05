@@ -264,6 +264,24 @@ function AdminPage() {
     setExercises((prev) => prev.filter((e) => e.id !== id));
   };
 
+  const uploadMachineVideo = async (file: File) => {
+    if (!file || !user) return;
+    setMachineVideoUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const path = `${user.id}/machine-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      setNewMachine((s) => ({ ...s, video_url: pub.publicUrl }));
+    } finally {
+      setMachineVideoUploading(false);
+      if (machineVideoInputRef.current) machineVideoInputRef.current.value = "";
+    }
+  };
+
   const addMachine = async () => {
     if (!newMachine.name) return;
     await supabase.from("machines").insert({
