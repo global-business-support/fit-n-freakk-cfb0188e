@@ -80,6 +80,8 @@ function AdminPage() {
   // New exercise form
   const [newEx, setNewEx] = useState({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gender_target: "both", difficulty: "beginner" });
   const [showExForm, setShowExForm] = useState(false);
+  const [exVideoUploading, setExVideoUploading] = useState(false);
+  const exVideoInputRef = useRef<HTMLInputElement>(null);
 
   // New machine form
   const [newMachine, setNewMachine] = useState({ name: "", description: "", how_to_use: "", image_url: "", video_url: "" });
