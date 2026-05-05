@@ -221,6 +221,24 @@ function AdminPage() {
 
   const getMemberName = (userId: string) => members.find((m: any) => m.user_id === userId)?.name || "Unknown";
 
+  const uploadExerciseVideo = async (file: File) => {
+    if (!file || !user) return;
+    setExVideoUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const path = `${user.id}/exercise-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      setNewEx((s) => ({ ...s, video_url: pub.publicUrl }));
+    } finally {
+      setExVideoUploading(false);
+      if (exVideoInputRef.current) exVideoInputRef.current.value = "";
+    }
+  };
+
   const addExercise = async () => {
     if (!newEx.name || !newEx.body_part) return;
     await supabase.from("exercises").insert({
