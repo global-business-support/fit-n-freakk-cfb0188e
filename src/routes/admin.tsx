@@ -721,7 +721,29 @@ function AdminPage() {
                 <Input placeholder="Description" className="bg-secondary border-border" value={newMachine.description} onChange={(e) => setNewMachine({ ...newMachine, description: e.target.value })} />
                 <textarea placeholder="How to use this machine..." className="w-full rounded-lg bg-secondary border border-border p-3 text-sm font-body min-h-[80px] resize-none" value={newMachine.how_to_use} onChange={(e) => setNewMachine({ ...newMachine, how_to_use: e.target.value })} />
                 <Input placeholder="Image URL" className="bg-secondary border-border" value={newMachine.image_url} onChange={(e) => setNewMachine({ ...newMachine, image_url: e.target.value })} />
-                <Input placeholder="Video URL" className="bg-secondary border-border" value={newMachine.video_url} onChange={(e) => setNewMachine({ ...newMachine, video_url: e.target.value })} />
+                <Input placeholder="Video URL (YouTube / Drive / direct .mp4)" className="bg-secondary border-border" value={newMachine.video_url} onChange={(e) => setNewMachine({ ...newMachine, video_url: e.target.value })} />
+                <div className="space-y-1">
+                  <input
+                    ref={machineVideoInputRef}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadMachineVideo(f); }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={machineVideoUploading}
+                    onClick={() => machineVideoInputRef.current?.click()}
+                    className="w-full"
+                  >
+                    {machineVideoUploading ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> Upload Video File</>)}
+                  </Button>
+                  {newMachine.video_url && (
+                    <p className="text-[10px] text-success font-body truncate">✓ Video set: {newMachine.video_url.slice(0, 60)}...</p>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <Button variant="ember" size="sm" onClick={addMachine}>Save</Button>
                   <Button variant="outline" size="sm" onClick={() => setShowMachineForm(false)}>Cancel</Button>
