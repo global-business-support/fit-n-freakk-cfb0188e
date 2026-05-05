@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Play, X, Columns2 } from "lucide-react";
 
 /** Default preview cap (used only on locked/public surfaces). Logged-in views play full-length. */
