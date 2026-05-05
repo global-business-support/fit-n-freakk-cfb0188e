@@ -86,6 +86,8 @@ function AdminPage() {
   // New machine form
   const [newMachine, setNewMachine] = useState({ name: "", description: "", how_to_use: "", image_url: "", video_url: "" });
   const [showMachineForm, setShowMachineForm] = useState(false);
+  const [machineVideoUploading, setMachineVideoUploading] = useState(false);
+  const machineVideoInputRef = useRef<HTMLInputElement>(null);
 
   // Schedule assignment
   const [scheduleUser, setScheduleUser] = useState("");
