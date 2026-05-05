@@ -86,6 +86,8 @@ function AdminPage() {
   // New machine form
   const [newMachine, setNewMachine] = useState({ name: "", description: "", how_to_use: "", image_url: "", video_url: "" });
   const [showMachineForm, setShowMachineForm] = useState(false);
+  const [machineVideoUploading, setMachineVideoUploading] = useState(false);
+  const machineVideoInputRef = useRef<HTMLInputElement>(null);
 
   // Schedule assignment
   const [scheduleUser, setScheduleUser] = useState("");
@@ -260,6 +262,24 @@ function AdminPage() {
   const deleteExercise = async (id: string) => {
     await supabase.from("exercises").delete().eq("id", id);
     setExercises((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  const uploadMachineVideo = async (file: File) => {
+    if (!file || !user) return;
+    setMachineVideoUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const path = `${user.id}/machine-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      setNewMachine((s) => ({ ...s, video_url: pub.publicUrl }));
+    } finally {
+      setMachineVideoUploading(false);
+      if (machineVideoInputRef.current) machineVideoInputRef.current.value = "";
+    }
   };
 
   const addMachine = async () => {
@@ -701,7 +721,29 @@ function AdminPage() {
                 <Input placeholder="Description" className="bg-secondary border-border" value={newMachine.description} onChange={(e) => setNewMachine({ ...newMachine, description: e.target.value })} />
                 <textarea placeholder="How to use this machine..." className="w-full rounded-lg bg-secondary border border-border p-3 text-sm font-body min-h-[80px] resize-none" value={newMachine.how_to_use} onChange={(e) => setNewMachine({ ...newMachine, how_to_use: e.target.value })} />
                 <Input placeholder="Image URL" className="bg-secondary border-border" value={newMachine.image_url} onChange={(e) => setNewMachine({ ...newMachine, image_url: e.target.value })} />
-                <Input placeholder="Video URL" className="bg-secondary border-border" value={newMachine.video_url} onChange={(e) => setNewMachine({ ...newMachine, video_url: e.target.value })} />
+                <Input placeholder="Video URL (YouTube / Drive / direct .mp4)" className="bg-secondary border-border" value={newMachine.video_url} onChange={(e) => setNewMachine({ ...newMachine, video_url: e.target.value })} />
+                <div className="space-y-1">
+                  <input
+                    ref={machineVideoInputRef}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadMachineVideo(f); }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={machineVideoUploading}
+                    onClick={() => machineVideoInputRef.current?.click()}
+                    className="w-full"
+                  >
+                    {machineVideoUploading ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> Upload Video File</>)}
+                  </Button>
+                  {newMachine.video_url && (
+                    <p className="text-[10px] text-success font-body truncate">✓ Video set: {newMachine.video_url.slice(0, 60)}...</p>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <Button variant="ember" size="sm" onClick={addMachine}>Save</Button>
                   <Button variant="outline" size="sm" onClick={() => setShowMachineForm(false)}>Cancel</Button>
