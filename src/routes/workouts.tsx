@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { BodyPartDiagram } from "@/components/BodyPartDiagram";
 
 export const Route = createFileRoute("/workouts")({
   head: () => ({
