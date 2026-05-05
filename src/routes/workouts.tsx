@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { BodyPartDiagram } from "@/components/BodyPartDiagram";
 
 export const Route = createFileRoute("/workouts")({
   head: () => ({
@@ -212,7 +213,8 @@ function WorkoutsPage() {
                   </button>
 
                   {expandedPart === part && (
-                    <div className="border-t border-border px-4 pb-4 pt-2 space-y-3">
+                    <div className="border-t border-border px-4 pb-4 pt-3 space-y-3">
+                      <BodyPartDiagram bodyPart={part} className="max-w-[260px] mx-auto" />
                       {partExercises.map((exercise: any) => (
                         <ExerciseCard
                           key={exercise.id}

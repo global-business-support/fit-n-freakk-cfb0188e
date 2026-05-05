@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Play, X, Columns2 } from "lucide-react";
 
-/** All previews across the app are capped at 30 seconds. */
-const PREVIEW_SECONDS = 30;
+/** Default preview cap (used only on locked/public surfaces). Logged-in views play full-length. */
+const PREVIEW_SECONDS = 0; // 0 = no cap, full video with seek controls
 
 /**
  * Convert any YouTube URL to an embed URL — plays in-app, no new tab.
@@ -25,8 +25,8 @@ function toYouTubeEmbed(url: string): string | null {
     }
 
     if (!id) return null;
-    // controls=0 hides progress bar so users cannot skip past 30s; disablekb=1 blocks keyboard seek; fs=0 hides fullscreen.
-    return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&start=0&end=${PREVIEW_SECONDS}`;
+    // Full controls so users can seek forward/backward and replay.
+    return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&controls=1&iv_load_policy=3`;
   } catch {
     return null;
   }
@@ -47,14 +47,8 @@ function getEmbedSrc(url: string): { embed: string | null; isDirect: boolean } {
   return { embed, isDirect };
 }
 
-function VideoFrame({ url, title, onEnded }: { url: string; title?: string; onEnded?: () => void }) {
+function VideoFrame({ url, title }: { url: string; title?: string; onEnded?: () => void }) {
   const { embed, isDirect } = getEmbedSrc(url);
-  // Hard-cut timer for iframe embeds (YouTube/Drive) — YouTube's &end= isn't always respected for ad-less clips.
-  useEffect(() => {
-    if (!embed) return;
-    const t = setTimeout(() => { onEnded?.(); }, PREVIEW_SECONDS * 1000 + 500);
-    return () => clearTimeout(t);
-  }, [embed, onEnded]);
 
   if (embed) {
     return (
@@ -73,16 +67,9 @@ function VideoFrame({ url, title, onEnded }: { url: string; title?: string; onEn
         src={url}
         autoPlay
         playsInline
-        controlsList="nodownload noplaybackrate noremoteplayback"
-        disablePictureInPicture
-        onContextMenu={(e) => e.preventDefault()}
+        controls
+        controlsList="nodownload"
         className="absolute inset-0 h-full w-full"
-        onTimeUpdate={(e) => {
-          if (e.currentTarget.currentTime >= PREVIEW_SECONDS) {
-            e.currentTarget.pause();
-            onEnded?.();
-          }
-        }}
       />
     );
   }

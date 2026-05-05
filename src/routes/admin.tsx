@@ -80,6 +80,8 @@ function AdminPage() {
   // New exercise form
   const [newEx, setNewEx] = useState({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gender_target: "both", difficulty: "beginner" });
   const [showExForm, setShowExForm] = useState(false);
+  const [exVideoUploading, setExVideoUploading] = useState(false);
+  const exVideoInputRef = useRef<HTMLInputElement>(null);
 
   // New machine form
   const [newMachine, setNewMachine] = useState({ name: "", description: "", how_to_use: "", image_url: "", video_url: "" });
@@ -218,6 +220,24 @@ function AdminPage() {
   };
 
   const getMemberName = (userId: string) => members.find((m: any) => m.user_id === userId)?.name || "Unknown";
+
+  const uploadExerciseVideo = async (file: File) => {
+    if (!file || !user) return;
+    setExVideoUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const path = `${user.id}/exercise-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      setNewEx((s) => ({ ...s, video_url: pub.publicUrl }));
+    } finally {
+      setExVideoUploading(false);
+      if (exVideoInputRef.current) exVideoInputRef.current.value = "";
+    }
+  };
 
   const addExercise = async () => {
     if (!newEx.name || !newEx.body_part) return;
@@ -603,7 +623,34 @@ function AdminPage() {
                   <Input placeholder="Sets" type="number" className="bg-secondary border-border" value={newEx.sets} onChange={(e) => setNewEx({ ...newEx, sets: e.target.value })} />
                   <Input placeholder="Reps (e.g. 8-12)" className="bg-secondary border-border" value={newEx.reps} onChange={(e) => setNewEx({ ...newEx, reps: e.target.value })} />
                 </div>
-                <Input placeholder="Video URL (YouTube/Drive)" className="bg-secondary border-border" value={newEx.video_url} onChange={(e) => setNewEx({ ...newEx, video_url: e.target.value })} />
+                <div className="space-y-2">
+                  <Input placeholder="Video URL (YouTube / Drive / direct .mp4)" className="bg-secondary border-border" value={newEx.video_url} onChange={(e) => setNewEx({ ...newEx, video_url: e.target.value })} />
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-body">or upload</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                  <input
+                    ref={exVideoInputRef}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadExerciseVideo(f); }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exVideoInputRef.current?.click()}
+                    disabled={exVideoUploading}
+                    className="w-full"
+                  >
+                    {exVideoUploading ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> Upload Video File</>)}
+                  </Button>
+                  {newEx.video_url && (
+                    <p className="text-[10px] text-success font-body truncate">✓ Video set: {newEx.video_url.slice(0, 60)}...</p>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   {["both", "male", "female"].map((g) => (
                     <button key={g} onClick={() => setNewEx({ ...newEx, gender_target: g })} className={cn("rounded-lg border px-3 py-1.5 text-xs font-body uppercase", newEx.gender_target === g ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}>

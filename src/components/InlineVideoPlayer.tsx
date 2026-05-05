@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause } from "lucide-react";
 
-/** ALL videos in the app are capped at 30s — no exceptions. */
-const MAX_PREVIEW_SECONDS = 30;
-
+/** Default: no cap (full video). Pass previewSeconds to enable a hard cut for locked/public surfaces. */
 function toYouTubeEmbed(url: string, opts?: { previewSeconds?: number }): string | null {
   if (!url) return null;
   try {
@@ -18,9 +16,10 @@ function toYouTubeEmbed(url: string, opts?: { previewSeconds?: number }): string
       else if (u.pathname.startsWith("/v/")) id = u.pathname.split("/")[2];
     }
     if (!id) return null;
-    const end = Math.min(opts?.previewSeconds ?? MAX_PREVIEW_SECONDS, MAX_PREVIEW_SECONDS);
-    // controls=0 hides bar so users can't skip; disablekb=1 disables keyboard seek; fs=0 hides fullscreen; iv_load_policy=3 hides annotations.
-    return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&start=0&end=${end}`;
+    const cap = opts?.previewSeconds;
+    const endParam = cap && cap > 0 ? `&start=0&end=${cap}` : "";
+    // Full controls so users can scrub forward/backward.
+    return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&controls=1&iv_load_policy=3${endParam}`;
   } catch {
     return null;
   }
@@ -64,12 +63,12 @@ interface InlineVideoPlayerProps {
 export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", previewSeconds }: InlineVideoPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  // Always cap at MAX_PREVIEW_SECONDS — never honor a higher value
-  const cap = Math.min(previewSeconds ?? MAX_PREVIEW_SECONDS, MAX_PREVIEW_SECONDS);
+  // 0 / undefined = no cap (full video with seek). Positive = locked preview.
+  const cap = previewSeconds && previewSeconds > 0 ? previewSeconds : 0;
 
-  // Hard-cut: stop playback after cap seconds (works for iframes too — JS-level kill)
+  // Hard-cut only when a positive cap is set
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || cap <= 0) return;
     const t = setTimeout(() => setPlaying(false), cap * 1000 + 200);
     return () => clearTimeout(t);
   }, [playing, cap]);
@@ -132,13 +131,11 @@ export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", pr
           src={url}
           autoPlay
           playsInline
-          controlsList="nodownload noplaybackrate noremoteplayback"
-          disablePictureInPicture
-          onContextMenu={(e) => e.preventDefault()}
+          controls
+          controlsList="nodownload"
           className="absolute inset-0 h-full w-full"
           onTimeUpdate={(e) => {
-            // Hard cap at 30s — also block forward seeking past cap
-            if (e.currentTarget.currentTime >= cap) {
+            if (cap > 0 && e.currentTarget.currentTime >= cap) {
               e.currentTarget.pause();
               setPlaying(false);
             }
@@ -149,11 +146,12 @@ export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", pr
           Unsupported video URL.
         </div>
       )}
-      {/* 30s preview badge */}
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-body uppercase tracking-wider text-sky-100 backdrop-blur-sm">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-        {cap}s preview
-      </div>
+      {cap > 0 && (
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-body uppercase tracking-wider text-sky-100 backdrop-blur-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          {cap}s preview
+        </div>
+      )}
       <button
         type="button"
         onClick={() => setPlaying(false)}
