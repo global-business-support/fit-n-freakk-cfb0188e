@@ -47,14 +47,8 @@ function getEmbedSrc(url: string): { embed: string | null; isDirect: boolean } {
   return { embed, isDirect };
 }
 
-function VideoFrame({ url, title, onEnded }: { url: string; title?: string; onEnded?: () => void }) {
+function VideoFrame({ url, title }: { url: string; title?: string; onEnded?: () => void }) {
   const { embed, isDirect } = getEmbedSrc(url);
-  // Hard-cut timer for iframe embeds (YouTube/Drive) — YouTube's &end= isn't always respected for ad-less clips.
-  useEffect(() => {
-    if (!embed) return;
-    const t = setTimeout(() => { onEnded?.(); }, PREVIEW_SECONDS * 1000 + 500);
-    return () => clearTimeout(t);
-  }, [embed, onEnded]);
 
   if (embed) {
     return (
@@ -73,16 +67,9 @@ function VideoFrame({ url, title, onEnded }: { url: string; title?: string; onEn
         src={url}
         autoPlay
         playsInline
-        controlsList="nodownload noplaybackrate noremoteplayback"
-        disablePictureInPicture
-        onContextMenu={(e) => e.preventDefault()}
+        controls
+        controlsList="nodownload"
         className="absolute inset-0 h-full w-full"
-        onTimeUpdate={(e) => {
-          if (e.currentTarget.currentTime >= PREVIEW_SECONDS) {
-            e.currentTarget.pause();
-            onEnded?.();
-          }
-        }}
       />
     );
   }
