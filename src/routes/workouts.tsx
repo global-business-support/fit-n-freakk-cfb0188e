@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { BodyPartDiagram } from "@/components/BodyPartDiagram";
+import { MusclePhoto } from "@/components/MusclePhoto";
 
 export const Route = createFileRoute("/workouts")({
   head: () => ({
@@ -107,8 +108,11 @@ function WorkoutsPage() {
                 </button>
 
                 {isOpen && (
-                  <div className="border-t border-border px-4 pb-4 pt-3 space-y-4">
-                    <BodyPartDiagram bodyPart={part} className="max-w-[260px] mx-auto" />
+                  <div className="border-t border-border px-4 pb-4 pt-3 space-y-4 animate-fade-in">
+                    <div className="grid grid-cols-2 gap-3">
+                      <MusclePhoto bodyPart={part} gender={gender} />
+                      <BodyPartDiagram bodyPart={part} />
+                    </div>
                     <div className="space-y-3">
                       {partExercises.map((exercise: any) => (
                         <ExerciseCard key={exercise.id} exercise={exercise} />
