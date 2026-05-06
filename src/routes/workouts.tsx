@@ -38,7 +38,7 @@ function WorkoutsPage() {
     const { data } = await supabase
       .from("exercises")
       .select("*")
-      .or(`gender_target.eq.${gender},gender_target.eq.both`)
+      .eq("gender_target", gender)
       .order("body_part");
     setExercises(data || []);
   };
