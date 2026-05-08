@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Play, Pause } from "lucide-react";
 
 /** Default: no cap (full video). Pass previewSeconds to enable a hard cut for locked/public surfaces. */
@@ -63,6 +63,7 @@ interface InlineVideoPlayerProps {
 export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", previewSeconds }: InlineVideoPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playerId = useId();
   // 0 / undefined = no cap (full video with seek). Positive = locked preview.
   const cap = previewSeconds && previewSeconds > 0 ? previewSeconds : 0;
 
@@ -72,6 +73,21 @@ export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", pr
     const t = setTimeout(() => setPlaying(false), cap * 1000 + 200);
     return () => clearTimeout(t);
   }, [playing, cap]);
+
+  // Keep workout pages smooth: starting one inline video stops every other one.
+  useEffect(() => {
+    const stopOtherPlayers = (event: Event) => {
+      const activeId = (event as CustomEvent<string>).detail;
+      if (activeId !== playerId) setPlaying(false);
+    };
+    window.addEventListener("feet-freakk-video-play", stopOtherPlayers);
+    return () => window.removeEventListener("feet-freakk-video-play", stopOtherPlayers);
+  }, [playerId]);
+
+  const startPlaying = () => {
+    window.dispatchEvent(new CustomEvent("feet-freakk-video-play", { detail: playerId }));
+    setPlaying(true);
+  };
 
   if (!url) return null;
 
@@ -85,7 +101,7 @@ export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", pr
     return (
       <button
         type="button"
-        onClick={() => setPlaying(true)}
+        onClick={startPlaying}
         className={`group relative aspect-video w-full overflow-hidden rounded-xl border border-sky/30 bg-black ${className}`}
         aria-label={`Play ${title || "video"}`}
       >
@@ -122,6 +138,7 @@ export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", pr
           src={embed}
           title={title || "Video"}
           className="absolute inset-0 h-full w-full"
+          loading="lazy"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
         />
@@ -132,6 +149,7 @@ export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", pr
           autoPlay
           playsInline
           controls
+          preload="metadata"
           controlsList="nodownload"
           className="absolute inset-0 h-full w-full"
           onTimeUpdate={(e) => {
