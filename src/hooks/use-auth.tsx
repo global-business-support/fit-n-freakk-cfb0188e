@@ -24,7 +24,7 @@ interface AuthState {
   role: AppRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, meta: Record<string, unknown>) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, meta: Record<string, unknown>) => Promise<{ error: string | null; userId?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -96,11 +96,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         height: meta.height as string,
         weight: meta.weight as number,
         gender: meta.gender as string,
+        member_id: meta.member_id as string,
         ...(meta.fitness_level ? { fitness_level: meta.fitness_level as string } : {}),
       } as any).eq("user_id", data.user.id);
     }
     
-    return { error: error?.message ?? null };
+    return { error: error?.message ?? null, userId: data.user?.id };
   };
 
   const signOut = async () => {
