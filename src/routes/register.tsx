@@ -73,12 +73,14 @@ function RegisterPage() {
     setIsLoading(true);
 
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
+    const id = generateMemberId(firstName, phone);
 
-    const { error: signUpError } = await signUp(email, password, {
+    const { error: signUpError, userId } = await signUp(email, password, {
       name: fullName,
       first_name: firstName.trim(),
       last_name: lastName.trim(),
       phone,
+      member_id: id,
       age: parseInt(age),
       height,
       weight: parseFloat(weight),
@@ -93,27 +95,26 @@ function RegisterPage() {
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user && photoFile) {
+    const effectiveUserId = userId;
+    if (effectiveUserId && photoFile) {
       const ext = photoFile.name.split(".").pop();
-      const path = `${user.id}/profile.${ext}`;
+      const path = `${effectiveUserId}/profile.${ext}`;
       const { data: uploadData } = await supabase.storage.from("media").upload(path, photoFile, { upsert: true });
       if (uploadData) {
         const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
-        await supabase.from("profiles").update({ photo_url: publicUrl }).eq("user_id", user.id);
+        await supabase.from("profiles").update({ photo_url: publicUrl }).eq("user_id", effectiveUserId);
       }
     }
 
-    // Generate Member ID from FIRST name + last 4 digits of phone
-    const id = generateMemberId(firstName, phone);
-    if (user) {
+    // Member ID is saved during signup so login works immediately.
+    if (effectiveUserId) {
       let finalId = id;
       let attempt = 0;
       while (attempt < 5) {
         const { error: idErr } = await supabase
           .from("profiles")
           .update({ member_id: finalId })
-          .eq("user_id", user.id);
+          .eq("user_id", effectiveUserId);
         if (!idErr) break;
         attempt++;
         finalId = `${id}${Math.floor(Math.random() * 90 + 10)}`;
