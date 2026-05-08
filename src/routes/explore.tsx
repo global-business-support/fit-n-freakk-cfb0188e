@@ -87,7 +87,7 @@ function ExplorePage() {
         {/* Hero */}
         <section className="text-center space-y-3">
           <p className="inline-block rounded-full border border-sky/40 bg-sky/10 px-3 py-1 text-[10px] uppercase tracking-[0.25em] font-body text-sky-200">
-            Free preview · No login needed
+            Full library · No login needed
           </p>
           <h1 className="font-heading text-4xl md:text-6xl tracking-[0.12em] text-white drop-shadow-[0_2px_24px_rgba(125,211,252,0.6)]">
             TRAIN HARDER. <span className="text-sky">SMARTER.</span>
@@ -126,7 +126,7 @@ function ExplorePage() {
               {featured.map((ex) => (
                 <TiltCard key={ex.id}>
                   <div className="rounded-2xl border border-sky/30 bg-gradient-card overflow-hidden shadow-card">
-                    <InlineVideoPlayer url={ex.video_url!} title={ex.name} thumbnailUrl={ex.thumbnail_url} previewSeconds={30} />
+                    <InlineVideoPlayer url={ex.video_url!} title={ex.name} thumbnailUrl={ex.thumbnail_url} />
                     <div className="p-3">
                       <p className="font-heading text-lg tracking-wider text-white">{ex.name.toUpperCase()}</p>
                       <p className="text-xs font-body text-sky-200/70 uppercase tracking-wider">{ex.body_part}</p>
@@ -173,7 +173,7 @@ function ExplorePage() {
                   <Link to="/exercise/$id" params={{ id: ex.id }} className="block">
                     <div className="rounded-2xl border border-sky/30 bg-gradient-card p-3 space-y-3 shadow-card hover:border-sky/60 transition">
                       {ex.video_url ? (
-                        <InlineVideoPlayer url={ex.video_url} title={ex.name} thumbnailUrl={ex.thumbnail_url} previewSeconds={30} />
+                        <InlineVideoPlayer url={ex.video_url} title={ex.name} thumbnailUrl={ex.thumbnail_url} />
                       ) : (
                         <div className="aspect-video rounded-xl bg-secondary/60 flex items-center justify-center">
                           <Dumbbell className="h-10 w-10 text-sky/50" />
