@@ -426,28 +426,44 @@ function AdminPage() {
       </header>
 
       <main className="relative z-10 mx-auto max-w-lg px-4 py-4 space-y-4">
-        {/* 3D Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={cn(
-                "shrink-0 flex items-center gap-1.5 rounded-2xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider font-body transition-all duration-200",
-                tab === t.key
-                  ? "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-[0_8px_20px_-8px_hsl(var(--primary)/0.7),inset_0_1px_0_rgba(255,255,255,0.3)] -translate-y-0.5"
-                  : "bg-gradient-to-br from-secondary/80 to-secondary/40 text-muted-foreground border border-white/5 shadow-[0_4px_10px_-4px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.06)] hover:text-foreground hover:-translate-y-0.5"
-              )}
-            >
-              <t.icon className="h-3.5 w-3.5" />
-              {t.label}
-              {t.count > 0 && (
-                <span className="ml-0.5 flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-background/40 text-[10px] ring-1 ring-white/10">
-                  {t.count}
+        {/* Stacked professional menu */}
+        <div className="flex flex-col gap-2 rounded-2xl border border-white/5 bg-card/40 p-2 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl">
+          {tabs.map((t) => {
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={cn(
+                  "group flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all duration-200",
+                  active
+                    ? "bg-gradient-to-r from-primary to-primary/70 text-primary-foreground shadow-[0_6px_18px_-8px_hsl(var(--primary)/0.7),inset_0_1px_0_rgba(255,255,255,0.25)]"
+                    : "bg-gradient-to-r from-secondary/70 to-secondary/30 text-foreground/80 border border-white/5 shadow-[0_3px_10px_-6px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] hover:text-foreground hover:from-secondary hover:to-secondary/50"
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-lg shrink-0 transition-colors",
+                    active ? "bg-white/15 ring-1 ring-white/25" : "bg-background/40 ring-1 ring-white/5 group-hover:bg-background/60"
+                  )}
+                >
+                  <t.icon className="h-4 w-4" />
                 </span>
-              )}
-            </button>
-          ))}
+                <span className="flex-1 text-sm font-bold uppercase tracking-wider font-body">{t.label}</span>
+                {t.count > 0 && (
+                  <span
+                    className={cn(
+                      "flex h-6 min-w-6 px-2 items-center justify-center rounded-full text-[11px] font-bold font-body",
+                      active ? "bg-white/20 text-white ring-1 ring-white/30" : "bg-primary/15 text-primary ring-1 ring-primary/30"
+                    )}
+                  >
+                    {t.count}
+                  </span>
+                )}
+                <ChevronRight className={cn("h-4 w-4 transition-transform", active ? "translate-x-0.5" : "opacity-40 group-hover:opacity-70")} />
+              </button>
+            );
+          })}
         </div>
 
         {/* Posts moderation */}
