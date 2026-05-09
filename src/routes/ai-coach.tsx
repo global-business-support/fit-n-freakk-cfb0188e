@@ -4,7 +4,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { LiveBackground } from "@/components/LiveBackground";
 import { BottomNav } from "@/components/BottomNav";
-import { Sparkles, ArrowLeft, Target, Flame, Salad, Dumbbell, Loader2, RefreshCw } from "lucide-react";
+import { ExerciseMotionGif } from "@/components/ExerciseMotionGif";
+import { Sparkles, ArrowLeft, Target, Flame, Salad, Dumbbell, Loader2, RefreshCw, Play } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ function AICoachPage() {
   const navigate = useNavigate();
   const [plan, setPlan] = useState<any | null>(null);
   const [planRow, setPlanRow] = useState<any | null>(null);
+  const [library, setLibrary] = useState<Array<{ id: string; name: string; body_part: string }>>([]);
   const [generating, setGenerating] = useState(false);
   const [form, setForm] = useState({
     goal: "weight_loss",
@@ -63,7 +65,15 @@ function AICoachPage() {
           setPlan(data.plan_data);
         }
       });
+    supabase
+      .from("exercises")
+      .select("id, name, body_part")
+      .then(({ data }) => setLibrary((data ?? []) as any));
   }, [user, profile]);
+
+  const matchExercise = (name: string) =>
+    library.find((e) => e.name.toLowerCase().trim() === name.toLowerCase().trim()) ||
+    library.find((e) => e.name.toLowerCase().includes(name.toLowerCase().trim()));
 
   const handleGenerate = async () => {
     if (!form.current_weight || !form.target_weight || !form.height_cm || !form.age) {
@@ -306,15 +316,39 @@ function AICoachPage() {
                       )}
                     </div>
                     {!day.rest && day.exercises && (
-                      <div className="space-y-1 mt-2">
-                        {day.exercises.map((ex: any, j: number) => (
-                          <div key={j} className="flex items-center justify-between rounded-lg bg-secondary/40 px-3 py-2">
-                            <p className="text-sm font-body font-bold text-foreground flex-1 truncate">{ex.name}</p>
-                            <p className="text-xs font-bold text-ember font-body shrink-0 ml-2">
-                              {ex.sets} × {ex.reps}
-                            </p>
-                          </div>
-                        ))}
+                      <div className="space-y-2 mt-2">
+                        {day.exercises.map((ex: any, j: number) => {
+                          const lib = matchExercise(ex.name);
+                          const bp = ex.body_part || lib?.body_part || day.focus || "Legs";
+                          const card = (
+                            <div className="rounded-xl border border-sky/20 bg-secondary/40 p-2.5 hover:border-primary/40 transition-colors">
+                              <div className="grid grid-cols-[96px_1fr] gap-3">
+                                <ExerciseMotionGif bodyPart={bp} title={ex.name} compact />
+                                <div className="min-w-0 flex flex-col justify-between">
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-body font-bold text-foreground truncate">{ex.name}</p>
+                                    {ex.benefit && (
+                                      <p className="text-[10px] text-sky-200/80 font-body mt-0.5 line-clamp-2">{ex.benefit}</p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center justify-between gap-2 mt-1.5">
+                                    <span className="text-xs font-bold text-ember font-body">{ex.sets} × {ex.reps}</span>
+                                    {lib && (
+                                      <span className="inline-flex items-center gap-1 rounded-md bg-primary/15 px-1.5 py-0.5 text-[9px] font-body uppercase tracking-wider text-primary">
+                                        <Play className="h-2.5 w-2.5" /> Watch
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                          return lib ? (
+                            <Link key={j} to="/exercise/$id" params={{ id: lib.id }} className="block">{card}</Link>
+                          ) : (
+                            <div key={j}>{card}</div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

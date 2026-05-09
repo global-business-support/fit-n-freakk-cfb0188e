@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { BodyPartDiagram } from "@/components/BodyPartDiagram";
 import { MusclePhoto } from "@/components/MusclePhoto";
+import { ExerciseMotionGif } from "@/components/ExerciseMotionGif";
 
 export const Route = createFileRoute("/workouts")({
   head: () => ({
@@ -140,13 +141,14 @@ function ExerciseCard({ exercise }: { exercise: any }) {
   if (!exercise) return null;
   return (
     <div className="rounded-lg bg-secondary/50 p-3 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm font-body">{exercise.name}</p>
+      <div className="grid grid-cols-[88px_1fr] gap-3">
+        <ExerciseMotionGif bodyPart={exercise.body_part} title={exercise.name} compact />
+        <div className="min-w-0">
+          <p className="font-semibold text-sm font-body truncate">{exercise.name}</p>
           {exercise.description && (
             <p className="text-xs text-muted-foreground mt-0.5 font-body line-clamp-2">{exercise.description}</p>
           )}
-          <div className="flex gap-3 mt-2">
+          <div className="flex gap-3 mt-1.5">
             {exercise.sets && <span className="text-xs font-semibold text-primary font-body">{exercise.sets} sets</span>}
             {exercise.reps && <span className="text-xs font-semibold text-ember font-body">{exercise.reps} reps</span>}
           </div>
