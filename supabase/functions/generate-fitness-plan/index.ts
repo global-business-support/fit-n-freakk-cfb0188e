@@ -70,7 +70,29 @@ serve(async (req) => {
       duration_days = 60,
     } = body;
 
-    const systemPrompt = `You are an expert certified fitness coach and nutritionist. You build personalized 6-day workout splits with Sunday as a complete rest day. Respond ONLY by calling the build_plan function — no prose. Be specific, realistic, safe, and motivating.`;
+    // Fetch the gym's exercise library so the AI can ONLY pick from existing exercises
+    const adminClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? supabaseAnon);
+    const { data: libraryRows } = await adminClient
+      .from("exercises")
+      .select("name, body_part, gender_target")
+      .or(`gender_target.eq.both,gender_target.eq.${gender}`)
+      .order("body_part");
+    const library = (libraryRows ?? []) as Array<{ name: string; body_part: string; gender_target: string }>;
+    const grouped: Record<string, string[]> = {};
+    for (const row of library) {
+      const bp = row.body_part || "Other";
+      (grouped[bp] ||= []).push(row.name);
+    }
+    const libraryText = Object.entries(grouped)
+      .map(([bp, names]) => `${bp}: ${[...new Set(names)].slice(0, 30).join(" | ")}`)
+      .join("\n");
+
+    const systemPrompt = `You are an expert certified fitness coach and nutritionist. You build personalized 6-day workout splits with Sunday as a complete rest day. Respond ONLY by calling the build_plan function — no prose. Be specific, realistic, safe, and motivating.
+
+CRITICAL: You MUST pick every exercise EXACTLY by name from the gym's library below. Do NOT invent new exercise names — copy them character-for-character. If a body part is missing in the library, skip it.
+
+GYM EXERCISE LIBRARY (use these names verbatim):
+${libraryText}`;
 
     const userPrompt = `Build a personalized fitness plan for this member:
 - Goal: ${goal}
@@ -84,8 +106,9 @@ serve(async (req) => {
 
 Rules:
 - 6 training days (Monday to Saturday) + Sunday FULL REST
-- Each training day must focus on a specific muscle group: Mon=Chest, Tue=Back, Wed=Legs, Thu=Shoulders, Fri=Arms, Sat=Core/Cardio
-- Each day must have 5-7 exercises with realistic sets & reps
+- Each training day focuses on a muscle group: Mon=Chest, Tue=Back, Wed=Legs, Thu=Shoulders, Fri=Arms, Sat=Abs/Cardio
+- Each day must have 5-7 exercises picked ONLY from the library above (exact names)
+- For every exercise add a "benefit" string (one short line: which muscle it grows + why)
 - Include daily calorie target appropriate for the goal
 - Add 5-7 actionable diet tips
 - Include a brief motivational summary mentioning the timeframe & expected progress`;
@@ -127,12 +150,14 @@ Rules:
                           items: {
                             type: "object",
                             properties: {
-                              name: { type: "string" },
+                              name: { type: "string", description: "EXACT exercise name from the library" },
                               sets: { type: "number" },
                               reps: { type: "string" },
+                              body_part: { type: "string", description: "Body part this exercise targets" },
+                              benefit: { type: "string", description: "One-line benefit: which muscle grows + why" },
                               notes: { type: "string" },
                             },
-                            required: ["name", "sets", "reps"],
+                            required: ["name", "sets", "reps", "body_part", "benefit"],
                           },
                         },
                       },
