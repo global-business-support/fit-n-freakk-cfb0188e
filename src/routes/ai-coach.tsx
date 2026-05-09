@@ -4,7 +4,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { LiveBackground } from "@/components/LiveBackground";
 import { BottomNav } from "@/components/BottomNav";
-import { Sparkles, ArrowLeft, Target, Flame, Salad, Dumbbell, Loader2, RefreshCw } from "lucide-react";
+import { ExerciseMotionGif } from "@/components/ExerciseMotionGif";
+import { Sparkles, ArrowLeft, Target, Flame, Salad, Dumbbell, Loader2, RefreshCw, Play } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ function AICoachPage() {
   const navigate = useNavigate();
   const [plan, setPlan] = useState<any | null>(null);
   const [planRow, setPlanRow] = useState<any | null>(null);
+  const [library, setLibrary] = useState<Array<{ id: string; name: string; body_part: string }>>([]);
   const [generating, setGenerating] = useState(false);
   const [form, setForm] = useState({
     goal: "weight_loss",
@@ -63,7 +65,15 @@ function AICoachPage() {
           setPlan(data.plan_data);
         }
       });
+    supabase
+      .from("exercises")
+      .select("id, name, body_part")
+      .then(({ data }) => setLibrary((data ?? []) as any));
   }, [user, profile]);
+
+  const matchExercise = (name: string) =>
+    library.find((e) => e.name.toLowerCase().trim() === name.toLowerCase().trim()) ||
+    library.find((e) => e.name.toLowerCase().includes(name.toLowerCase().trim()));
 
   const handleGenerate = async () => {
     if (!form.current_weight || !form.target_weight || !form.height_cm || !form.age) {
