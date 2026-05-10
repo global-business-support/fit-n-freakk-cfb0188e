@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, User, Phone, ChevronLeft, Loader2, Copy, CheckCircle2, BadgeCheck, MessageCircle, Mail } from "lucide-react";
+import { Camera, User, Phone, ChevronLeft, Loader2, Copy, CheckCircle2, BadgeCheck, MessageCircle, Mail, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +40,7 @@ function RegisterPage() {
   const [weight, setWeight] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [memberId, setMemberId] = useState<string | null>(null);
@@ -75,7 +76,7 @@ function RegisterPage() {
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
     const id = generateMemberId(firstName, phone);
 
-    const { error: signUpError, userId } = await signUp(email, password, {
+    const { error: signUpError, userId, memberId: savedMemberIdFromBackend } = await signUp(email, password, {
       name: fullName,
       first_name: firstName.trim(),
       last_name: lastName.trim(),
@@ -106,23 +107,7 @@ function RegisterPage() {
       }
     }
 
-    // Member ID is saved during signup so login works immediately.
-    if (effectiveUserId) {
-      let finalId = id;
-      let attempt = 0;
-      while (attempt < 5) {
-        const { error: idErr } = await supabase
-          .from("profiles")
-          .update({ member_id: finalId })
-          .eq("user_id", effectiveUserId);
-        if (!idErr) break;
-        attempt++;
-        finalId = `${id}${Math.floor(Math.random() * 90 + 10)}`;
-      }
-      setMemberId(finalId);
-    } else {
-      setMemberId(id);
-    }
+    setMemberId(savedMemberIdFromBackend || id);
     setSavedEmail(email);
     setSavedPhone(phone);
     setIsLoading(false);
@@ -396,7 +381,26 @@ function RegisterPage() {
 
           <div className="space-y-2">
             <Label className="text-xs uppercase tracking-wider font-body">Password</Label>
-            <Input type="password" placeholder="Create a password (min 6 chars)" className="bg-secondary border-border h-11" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Create a password (min 6 chars)"
+                className="bg-secondary border-border h-11 pr-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((visible) => !visible)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           <Button type="submit" variant="ember" size="lg" className="w-full" disabled={isLoading}>

@@ -8,9 +8,6 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { BodyPartDiagram } from "@/components/BodyPartDiagram";
-import { MusclePhoto } from "@/components/MusclePhoto";
-import { ExerciseMotionGif } from "@/components/ExerciseMotionGif";
 
 export const Route = createFileRoute("/workouts")({
   head: () => ({
@@ -110,10 +107,6 @@ function WorkoutsPage() {
 
                 {isOpen && (
                   <div className="border-t border-border px-4 pb-4 pt-3 space-y-4 animate-fade-in">
-                    <div className="grid grid-cols-2 gap-3">
-                      <MusclePhoto bodyPart={part} gender={gender} />
-                      <BodyPartDiagram bodyPart={part} />
-                    </div>
                     <div className="space-y-3">
                       {partExercises.map((exercise: any) => (
                         <ExerciseCard key={exercise.id} exercise={exercise} />
@@ -139,19 +132,18 @@ function WorkoutsPage() {
 
 function ExerciseCard({ exercise }: { exercise: any }) {
   if (!exercise) return null;
+  const impact = getExerciseImpact(exercise.body_part);
   return (
     <div className="rounded-lg bg-secondary/50 p-3 space-y-3">
-      <div className="grid grid-cols-[88px_1fr] gap-3">
-        <ExerciseMotionGif bodyPart={exercise.body_part} title={exercise.name} compact />
-        <div className="min-w-0">
-          <p className="font-semibold text-sm font-body truncate">{exercise.name}</p>
-          {exercise.description && (
-            <p className="text-xs text-muted-foreground mt-0.5 font-body line-clamp-2">{exercise.description}</p>
-          )}
-          <div className="flex gap-3 mt-1.5">
-            {exercise.sets && <span className="text-xs font-semibold text-primary font-body">{exercise.sets} sets</span>}
-            {exercise.reps && <span className="text-xs font-semibold text-ember font-body">{exercise.reps} reps</span>}
-          </div>
+      <div className="min-w-0 space-y-1.5">
+        <p className="font-semibold text-sm font-body truncate">{exercise.name}</p>
+        <p className="text-[11px] font-body text-sky uppercase tracking-wider">Impact: {impact}</p>
+        {exercise.description && (
+          <p className="text-xs text-muted-foreground font-body line-clamp-2">{exercise.description}</p>
+        )}
+        <div className="flex gap-3">
+          {exercise.sets && <span className="text-xs font-semibold text-primary font-body">{exercise.sets} sets</span>}
+          {exercise.reps && <span className="text-xs font-semibold text-ember font-body">{exercise.reps} reps</span>}
         </div>
       </div>
       {exercise.video_url ? (
@@ -163,4 +155,20 @@ function ExerciseCard({ exercise }: { exercise: any }) {
       )}
     </div>
   );
+}
+
+function getExerciseImpact(bodyPart: string) {
+  const value = (bodyPart || "").toLowerCase();
+  if (value.includes("chest")) return "Chest size, push strength";
+  if (value.includes("back")) return "Back width, pulling power";
+  if (value.includes("shoulder")) return "Shoulder caps, upper-body shape";
+  if (value.includes("bicep")) return "Biceps peak, arm strength";
+  if (value.includes("tricep")) return "Triceps size, lockout power";
+  if (value.includes("arm")) return "Full arm growth";
+  if (value.includes("leg") || value.includes("quad") || value.includes("ham")) return "Leg strength, quads and hamstrings";
+  if (value.includes("glute")) return "Glute shape, hip power";
+  if (value.includes("calf")) return "Calf shape, ankle drive";
+  if (value.includes("abs") || value.includes("core")) return "Core strength, definition";
+  if (value.includes("cardio")) return "Stamina, fat burn";
+  return "Target muscle growth";
 }
