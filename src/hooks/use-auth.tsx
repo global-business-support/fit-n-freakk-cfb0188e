@@ -24,7 +24,7 @@ interface AuthState {
   role: AppRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, meta: Record<string, unknown>) => Promise<{ error: string | null; userId?: string }>;
+  signUp: (email: string, password: string, meta: Record<string, unknown>) => Promise<{ error: string | null; userId?: string; memberId?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -83,25 +83,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: { data: meta, emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined },
     });
     
+    let memberId = meta.member_id as string | undefined;
     if (!error && data.user) {
-      // If user_type is sub_user, update their role
-      if (meta.user_type === "sub_user") {
-        await supabase.from("user_roles").update({ role: "sub_user" }).eq("user_id", data.user.id);
-      }
-      
-      await supabase.from("profiles").update({
-        name: meta.name as string,
-        phone: meta.phone as string,
-        age: meta.age as number,
-        height: meta.height as string,
-        weight: meta.weight as number,
-        gender: meta.gender as string,
-        member_id: meta.member_id as string,
-        ...(meta.fitness_level ? { fitness_level: meta.fitness_level as string } : {}),
-      } as any).eq("user_id", data.user.id);
+      const { data: savedMemberId } = await (supabase as any).rpc("complete_user_registration", {
+        _user_id: data.user.id,
+      });
+      if (savedMemberId) memberId = savedMemberId;
     }
     
-    return { error: error?.message ?? null, userId: data.user?.id };
+    return { error: error?.message ?? null, userId: data.user?.id, memberId };
   };
 
   const signOut = async () => {
