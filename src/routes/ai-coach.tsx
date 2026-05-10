@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { LiveBackground } from "@/components/LiveBackground";
 import { BottomNav } from "@/components/BottomNav";
-import { ExerciseMotionGif } from "@/components/ExerciseMotionGif";
 import { Sparkles, ArrowLeft, Target, Flame, Salad, Dumbbell, Loader2, RefreshCw, Play } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -322,23 +321,21 @@ function AICoachPage() {
                           const bp = ex.body_part || lib?.body_part || day.focus || "Legs";
                           const card = (
                             <div className="rounded-xl border border-sky/20 bg-secondary/40 p-2.5 hover:border-primary/40 transition-colors">
-                              <div className="grid grid-cols-[96px_1fr] gap-3">
-                                <ExerciseMotionGif bodyPart={bp} title={ex.name} compact />
-                                <div className="min-w-0 flex flex-col justify-between">
-                                  <div className="min-w-0">
-                                    <p className="text-sm font-body font-bold text-foreground truncate">{ex.name}</p>
-                                    {ex.benefit && (
-                                      <p className="text-[10px] text-sky-200/80 font-body mt-0.5 line-clamp-2">{ex.benefit}</p>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center justify-between gap-2 mt-1.5">
-                                    <span className="text-xs font-bold text-ember font-body">{ex.sets} × {ex.reps}</span>
-                                    {lib && (
-                                      <span className="inline-flex items-center gap-1 rounded-md bg-primary/15 px-1.5 py-0.5 text-[9px] font-body uppercase tracking-wider text-primary">
-                                        <Play className="h-2.5 w-2.5" /> Watch
-                                      </span>
-                                    )}
-                                  </div>
+                              <div className="min-w-0 flex flex-col gap-1.5">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-body font-bold text-foreground truncate">{ex.name}</p>
+                                  <p className="text-[10px] text-sky font-body uppercase tracking-wider">Impact: {bp}</p>
+                                  {ex.benefit && (
+                                    <p className="text-[10px] text-sky-200/80 font-body mt-0.5 line-clamp-2">{ex.benefit}</p>
+                                  )}
+                                </div>
+                                <div className="flex items-center justify-between gap-2 mt-1">
+                                  <span className="text-xs font-bold text-ember font-body">{ex.sets} × {ex.reps}</span>
+                                  {lib && (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-primary/15 px-1.5 py-0.5 text-[9px] font-body uppercase tracking-wider text-primary">
+                                      <Play className="h-2.5 w-2.5" /> Watch Video
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
