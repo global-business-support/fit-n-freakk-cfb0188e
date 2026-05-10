@@ -381,7 +381,26 @@ function RegisterPage() {
 
           <div className="space-y-2">
             <Label className="text-xs uppercase tracking-wider font-body">Password</Label>
-            <Input type="password" placeholder="Create a password (min 6 chars)" className="bg-secondary border-border h-11" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Create a password (min 6 chars)"
+                className="bg-secondary border-border h-11 pr-10"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((visible) => !visible)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           <Button type="submit" variant="ember" size="lg" className="w-full" disabled={isLoading}>
