@@ -561,6 +561,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      complete_user_registration: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       get_email_by_member_id: { Args: { _member_id: string }; Returns: string }
       has_role: {
         Args: {
