@@ -84,6 +84,8 @@ function AdminPage() {
   const exVideoInputRef = useRef<HTMLInputElement>(null);
   const [exGifUploading, setExGifUploading] = useState(false);
   const exGifInputRef = useRef<HTMLInputElement>(null);
+  const [exerciseMediaUploadingId, setExerciseMediaUploadingId] = useState<string | null>(null);
+  const directExerciseGifInputRef = useRef<HTMLInputElement>(null);
 
   // New machine form
   const [newMachine, setNewMachine] = useState({ name: "", description: "", how_to_use: "", image_url: "", video_url: "" });
@@ -258,6 +260,26 @@ function AdminPage() {
     } finally {
       setExGifUploading(false);
       if (exGifInputRef.current) exGifInputRef.current.value = "";
+    }
+  };
+
+  const uploadGifForExercise = async (exerciseId: string, file: File) => {
+    if (!file || !user) return;
+    setExerciseMediaUploadingId(exerciseId);
+    try {
+      const ext = (file.name.split(".").pop() || "gif").toLowerCase();
+      const path = `${user.id}/exercise-animation-${exerciseId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      const { error: saveErr } = await supabase.from("exercises").update({ gif_url: pub.publicUrl } as any).eq("id", exerciseId);
+      if (saveErr) { alert("Save failed: " + saveErr.message); return; }
+      setExercises((prev) => prev.map((ex: any) => ex.id === exerciseId ? { ...ex, gif_url: pub.publicUrl } : ex));
+    } finally {
+      setExerciseMediaUploadingId(null);
+      if (directExerciseGifInputRef.current) directExerciseGifInputRef.current.value = "";
     }
   };
 
