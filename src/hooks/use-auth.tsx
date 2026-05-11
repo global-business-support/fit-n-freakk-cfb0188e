@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { ensureMemberRegistration } from "@/lib/member-auth.functions";
 
 interface Profile {
   id: string;
@@ -85,10 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     let memberId = meta.member_id as string | undefined;
     if (!error && data.user) {
-      const { data: savedMemberId } = await (supabase as any).rpc("complete_user_registration", {
-        _user_id: data.user.id,
-      });
-      if (savedMemberId) memberId = savedMemberId;
+      const saved = await ensureMemberRegistration({ data: { userId: data.user.id } });
+      if (saved.memberId) memberId = saved.memberId;
     }
     
     return { error: error?.message ?? null, userId: data.user?.id, memberId };
