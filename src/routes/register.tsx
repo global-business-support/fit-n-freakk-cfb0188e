@@ -306,22 +306,47 @@ function RegisterPage() {
         </div>
 
         {/* Photo Upload */}
-        <div className="flex justify-center">
-          <label className="group relative cursor-pointer">
-            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-secondary transition-colors group-hover:border-primary">
-              {photoPreview ? (
-                <img src={photoPreview} alt="Profile" className="h-full w-full object-cover" />
-              ) : (
-                <Camera className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
-              )}
+        <div className="space-y-3">
+          <div className="flex justify-center">
+            <label className="group relative cursor-pointer">
+              <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-secondary transition-colors group-hover:border-primary">
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Profile" className="h-full w-full object-cover" />
+                ) : (
+                  <Camera className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
+                )}
+              </div>
+              <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <Camera className="h-3.5 w-3.5" />
+              </div>
+              <input type="file" accept="image/*" capture="user" className="hidden" onChange={handlePhotoChange} />
+            </label>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={startCamera}>
+              <Video className="h-4 w-4 mr-1" /> Live Camera
+            </Button>
+            <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+              <Camera className="h-4 w-4 mr-1" /> Gallery
+              <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+            </label>
+          </div>
+          {cameraError && <p className="text-center text-xs text-destructive font-body">{cameraError}</p>}
+          {isCameraOpen && (
+            <div className="rounded-2xl border border-sky/30 bg-card p-3 space-y-3">
+              <video ref={videoRef} autoPlay muted playsInline className="aspect-[4/3] w-full rounded-xl bg-secondary object-cover" />
+              <div className="grid grid-cols-[1fr_auto] gap-2">
+                <Button type="button" variant="ember" onClick={capturePhoto}>
+                  <Camera className="h-4 w-4 mr-1" /> Capture Photo
+                </Button>
+                <Button type="button" variant="outline" onClick={stopCamera} aria-label="Close camera">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Camera className="h-3.5 w-3.5" />
-            </div>
-            <input type="file" accept="image/*" capture="user" className="hidden" onChange={handlePhotoChange} />
-          </label>
+          )}
+          <p className="text-center text-xs text-muted-foreground font-body">Photo is mandatory *</p>
         </div>
-        <p className="text-center text-xs text-muted-foreground font-body">Photo is mandatory *</p>
 
         {error && (
           <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive font-body">
