@@ -708,7 +708,32 @@ function AdminPage() {
                     <p className="text-[10px] text-success font-body truncate">✓ Video set: {newEx.video_url.slice(0, 60)}...</p>
                   )}
                 </div>
-                <div className="flex gap-2">
+                {/* GIF / animation upload */}
+                <div className="space-y-2">
+                  <Input placeholder="GIF / animation URL (optional)" className="bg-secondary border-border" value={newEx.gif_url} onChange={(e) => setNewEx({ ...newEx, gif_url: e.target.value })} />
+                  <input
+                    ref={exGifInputRef}
+                    type="file"
+                    accept="image/gif,image/webp,image/png,image/apng,image/*"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadExerciseGif(f); }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exGifInputRef.current?.click()}
+                    disabled={exGifUploading}
+                    className="w-full"
+                  >
+                    {exGifUploading ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> Upload GIF / Animation</>)}
+                  </Button>
+                  {newEx.gif_url && (
+                    <div className="flex items-center gap-2">
+                      <img src={newEx.gif_url} alt="gif preview" className="h-16 w-16 rounded-lg object-cover border border-border" />
+                      <p className="text-[10px] text-success font-body truncate flex-1">✓ GIF set</p>
+                    </div>
+                  )}
                   {["both", "male", "female"].map((g) => (
                     <button key={g} onClick={() => setNewEx({ ...newEx, gender_target: g })} className={cn("rounded-lg border px-3 py-1.5 text-xs font-body uppercase", newEx.gender_target === g ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}>
                       {g}
