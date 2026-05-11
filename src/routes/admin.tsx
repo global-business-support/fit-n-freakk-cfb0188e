@@ -784,7 +784,11 @@ function AdminPage() {
                     {ex.sets && <p className="text-xs text-primary font-body mt-1">{ex.sets} sets × {ex.reps}</p>}
                     <div className="mt-2 grid grid-cols-2 gap-2">
                       {ex.gif_url && (
-                        <img src={ex.gif_url} alt={ex.name} className="aspect-video w-full rounded-lg object-cover border border-border" />
+                        isVideoMedia(ex.gif_url) ? (
+                          <video src={ex.gif_url} className="aspect-video w-full rounded-lg object-cover border border-border bg-secondary" autoPlay muted loop playsInline controls />
+                        ) : (
+                          <img src={ex.gif_url} alt={ex.name} className="aspect-video w-full rounded-lg object-cover border border-border" />
+                        )
                       )}
                       {ex.video_url && (
                         <VideoPlayer url={ex.video_url} title={ex.name} size="sm" />
@@ -1274,4 +1278,8 @@ function AdminPage() {
       <BottomNav />
     </div>
   );
+}
+
+function isVideoMedia(url: string) {
+  return /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(url || "");
 }
