@@ -751,19 +751,25 @@ function AdminPage() {
 
             {exercises.map((ex: any) => (
               <div key={ex.id} className="rounded-xl border border-border bg-card p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
                     <p className="font-heading text-lg tracking-wider">{ex.name}</p>
                     <div className="flex gap-2 mt-1 flex-wrap">
                       <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-body uppercase">{ex.body_part}</span>
                       <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full font-body uppercase">{ex.gender_target}</span>
+                      {ex.gif_url && <span className="text-xs bg-ember/10 text-ember px-2 py-0.5 rounded-full font-body uppercase">GIF</span>}
                     </div>
                     {ex.sets && <p className="text-xs text-primary font-body mt-1">{ex.sets} sets × {ex.reps}</p>}
-                    {ex.video_url && (
-                      <div className="mt-2"><VideoPlayer url={ex.video_url} title={ex.name} size="sm" /></div>
-                    )}
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {ex.gif_url && (
+                        <img src={ex.gif_url} alt={ex.name} className="aspect-video w-full rounded-lg object-cover border border-border" />
+                      )}
+                      {ex.video_url && (
+                        <VideoPlayer url={ex.video_url} title={ex.name} size="sm" />
+                      )}
+                    </div>
                   </div>
-                  <button onClick={() => deleteExercise(ex.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
+                  <button onClick={() => deleteExercise(ex.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 shrink-0">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
