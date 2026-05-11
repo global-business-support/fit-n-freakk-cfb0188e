@@ -243,6 +243,24 @@ function AdminPage() {
     }
   };
 
+  const uploadExerciseGif = async (file: File) => {
+    if (!file || !user) return;
+    setExGifUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "gif").toLowerCase();
+      const path = `${user.id}/exercise-gif-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      setNewEx((s) => ({ ...s, gif_url: pub.publicUrl }));
+    } finally {
+      setExGifUploading(false);
+      if (exGifInputRef.current) exGifInputRef.current.value = "";
+    }
+  };
+
   const addExercise = async () => {
     if (!newEx.name || !newEx.body_part) return;
     await supabase.from("exercises").insert({
@@ -252,11 +270,12 @@ function AdminPage() {
       sets: newEx.sets ? parseInt(newEx.sets) : null,
       reps: newEx.reps || null,
       video_url: newEx.video_url || null,
+      gif_url: newEx.gif_url || null,
       gender_target: newEx.gender_target,
       difficulty: newEx.difficulty,
       created_by: user?.id,
     } as any);
-    setNewEx({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gender_target: "both", difficulty: "beginner" });
+    setNewEx({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gif_url: "", gender_target: "both", difficulty: "beginner" });
     setShowExForm(false);
     loadData();
   };
