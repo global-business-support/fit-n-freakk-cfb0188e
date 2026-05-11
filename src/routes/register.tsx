@@ -1,9 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, User, Phone, ChevronLeft, Loader2, Copy, CheckCircle2, BadgeCheck, MessageCircle, Mail, Eye, EyeOff } from "lucide-react";
+import { Camera, User, Phone, ChevronLeft, Loader2, Copy, CheckCircle2, BadgeCheck, MessageCircle, Mail, Eye, EyeOff, Video, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +32,8 @@ function RegisterPage() {
   const [fitnessLevel, setFitnessLevel] = useState<"beginner" | "intermediate" | "advanced">("beginner");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [cameraError, setCameraError] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
@@ -49,6 +51,10 @@ function RegisterPage() {
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
   const { signUp } = useAuth();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => () => stopCamera(), []);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,6 +64,44 @@ function RegisterPage() {
       reader.onloadend = () => setPhotoPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
+  };
+
+  const startCamera = async () => {
+    setCameraError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+      cameraStreamRef.current = stream;
+      setIsCameraOpen(true);
+      setTimeout(() => {
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      }, 0);
+    } catch {
+      setCameraError("Camera permission allow karo ya gallery se photo upload karo.");
+    }
+  };
+
+  const stopCamera = () => {
+    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    cameraStreamRef.current = null;
+    setIsCameraOpen(false);
+  };
+
+  const capturePhoto = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 720;
+    canvas.height = video.videoHeight || 720;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], `profile-camera-${Date.now()}.jpg`, { type: "image/jpeg" });
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(blob));
+      stopCamera();
+    }, "image/jpeg", 0.9);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
