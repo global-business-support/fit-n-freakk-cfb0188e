@@ -146,7 +146,17 @@ function ExerciseCard({ exercise }: { exercise: any }) {
           {exercise.reps && <span className="text-xs font-semibold text-ember font-body">{exercise.reps} reps</span>}
         </div>
       </div>
-      {exercise.gif_url && (
+      {exercise.gif_url && (isVideoMedia(exercise.gif_url) ? (
+        <video
+          src={exercise.gif_url}
+          className="w-full aspect-video rounded-lg border border-border object-cover bg-black"
+          autoPlay
+          muted
+          loop
+          playsInline
+          controls
+        />
+      ) : (
         <div className="overflow-hidden rounded-lg border border-border bg-black">
           <img
             src={exercise.gif_url}
@@ -155,7 +165,7 @@ function ExerciseCard({ exercise }: { exercise: any }) {
             loading="lazy"
           />
         </div>
-      )}
+      ))}
       {exercise.video_url ? (
         <InlineVideoPlayer url={exercise.video_url} title={exercise.name} thumbnailUrl={exercise.thumbnail_url} />
       ) : !exercise.gif_url ? (
@@ -181,4 +191,8 @@ function getExerciseImpact(bodyPart: string) {
   if (value.includes("abs") || value.includes("core")) return "Core strength, definition";
   if (value.includes("cardio")) return "Stamina, fat burn";
   return "Target muscle growth";
+}
+
+function isVideoMedia(url: string) {
+  return /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(url || "");
 }
