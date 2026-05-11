@@ -734,6 +734,8 @@ function AdminPage() {
                       <p className="text-[10px] text-success font-body truncate flex-1">✓ GIF set</p>
                     </div>
                   )}
+                </div>
+                <div className="flex gap-2">
                   {["both", "male", "female"].map((g) => (
                     <button key={g} onClick={() => setNewEx({ ...newEx, gender_target: g })} className={cn("rounded-lg border px-3 py-1.5 text-xs font-body uppercase", newEx.gender_target === g ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}>
                       {g}
