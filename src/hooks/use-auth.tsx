@@ -86,8 +86,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     let memberId = meta.member_id as string | undefined;
     if (!error && data.user) {
-      const saved = await ensureMemberRegistration({ data: { userId: data.user.id } });
-      if (saved.memberId) memberId = saved.memberId;
+      try {
+        const saved = await ensureMemberRegistration({ data: { userId: data.user.id } });
+        if (saved.memberId) memberId = saved.memberId;
+      } catch (registrationError: any) {
+        return { error: registrationError?.message || "Member ID save failed. Please try again.", userId: data.user.id, memberId };
+      }
     }
     
     return { error: error?.message ?? null, userId: data.user?.id, memberId };
