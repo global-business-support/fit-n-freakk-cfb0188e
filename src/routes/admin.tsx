@@ -790,6 +790,24 @@ function AdminPage() {
                         <VideoPlayer url={ex.video_url} title={ex.name} size="sm" />
                       )}
                     </div>
+                    <input
+                      ref={exerciseMediaUploadingId === ex.id ? directExerciseGifInputRef : undefined}
+                      id={`exercise-gif-${ex.id}`}
+                      type="file"
+                      accept="image/gif,image/webp,image/apng,video/mp4,video/webm,video/*"
+                      className="hidden"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadGifForExercise(ex.id, f); }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById(`exercise-gif-${ex.id}`)?.click()}
+                      disabled={exerciseMediaUploadingId === ex.id}
+                      className="mt-3 w-full"
+                    >
+                      {exerciseMediaUploadingId === ex.id ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> Upload GIF / Animation</>)}
+                    </Button>
                   </div>
                   <button onClick={() => deleteExercise(ex.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 shrink-0">
                     <Trash2 className="h-4 w-4" />
