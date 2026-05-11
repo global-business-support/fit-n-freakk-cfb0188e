@@ -125,6 +125,7 @@ export type Database = {
           description_hi: string | null
           difficulty: string | null
           gender_target: string | null
+          gif_url: string | null
           how_to_use: string | null
           how_to_use_hi: string | null
           id: string
@@ -144,6 +145,7 @@ export type Database = {
           description_hi?: string | null
           difficulty?: string | null
           gender_target?: string | null
+          gif_url?: string | null
           how_to_use?: string | null
           how_to_use_hi?: string | null
           id?: string
@@ -163,6 +165,7 @@ export type Database = {
           description_hi?: string | null
           difficulty?: string | null
           gender_target?: string | null
+          gif_url?: string | null
           how_to_use?: string | null
           how_to_use_hi?: string | null
           id?: string
