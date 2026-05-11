@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/hooks/use-branding";
 import { supabase } from "@/integrations/supabase/client";
 import loginBg from "@/assets/login-bg.jpg";
+import { resolveMemberLoginEmail } from "@/lib/member-auth.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -80,15 +81,13 @@ function LoginPage() {
       if (cleaned.includes("@")) {
         emailToUse = cleaned;
       } else {
-        const { data, error: rpcErr } = await supabase.rpc("get_email_by_member_id", {
-          _member_id: cleaned,
-        });
-        if (rpcErr || !data) {
+        const resolved = await resolveMemberLoginEmail({ data: { identifier: cleaned } });
+        if (!resolved.email) {
           setError("Member ID not found. Please check and try again.");
           setIsLoading(false);
           return;
         }
-        emailToUse = data as string;
+        emailToUse = resolved.email;
       }
 
       const { error: signErr } = await signIn(emailToUse, password);

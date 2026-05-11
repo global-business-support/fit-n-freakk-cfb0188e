@@ -84,6 +84,8 @@ function AdminPage() {
   const exVideoInputRef = useRef<HTMLInputElement>(null);
   const [exGifUploading, setExGifUploading] = useState(false);
   const exGifInputRef = useRef<HTMLInputElement>(null);
+  const [exerciseMediaUploadingId, setExerciseMediaUploadingId] = useState<string | null>(null);
+  const directExerciseGifInputRef = useRef<HTMLInputElement>(null);
 
   // New machine form
   const [newMachine, setNewMachine] = useState({ name: "", description: "", how_to_use: "", image_url: "", video_url: "" });
@@ -258,6 +260,26 @@ function AdminPage() {
     } finally {
       setExGifUploading(false);
       if (exGifInputRef.current) exGifInputRef.current.value = "";
+    }
+  };
+
+  const uploadGifForExercise = async (exerciseId: string, file: File) => {
+    if (!file || !user) return;
+    setExerciseMediaUploadingId(exerciseId);
+    try {
+      const ext = (file.name.split(".").pop() || "gif").toLowerCase();
+      const path = `${user.id}/exercise-animation-${exerciseId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      const { error: saveErr } = await supabase.from("exercises").update({ gif_url: pub.publicUrl } as any).eq("id", exerciseId);
+      if (saveErr) { alert("Save failed: " + saveErr.message); return; }
+      setExercises((prev) => prev.map((ex: any) => ex.id === exerciseId ? { ...ex, gif_url: pub.publicUrl } : ex));
+    } finally {
+      setExerciseMediaUploadingId(null);
+      if (directExerciseGifInputRef.current) directExerciseGifInputRef.current.value = "";
     }
   };
 
@@ -762,12 +784,34 @@ function AdminPage() {
                     {ex.sets && <p className="text-xs text-primary font-body mt-1">{ex.sets} sets × {ex.reps}</p>}
                     <div className="mt-2 grid grid-cols-2 gap-2">
                       {ex.gif_url && (
-                        <img src={ex.gif_url} alt={ex.name} className="aspect-video w-full rounded-lg object-cover border border-border" />
+                        isVideoMedia(ex.gif_url) ? (
+                          <video src={ex.gif_url} className="aspect-video w-full rounded-lg object-cover border border-border bg-secondary" autoPlay muted loop playsInline controls />
+                        ) : (
+                          <img src={ex.gif_url} alt={ex.name} className="aspect-video w-full rounded-lg object-cover border border-border" />
+                        )
                       )}
                       {ex.video_url && (
                         <VideoPlayer url={ex.video_url} title={ex.name} size="sm" />
                       )}
                     </div>
+                    <input
+                      ref={exerciseMediaUploadingId === ex.id ? directExerciseGifInputRef : undefined}
+                      id={`exercise-gif-${ex.id}`}
+                      type="file"
+                      accept="image/gif,image/webp,image/apng,video/mp4,video/webm,video/*"
+                      className="hidden"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadGifForExercise(ex.id, f); }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById(`exercise-gif-${ex.id}`)?.click()}
+                      disabled={exerciseMediaUploadingId === ex.id}
+                      className="mt-3 w-full"
+                    >
+                      {exerciseMediaUploadingId === ex.id ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> Upload GIF / Animation</>)}
+                    </Button>
                   </div>
                   <button onClick={() => deleteExercise(ex.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 shrink-0">
                     <Trash2 className="h-4 w-4" />
@@ -1234,4 +1278,8 @@ function AdminPage() {
       <BottomNav />
     </div>
   );
+}
+
+function isVideoMedia(url: string) {
+  return /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(url || "");
 }
