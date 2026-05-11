@@ -146,13 +146,23 @@ function ExerciseCard({ exercise }: { exercise: any }) {
           {exercise.reps && <span className="text-xs font-semibold text-ember font-body">{exercise.reps} reps</span>}
         </div>
       </div>
+      {exercise.gif_url && (
+        <div className="overflow-hidden rounded-lg border border-border bg-black">
+          <img
+            src={exercise.gif_url}
+            alt={`${exercise.name} animation`}
+            className="w-full aspect-video object-cover"
+            loading="lazy"
+          />
+        </div>
+      )}
       {exercise.video_url ? (
         <InlineVideoPlayer url={exercise.video_url} title={exercise.name} thumbnailUrl={exercise.thumbnail_url} />
-      ) : (
+      ) : !exercise.gif_url ? (
         <div className="aspect-video rounded-lg bg-secondary flex items-center justify-center text-muted-foreground/40">
           <Play className="h-6 w-6" />
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

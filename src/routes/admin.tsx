@@ -78,10 +78,12 @@ function AdminPage() {
   }, [appName]);
 
   // New exercise form
-  const [newEx, setNewEx] = useState({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gender_target: "both", difficulty: "beginner" });
+  const [newEx, setNewEx] = useState({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gif_url: "", gender_target: "both", difficulty: "beginner" });
   const [showExForm, setShowExForm] = useState(false);
   const [exVideoUploading, setExVideoUploading] = useState(false);
   const exVideoInputRef = useRef<HTMLInputElement>(null);
+  const [exGifUploading, setExGifUploading] = useState(false);
+  const exGifInputRef = useRef<HTMLInputElement>(null);
 
   // New machine form
   const [newMachine, setNewMachine] = useState({ name: "", description: "", how_to_use: "", image_url: "", video_url: "" });
@@ -241,6 +243,24 @@ function AdminPage() {
     }
   };
 
+  const uploadExerciseGif = async (file: File) => {
+    if (!file || !user) return;
+    setExGifUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "gif").toLowerCase();
+      const path = `${user.id}/exercise-gif-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      setNewEx((s) => ({ ...s, gif_url: pub.publicUrl }));
+    } finally {
+      setExGifUploading(false);
+      if (exGifInputRef.current) exGifInputRef.current.value = "";
+    }
+  };
+
   const addExercise = async () => {
     if (!newEx.name || !newEx.body_part) return;
     await supabase.from("exercises").insert({
@@ -250,11 +270,12 @@ function AdminPage() {
       sets: newEx.sets ? parseInt(newEx.sets) : null,
       reps: newEx.reps || null,
       video_url: newEx.video_url || null,
+      gif_url: newEx.gif_url || null,
       gender_target: newEx.gender_target,
       difficulty: newEx.difficulty,
       created_by: user?.id,
     } as any);
-    setNewEx({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gender_target: "both", difficulty: "beginner" });
+    setNewEx({ name: "", body_part: "", description: "", sets: "", reps: "", video_url: "", gif_url: "", gender_target: "both", difficulty: "beginner" });
     setShowExForm(false);
     loadData();
   };
@@ -687,6 +708,33 @@ function AdminPage() {
                     <p className="text-[10px] text-success font-body truncate">✓ Video set: {newEx.video_url.slice(0, 60)}...</p>
                   )}
                 </div>
+                {/* GIF / animation upload */}
+                <div className="space-y-2">
+                  <Input placeholder="GIF / animation URL (optional)" className="bg-secondary border-border" value={newEx.gif_url} onChange={(e) => setNewEx({ ...newEx, gif_url: e.target.value })} />
+                  <input
+                    ref={exGifInputRef}
+                    type="file"
+                    accept="image/gif,image/webp,image/png,image/apng,image/*"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadExerciseGif(f); }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exGifInputRef.current?.click()}
+                    disabled={exGifUploading}
+                    className="w-full"
+                  >
+                    {exGifUploading ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> Upload GIF / Animation</>)}
+                  </Button>
+                  {newEx.gif_url && (
+                    <div className="flex items-center gap-2">
+                      <img src={newEx.gif_url} alt="gif preview" className="h-16 w-16 rounded-lg object-cover border border-border" />
+                      <p className="text-[10px] text-success font-body truncate flex-1">✓ GIF set</p>
+                    </div>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   {["both", "male", "female"].map((g) => (
                     <button key={g} onClick={() => setNewEx({ ...newEx, gender_target: g })} className={cn("rounded-lg border px-3 py-1.5 text-xs font-body uppercase", newEx.gender_target === g ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}>
@@ -703,19 +751,25 @@ function AdminPage() {
 
             {exercises.map((ex: any) => (
               <div key={ex.id} className="rounded-xl border border-border bg-card p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
                     <p className="font-heading text-lg tracking-wider">{ex.name}</p>
                     <div className="flex gap-2 mt-1 flex-wrap">
                       <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-body uppercase">{ex.body_part}</span>
                       <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full font-body uppercase">{ex.gender_target}</span>
+                      {ex.gif_url && <span className="text-xs bg-ember/10 text-ember px-2 py-0.5 rounded-full font-body uppercase">GIF</span>}
                     </div>
                     {ex.sets && <p className="text-xs text-primary font-body mt-1">{ex.sets} sets × {ex.reps}</p>}
-                    {ex.video_url && (
-                      <div className="mt-2"><VideoPlayer url={ex.video_url} title={ex.name} size="sm" /></div>
-                    )}
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {ex.gif_url && (
+                        <img src={ex.gif_url} alt={ex.name} className="aspect-video w-full rounded-lg object-cover border border-border" />
+                      )}
+                      {ex.video_url && (
+                        <VideoPlayer url={ex.video_url} title={ex.name} size="sm" />
+                      )}
+                    </div>
                   </div>
-                  <button onClick={() => deleteExercise(ex.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
+                  <button onClick={() => deleteExercise(ex.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 shrink-0">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
