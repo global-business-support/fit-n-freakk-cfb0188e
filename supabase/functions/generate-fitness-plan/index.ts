@@ -20,30 +20,18 @@ serve(async (req) => {
   }
 
   try {
-    // Require authentication
+    // Allow public gallery use; save is still handled client-side only for signed-in members.
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const token = authHeader.replace("Bearer ", "");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.replace("Bearer ", "") : "";
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseClient = createClient(supabaseUrl, supabaseAnon, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
+      global: token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
     });
-    const { data: userData, error: userErr } = await supabaseClient.auth.getUser(token);
-    if (userErr || !userData?.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { data: userData } = token ? await supabaseClient.auth.getUser(token) : { data: { user: null } };
 
-    // Per-user rate limit
-    const uid = userData.user.id;
+    // Rate limit signed-in users by account and public gallery visitors by IP.
+    const uid = userData?.user?.id || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "public";
     const now = Date.now();
     const hits = (rateMap.get(uid) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
     if (hits.length >= RATE_MAX) {

@@ -10,10 +10,13 @@ interface Profile {
   phone: string | null;
   age: number | null;
   height: string | null;
+  height_feet?: number | null;
+  height_inches?: number | null;
   weight: number | null;
   gender: string | null;
   photo_url: string | null;
   member_id: string | null;
+  dob?: string | null;
 }
 
 type AppRole = "admin" | "member" | "manager" | "sub_user";
@@ -73,13 +76,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
     return { error: error?.message ?? null };
   };
 
   const signUp = async (email: string, password: string, meta: Record<string, unknown>) => {
+    const cleanEmail = email.trim().toLowerCase();
     const { error, data } = await supabase.auth.signUp({
-      email,
+      email: cleanEmail,
       password,
       options: { data: meta, emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined },
     });

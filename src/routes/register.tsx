@@ -26,6 +26,12 @@ function generateMemberId(firstName: string, phone: string): string {
   return `${nameSlug}${phoneSlug}`;
 }
 
+const digitsOnly = (value: string) => value.replace(/\D/g, "");
+const positiveDecimal = (value: string) => value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1");
+const blockInvalidNumberKeys = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (["-", "+", "e", "E"].includes(e.key)) e.preventDefault();
+};
+
 function RegisterPage() {
   const [userType, setUserType] = useState<"member" | "sub_user">("member");
   const [gender, setGender] = useState<"male" | "female">("male");
@@ -38,8 +44,10 @@ function RegisterPage() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [age, setAge] = useState("");
-  const [height, setHeight] = useState("");
+  const [heightFeet, setHeightFeet] = useState("");
+  const [heightInches, setHeightInches] = useState("");
   const [weight, setWeight] = useState("");
+  const [dob, setDob] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -114,11 +122,20 @@ function RegisterPage() {
       setError("First name and last name are required!");
       return;
     }
+    const ageValue = Number(age);
+    const feetValue = Number(heightFeet);
+    const inchesValue = Number(heightInches || "0");
+    const weightValue = Number(weight);
+    if (!Number.isFinite(ageValue) || ageValue < 1 || !Number.isFinite(feetValue) || feetValue < 1 || !Number.isFinite(inchesValue) || inchesValue < 0 || inchesValue > 11 || !Number.isFinite(weightValue) || weightValue < 1 || !dob) {
+      setError("Age, height, weight aur DOB sahi fill karo. Negative/zero values allowed nahi hain.");
+      return;
+    }
     setError("");
     setIsLoading(true);
 
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
     const id = generateMemberId(firstName, phone);
+    const height = `${feetValue}'${inchesValue}"`;
 
     const { error: signUpError, userId, memberId: savedMemberIdFromBackend } = await signUp(email, password, {
       name: fullName,
@@ -126,9 +143,12 @@ function RegisterPage() {
       last_name: lastName.trim(),
       phone,
       member_id: id,
-      age: parseInt(age),
+      age: ageValue,
       height,
-      weight: parseFloat(weight),
+      height_feet: feetValue,
+      height_inches: inchesValue,
+      weight: weightValue,
+      dob,
       gender,
       fitness_level: fitnessLevel,
       user_type: userType,
@@ -431,15 +451,26 @@ function RegisterPage() {
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-wider font-body">Age</Label>
-              <Input placeholder="25" type="number" className="bg-secondary border-border h-11 text-center" value={age} onChange={(e) => setAge(e.target.value)} required />
+              <Input placeholder="25" type="number" min="1" step="1" inputMode="numeric" className="bg-secondary border-border h-11 text-center" value={age} onKeyDown={blockInvalidNumberKeys} onChange={(e) => setAge(digitsOnly(e.target.value))} required />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider font-body">Height</Label>
-              <Input placeholder={'5\'10"'} className="bg-secondary border-border h-11 text-center" value={height} onChange={(e) => setHeight(e.target.value)} required />
+              <Label className="text-xs uppercase tracking-wider font-body">Height Ft</Label>
+              <Input placeholder="5" type="number" min="1" step="1" inputMode="numeric" className="bg-secondary border-border h-11 text-center" value={heightFeet} onKeyDown={blockInvalidNumberKeys} onChange={(e) => setHeightFeet(digitsOnly(e.target.value))} required />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider font-body">Weight</Label>
-              <Input placeholder="75" type="number" className="bg-secondary border-border h-11 text-center" value={weight} onChange={(e) => setWeight(e.target.value)} required />
+              <Label className="text-xs uppercase tracking-wider font-body">Height In</Label>
+              <Input placeholder="10" type="number" min="0" max="11" step="1" inputMode="numeric" className="bg-secondary border-border h-11 text-center" value={heightInches} onKeyDown={blockInvalidNumberKeys} onChange={(e) => setHeightInches(digitsOnly(e.target.value).slice(0, 2))} required />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider font-body">Weight Kg</Label>
+              <Input placeholder="75" type="number" min="1" step="0.1" inputMode="decimal" className="bg-secondary border-border h-11 text-center" value={weight} onKeyDown={blockInvalidNumberKeys} onChange={(e) => setWeight(positiveDecimal(e.target.value))} required />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider font-body">DOB</Label>
+              <Input type="date" className="bg-secondary border-border h-11 text-center" value={dob} onChange={(e) => setDob(e.target.value)} required />
             </div>
           </div>
 

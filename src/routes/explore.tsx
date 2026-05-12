@@ -26,6 +26,7 @@ interface Exercise {
   body_part: string;
   video_url: string | null;
   thumbnail_url: string | null;
+  gif_url?: string | null;
   description: string | null;
   sets: number | null;
   reps: string | null;
@@ -49,12 +50,12 @@ function ExplorePage() {
       });
   }, []);
 
-  // By default only show exercises that have a working video — no broken thumbnails.
-  const playable = exercises.filter((e) => !!e.video_url);
+  // By default only show exercises that have a working video/animation — no broken thumbnails.
+  const playable = exercises.filter((e) => !!e.video_url || !!e.gif_url);
   const pool = showAll ? exercises : playable;
   const bodyParts = Array.from(new Set(pool.map((e) => e.body_part))).sort();
   const visible = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
-  const featured = playable.slice(0, 3);
+  const featured = playable.filter((e) => !!e.gif_url).concat(playable.filter((e) => !e.gif_url)).slice(0, 3);
 
   return (
     <div className="relative min-h-screen pb-24">
@@ -126,7 +127,7 @@ function ExplorePage() {
               {featured.map((ex) => (
                 <TiltCard key={ex.id}>
                   <div className="rounded-2xl border border-sky/30 bg-gradient-card overflow-hidden shadow-card">
-                    <InlineVideoPlayer url={ex.video_url!} title={ex.name} thumbnailUrl={ex.thumbnail_url} />
+                    <AutoExerciseMedia exercise={ex} />
                     <div className="p-3">
                       <p className="font-heading text-lg tracking-wider text-white">{ex.name.toUpperCase()}</p>
                       <p className="text-xs font-body text-sky-200/70 uppercase tracking-wider">{ex.body_part}</p>
@@ -172,7 +173,9 @@ function ExplorePage() {
                 <TiltCard key={ex.id}>
                   <Link to="/exercise/$id" params={{ id: ex.id }} className="block">
                     <div className="rounded-2xl border border-sky/30 bg-gradient-card p-3 space-y-3 shadow-card hover:border-sky/60 transition">
-                      {ex.video_url ? (
+                      {ex.gif_url ? (
+                        <AutoExerciseMedia exercise={ex} />
+                      ) : ex.video_url ? (
                         <InlineVideoPlayer url={ex.video_url} title={ex.name} thumbnailUrl={ex.thumbnail_url} />
                       ) : (
                         <div className="aspect-video rounded-xl bg-secondary/60 flex items-center justify-center">
@@ -238,4 +241,31 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
       {children}
     </button>
   );
+}
+
+function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
+  const mediaUrl = exercise.gif_url;
+  if (mediaUrl) {
+    const isVideo = /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(mediaUrl);
+    return isVideo ? (
+      <video
+        src={mediaUrl}
+        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+        controls={false}
+        preload="metadata"
+      />
+    ) : (
+      <img
+        src={mediaUrl}
+        alt={`${exercise.name} animation`}
+        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
+        loading="lazy"
+      />
+    );
+  }
+  return exercise.video_url ? <InlineVideoPlayer url={exercise.video_url} title={exercise.name} thumbnailUrl={exercise.thumbnail_url} /> : null;
 }
