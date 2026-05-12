@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +19,6 @@ export const Route = createFileRoute("/ai-coach")({
 
 function AICoachPage() {
   const { user, profile, loading } = useAuth();
-  const navigate = useNavigate();
   const [plan, setPlan] = useState<any | null>(null);
   const [planRow, setPlanRow] = useState<any | null>(null);
   const [library, setLibrary] = useState<Array<{ id: string; name: string; body_part: string }>>([]);
