@@ -35,22 +35,32 @@ function AICoachPage() {
     duration_days: 60,
   });
 
-  // Auth required: redirect to login
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-  }, [loading, user, navigate]);
-
-  useEffect(() => {
-    if (!user) return;
     if (profile) {
+      const profileHeight = profile.height_feet
+        ? Math.round((profile.height_feet * 30.48) + ((profile.height_inches || 0) * 2.54))
+        : profile.height
+          ? String(profile.height).replace(/[^\d.]/g, "")
+          : "";
       setForm((f) => ({
         ...f,
         current_weight: profile.weight ? String(profile.weight) : f.current_weight,
-        height_cm: profile.height ? String(profile.height).replace(/[^\d.]/g, "") : f.height_cm,
+        height_cm: profileHeight || f.height_cm,
         age: profile.age ? String(profile.age) : f.age,
         gender: profile.gender || f.gender,
       }));
     }
+  }, [profile]);
+
+  useEffect(() => {
+    supabase
+      .from("exercises")
+      .select("id, name, body_part")
+      .then(({ data }) => setLibrary((data ?? []) as any));
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
     supabase
       .from("ai_fitness_plans")
       .select("*")
@@ -64,11 +74,7 @@ function AICoachPage() {
           setPlan(data.plan_data);
         }
       });
-    supabase
-      .from("exercises")
-      .select("id, name, body_part")
-      .then(({ data }) => setLibrary((data ?? []) as any));
-  }, [user, profile]);
+  }, [user]);
 
   const matchExercise = (name: string) =>
     library.find((e) => e.name.toLowerCase().trim() === name.toLowerCase().trim()) ||
@@ -77,6 +83,10 @@ function AICoachPage() {
   const handleGenerate = async () => {
     if (!form.current_weight || !form.target_weight || !form.height_cm || !form.age) {
       toast.error("Please fill all fields");
+      return;
+    }
+    if ([form.current_weight, form.target_weight, form.height_cm, form.age].some((value) => Number(value) < 1)) {
+      toast.error("Numbers must start from 1");
       return;
     }
     setGenerating(true);
