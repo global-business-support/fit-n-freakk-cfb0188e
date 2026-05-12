@@ -451,15 +451,26 @@ function RegisterPage() {
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-wider font-body">Age</Label>
-              <Input placeholder="25" type="number" className="bg-secondary border-border h-11 text-center" value={age} onChange={(e) => setAge(e.target.value)} required />
+              <Input placeholder="25" type="number" min="1" step="1" inputMode="numeric" className="bg-secondary border-border h-11 text-center" value={age} onKeyDown={blockInvalidNumberKeys} onChange={(e) => setAge(digitsOnly(e.target.value))} required />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider font-body">Height</Label>
-              <Input placeholder={'5\'10"'} className="bg-secondary border-border h-11 text-center" value={height} onChange={(e) => setHeight(e.target.value)} required />
+              <Label className="text-xs uppercase tracking-wider font-body">Height Ft</Label>
+              <Input placeholder="5" type="number" min="1" step="1" inputMode="numeric" className="bg-secondary border-border h-11 text-center" value={heightFeet} onKeyDown={blockInvalidNumberKeys} onChange={(e) => setHeightFeet(digitsOnly(e.target.value))} required />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider font-body">Weight</Label>
-              <Input placeholder="75" type="number" className="bg-secondary border-border h-11 text-center" value={weight} onChange={(e) => setWeight(e.target.value)} required />
+              <Label className="text-xs uppercase tracking-wider font-body">Height In</Label>
+              <Input placeholder="10" type="number" min="0" max="11" step="1" inputMode="numeric" className="bg-secondary border-border h-11 text-center" value={heightInches} onKeyDown={blockInvalidNumberKeys} onChange={(e) => setHeightInches(digitsOnly(e.target.value).slice(0, 2))} required />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider font-body">Weight Kg</Label>
+              <Input placeholder="75" type="number" min="1" step="0.1" inputMode="decimal" className="bg-secondary border-border h-11 text-center" value={weight} onKeyDown={blockInvalidNumberKeys} onChange={(e) => setWeight(positiveDecimal(e.target.value))} required />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider font-body">DOB</Label>
+              <Input type="date" className="bg-secondary border-border h-11 text-center" value={dob} onChange={(e) => setDob(e.target.value)} required />
             </div>
           </div>
 
