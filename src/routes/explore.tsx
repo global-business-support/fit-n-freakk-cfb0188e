@@ -242,3 +242,30 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
     </button>
   );
 }
+
+function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
+  const mediaUrl = exercise.gif_url;
+  if (mediaUrl) {
+    const isVideo = /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(mediaUrl);
+    return isVideo ? (
+      <video
+        src={mediaUrl}
+        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+        controls={false}
+        preload="metadata"
+      />
+    ) : (
+      <img
+        src={mediaUrl}
+        alt={`${exercise.name} animation`}
+        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
+        loading="lazy"
+      />
+    );
+  }
+  return exercise.video_url ? <InlineVideoPlayer url={exercise.video_url} title={exercise.name} thumbnailUrl={exercise.thumbnail_url} /> : null;
+}
