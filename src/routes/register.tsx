@@ -26,6 +26,12 @@ function generateMemberId(firstName: string, phone: string): string {
   return `${nameSlug}${phoneSlug}`;
 }
 
+const digitsOnly = (value: string) => value.replace(/\D/g, "");
+const positiveDecimal = (value: string) => value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1");
+const blockInvalidNumberKeys = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (["-", "+", "e", "E"].includes(e.key)) e.preventDefault();
+};
+
 function RegisterPage() {
   const [userType, setUserType] = useState<"member" | "sub_user">("member");
   const [gender, setGender] = useState<"male" | "female">("male");
@@ -38,8 +44,10 @@ function RegisterPage() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [age, setAge] = useState("");
-  const [height, setHeight] = useState("");
+  const [heightFeet, setHeightFeet] = useState("");
+  const [heightInches, setHeightInches] = useState("");
   const [weight, setWeight] = useState("");
+  const [dob, setDob] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
