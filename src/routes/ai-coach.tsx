@@ -45,7 +45,7 @@ function AICoachPage() {
       setForm((f) => ({
         ...f,
         current_weight: profile.weight ? String(profile.weight) : f.current_weight,
-        height_cm: profileHeight || f.height_cm,
+        height_cm: profileHeight ? String(profileHeight) : f.height_cm,
         age: profile.age ? String(profile.age) : f.age,
         gender: profile.gender || f.gender,
       }));
