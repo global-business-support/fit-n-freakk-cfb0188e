@@ -122,11 +122,20 @@ function RegisterPage() {
       setError("First name and last name are required!");
       return;
     }
+    const ageValue = Number(age);
+    const feetValue = Number(heightFeet);
+    const inchesValue = Number(heightInches || "0");
+    const weightValue = Number(weight);
+    if (!Number.isFinite(ageValue) || ageValue < 1 || !Number.isFinite(feetValue) || feetValue < 1 || !Number.isFinite(inchesValue) || inchesValue < 0 || inchesValue > 11 || !Number.isFinite(weightValue) || weightValue < 1 || !dob) {
+      setError("Age, height, weight aur DOB sahi fill karo. Negative/zero values allowed nahi hain.");
+      return;
+    }
     setError("");
     setIsLoading(true);
 
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
     const id = generateMemberId(firstName, phone);
+    const height = `${feetValue}'${inchesValue}"`;
 
     const { error: signUpError, userId, memberId: savedMemberIdFromBackend } = await signUp(email, password, {
       name: fullName,
@@ -134,9 +143,12 @@ function RegisterPage() {
       last_name: lastName.trim(),
       phone,
       member_id: id,
-      age: parseInt(age),
+      age: ageValue,
       height,
-      weight: parseFloat(weight),
+      height_feet: feetValue,
+      height_inches: inchesValue,
+      weight: weightValue,
+      dob,
       gender,
       fitness_level: fitnessLevel,
       user_type: userType,
