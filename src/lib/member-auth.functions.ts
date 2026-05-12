@@ -64,7 +64,7 @@ export const ensureMemberRegistration = createServerFn({ method: "POST" })
 
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
-      .upsert(profilePayload, { onConflict: "user_id" });
+      .upsert(profilePayload as any, { onConflict: "user_id" });
     if (profileError) throw new Error(profileError.message);
 
     const role = meta.user_type === "sub_user" ? "sub_user" : "member";
