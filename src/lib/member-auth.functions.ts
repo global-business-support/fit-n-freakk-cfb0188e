@@ -22,7 +22,12 @@ export const ensureMemberRegistration = createServerFn({ method: "POST" })
     const onlyLetters = String(meta.first_name || meta.name || "USER").replace(/[^a-zA-Z]/g, "");
     const nameSlug = (onlyLetters.slice(0, 4) || "USER").toUpperCase().padEnd(4, "X");
     const phoneSlug = String(meta.phone || "").replace(/\D/g, "").slice(-4).padStart(4, "0");
-    const baseMemberId = String(meta.member_id || `${nameSlug}${phoneSlug}`).toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const baseMemberId = String(meta.member_id || `${nameSlug}${phoneSlug}`).toUpperCase().replace(/[^A-Z0-9]/g, "") || "USER0000";
+    const positiveNumber = (value: unknown) => {
+      const number = Number(value);
+      return Number.isFinite(number) && number >= 1 ? number : null;
+    };
+    const inches = Number(meta.height_inches);
 
     const { data: profiles } = await supabaseAdmin
       .from("profiles")
@@ -46,12 +51,15 @@ export const ensureMemberRegistration = createServerFn({ method: "POST" })
       user_id: data.userId,
       name: String(meta.name || "New Member"),
       phone: meta.phone ? String(meta.phone) : null,
-      age: meta.age ? Number(meta.age) : null,
+      age: positiveNumber(meta.age),
       height: meta.height ? String(meta.height) : null,
-      weight: meta.weight ? Number(meta.weight) : null,
+      height_feet: positiveNumber(meta.height_feet),
+      height_inches: Number.isFinite(inches) ? Math.min(Math.max(Math.trunc(inches), 0), 11) : null,
+      weight: positiveNumber(meta.weight),
       gender: meta.gender ? String(meta.gender) : null,
       fitness_level: meta.fitness_level ? String(meta.fitness_level) : "beginner",
       member_id: memberId,
+      dob: meta.dob ? String(meta.dob) : null,
     };
 
     const { error: profileError } = await supabaseAdmin
@@ -74,6 +82,11 @@ export const resolveMemberLoginEmail = createServerFn({ method: "POST" })
     if (identifier.includes("@")) return { email: identifier.toLowerCase() };
 
     const normalized = identifier.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const { data: rpcEmail } = await supabaseAdmin.rpc("get_email_by_member_id" as never, {
+      _member_id: normalized,
+    } as never);
+    if (rpcEmail) return { email: String(rpcEmail).toLowerCase() };
+
     const { data: direct } = await supabaseAdmin
       .from("profiles")
       .select("user_id, member_id")
