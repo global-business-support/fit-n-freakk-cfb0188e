@@ -366,9 +366,12 @@ export type Database = {
         Row: {
           age: number | null
           created_at: string
+          dob: string | null
           fitness_level: string | null
           gender: string | null
           height: string | null
+          height_feet: number | null
+          height_inches: number | null
           id: string
           member_id: string | null
           name: string
@@ -381,9 +384,12 @@ export type Database = {
         Insert: {
           age?: number | null
           created_at?: string
+          dob?: string | null
           fitness_level?: string | null
           gender?: string | null
           height?: string | null
+          height_feet?: number | null
+          height_inches?: number | null
           id?: string
           member_id?: string | null
           name: string
@@ -396,9 +402,12 @@ export type Database = {
         Update: {
           age?: number | null
           created_at?: string
+          dob?: string | null
           fitness_level?: string | null
           gender?: string | null
           height?: string | null
+          height_feet?: number | null
+          height_inches?: number | null
           id?: string
           member_id?: string | null
           name?: string
