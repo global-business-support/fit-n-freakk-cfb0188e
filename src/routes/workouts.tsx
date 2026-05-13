@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
+import { WorkoutHistoryCalendar } from "@/components/WorkoutHistoryCalendar";
 import { Dumbbell, ChevronRight, LogIn, Play } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -64,6 +65,9 @@ function WorkoutsPage() {
       </header>
 
       <main className="relative z-10 mx-auto max-w-lg px-4 py-4 space-y-4">
+        {/* Workout history calendar — signed-in members only */}
+        {user && <WorkoutHistoryCalendar userId={user.id} />}
+
         {/* Gender Toggle */}
         <div className="grid grid-cols-2 gap-2">
           {(["male", "female"] as const).map((g) => (

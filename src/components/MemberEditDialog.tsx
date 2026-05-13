@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { X, Loader2, RefreshCw, Save, BadgeCheck, IndianRupee, Plus, Check, Trash2, CalendarDays, Dumbbell } from "lucide-react";
+import { X, Loader2, RefreshCw, Save, BadgeCheck, IndianRupee, Plus, Check, Trash2, CalendarDays, Dumbbell, KeyRound, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { adminResetMemberPassword } from "@/lib/admin-actions.functions";
 
 const DAYS = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -232,6 +234,8 @@ export function MemberEditDialog({ member, exercises, onClose, onSaved }: Member
               <Button onClick={saveProfile} disabled={saving} className="w-full bg-gradient-primary text-primary-foreground" size="lg">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-2" /> Save Changes</>}
               </Button>
+
+              <ResetPasswordSection userId={member.user_id} memberName={member.name} />
             </div>
           )}
 
@@ -348,6 +352,61 @@ export function MemberEditDialog({ member, exercises, onClose, onSaved }: Member
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ResetPasswordSection({ userId, memberName }: { userId: string; memberName: string }) {
+  const [pwd, setPwd] = useState("");
+  const [show, setShow] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const reset = async () => {
+    if (pwd.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    setBusy(true);
+    try {
+      await adminResetMemberPassword({ data: { targetUserId: userId, newPassword: pwd } });
+      toast.success(`Password reset for ${memberName}`);
+      setPwd("");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to reset password");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2 pt-3 border-t border-border">
+      <Label className="text-xs uppercase tracking-wider font-body inline-flex items-center gap-1.5">
+        <KeyRound className="h-3.5 w-3.5 text-warning" /> Reset Member Password
+      </Label>
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Input
+            type={show ? "text" : "password"}
+            value={pwd}
+            onChange={(e) => setPwd(e.target.value)}
+            placeholder="New password (min 6 chars)"
+            className="bg-secondary border-border h-11 pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShow(!show)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        <Button onClick={reset} disabled={busy || !pwd} variant="outline" className="h-11 shrink-0">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Reset"}
+        </Button>
+      </div>
+      <p className="text-[10px] text-muted-foreground font-body">
+        Share this password with the member. They can log in with their Member ID + new password.
+      </p>
     </div>
   );
 }
