@@ -234,6 +234,8 @@ export function MemberEditDialog({ member, exercises, onClose, onSaved }: Member
               <Button onClick={saveProfile} disabled={saving} className="w-full bg-gradient-primary text-primary-foreground" size="lg">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-2" /> Save Changes</>}
               </Button>
+
+              <ResetPasswordSection userId={member.user_id} memberName={member.name} />
             </div>
           )}
 
