@@ -37,7 +37,9 @@ function ExplorePage() {
   const { appName, logoUrl } = useBranding();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [filter, setFilter] = useState<string>("all");
+  const [nameFilter, setNameFilter] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [namesOpen, setNamesOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,12 +53,28 @@ function ExplorePage() {
       });
   }, []);
 
-  // By default only show exercises that have a working video/animation — no broken thumbnails.
-  const playable = exercises.filter((e) => !!e.video_url || !!e.gif_url);
-  const pool = showAll ? exercises : playable;
+  // Dedupe by name (case-insensitive). Prefer entries with media.
+  const dedupeByName = (list: Exercise[]) => {
+    const map = new Map<string, Exercise>();
+    for (const ex of list) {
+      const key = (ex.name || "").trim().toLowerCase();
+      if (!key) continue;
+      const existing = map.get(key);
+      const hasMedia = !!ex.video_url || !!ex.gif_url;
+      const existingHasMedia = existing && (!!existing.video_url || !!existing.gif_url);
+      if (!existing || (hasMedia && !existingHasMedia)) map.set(key, ex);
+    }
+    return Array.from(map.values());
+  };
+
+  const uniqueExercises = dedupeByName(exercises);
+  const playable = uniqueExercises.filter((e) => !!e.video_url || !!e.gif_url);
+  const pool = showAll ? uniqueExercises : playable;
   const bodyParts = Array.from(new Set(pool.map((e) => e.body_part))).sort();
-  const visible = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
+  let visible = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
+  if (nameFilter) visible = visible.filter((e) => e.name.toLowerCase() === nameFilter.toLowerCase());
   const featured = playable.filter((e) => !!e.gif_url).concat(playable.filter((e) => !e.gif_url)).slice(0, 3);
+  const allNames = Array.from(new Set(uniqueExercises.map((e) => e.name).filter(Boolean))).sort((a, b) => a.localeCompare(b));
 
   return (
     <div className="relative min-h-screen pb-24">
