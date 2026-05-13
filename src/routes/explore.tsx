@@ -167,20 +167,64 @@ function ExplorePage() {
                 {visible.length} {showAll ? "total" : "with video"}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowAll((s) => !s)}
-              className="rounded-full border border-sky/40 bg-card/60 px-3 py-1 text-[10px] uppercase tracking-wider font-body text-sky-100 hover:border-sky/70 transition"
-            >
-              {showAll ? "Show videos only" : "Show all exercises"}
-            </button>
+            <div className="flex items-center gap-2">
+              <Dialog open={namesOpen} onOpenChange={setNamesOpen}>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 rounded-full border border-sky/40 bg-card/60 px-3 py-1 text-[10px] uppercase tracking-wider font-body text-sky-100 hover:border-sky/70 transition"
+                  >
+                    <List className="h-3.5 w-3.5" /> Names ({allNames.length})
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>All Exercises</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => { setNameFilter(null); setNamesOpen(false); }}
+                      className={`rounded-full px-3 py-1 text-xs font-body border transition ${!nameFilter ? "bg-gradient-primary text-white border-transparent" : "border-sky/30 text-sky-200/80 hover:border-sky/60"}`}
+                    >
+                      Show all
+                    </button>
+                    {allNames.map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => { setNameFilter(n); setFilter("all"); setNamesOpen(false); }}
+                        className={`rounded-full px-3 py-1 text-xs font-body border transition ${nameFilter === n ? "bg-gradient-primary text-white border-transparent" : "border-sky/30 text-sky-200/80 hover:border-sky/60"}`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <button
+                type="button"
+                onClick={() => setShowAll((s) => !s)}
+                className="rounded-full border border-sky/40 bg-card/60 px-3 py-1 text-[10px] uppercase tracking-wider font-body text-sky-100 hover:border-sky/70 transition"
+              >
+                {showAll ? "Show videos only" : "Show all exercises"}
+              </button>
+            </div>
           </div>
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
-            <FilterPill active={filter === "all"} onClick={() => setFilter("all")}>All</FilterPill>
-            {bodyParts.map((bp) => (
-              <FilterPill key={bp} active={filter === bp} onClick={() => setFilter(bp)}>{bp}</FilterPill>
-            ))}
-          </div>
+          {nameFilter && (
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-primary/20 border border-primary/40 px-3 py-1 text-[11px] font-body text-white">
+                Filter: {nameFilter}
+              </span>
+              <button
+                type="button"
+                onClick={() => setNameFilter(null)}
+                className="text-[11px] font-body text-sky-200/80 hover:text-white underline"
+              >
+                Clear
+              </button>
+            </div>
+          )}
 
           {loading ? (
             <div className="py-12 text-center text-sky-200/70 font-body">Loading exercises…</div>
