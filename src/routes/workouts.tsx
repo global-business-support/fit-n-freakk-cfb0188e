@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
+import { WorkoutHistoryCalendar } from "@/components/WorkoutHistoryCalendar";
 import { Dumbbell, ChevronRight, LogIn, Play } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
