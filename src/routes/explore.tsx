@@ -5,10 +5,11 @@ import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
 import { TiltCard } from "@/components/TiltCard";
 import { useBranding } from "@/hooks/use-branding";
-import { Dumbbell, Lock, LogIn, Eye, Sparkles, Cog } from "lucide-react";
+import { Dumbbell, Lock, LogIn, Eye, Sparkles, Cog, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/explore")({
   head: () => ({
@@ -36,7 +37,9 @@ function ExplorePage() {
   const { appName, logoUrl } = useBranding();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [filter, setFilter] = useState<string>("all");
+  const [nameFilter, setNameFilter] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [namesOpen, setNamesOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,12 +53,28 @@ function ExplorePage() {
       });
   }, []);
 
-  // By default only show exercises that have a working video/animation — no broken thumbnails.
-  const playable = exercises.filter((e) => !!e.video_url || !!e.gif_url);
-  const pool = showAll ? exercises : playable;
+  // Dedupe by name (case-insensitive). Prefer entries with media.
+  const dedupeByName = (list: Exercise[]) => {
+    const map = new Map<string, Exercise>();
+    for (const ex of list) {
+      const key = (ex.name || "").trim().toLowerCase();
+      if (!key) continue;
+      const existing = map.get(key);
+      const hasMedia = !!ex.video_url || !!ex.gif_url;
+      const existingHasMedia = existing && (!!existing.video_url || !!existing.gif_url);
+      if (!existing || (hasMedia && !existingHasMedia)) map.set(key, ex);
+    }
+    return Array.from(map.values());
+  };
+
+  const uniqueExercises = dedupeByName(exercises);
+  const playable = uniqueExercises.filter((e) => !!e.video_url || !!e.gif_url);
+  const pool = showAll ? uniqueExercises : playable;
   const bodyParts = Array.from(new Set(pool.map((e) => e.body_part))).sort();
-  const visible = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
+  let visible = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
+  if (nameFilter) visible = visible.filter((e) => e.name.toLowerCase() === nameFilter.toLowerCase());
   const featured = playable.filter((e) => !!e.gif_url).concat(playable.filter((e) => !e.gif_url)).slice(0, 3);
+  const allNames = Array.from(new Set(uniqueExercises.map((e) => e.name).filter(Boolean))).sort((a, b) => a.localeCompare(b));
 
   return (
     <div className="relative min-h-screen pb-24">
@@ -148,14 +167,64 @@ function ExplorePage() {
                 {visible.length} {showAll ? "total" : "with video"}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowAll((s) => !s)}
-              className="rounded-full border border-sky/40 bg-card/60 px-3 py-1 text-[10px] uppercase tracking-wider font-body text-sky-100 hover:border-sky/70 transition"
-            >
-              {showAll ? "Show videos only" : "Show all exercises"}
-            </button>
+            <div className="flex items-center gap-2">
+              <Dialog open={namesOpen} onOpenChange={setNamesOpen}>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 rounded-full border border-sky/40 bg-card/60 px-3 py-1 text-[10px] uppercase tracking-wider font-body text-sky-100 hover:border-sky/70 transition"
+                  >
+                    <List className="h-3.5 w-3.5" /> Names ({allNames.length})
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>All Exercises</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => { setNameFilter(null); setNamesOpen(false); }}
+                      className={`rounded-full px-3 py-1 text-xs font-body border transition ${!nameFilter ? "bg-gradient-primary text-white border-transparent" : "border-sky/30 text-sky-200/80 hover:border-sky/60"}`}
+                    >
+                      Show all
+                    </button>
+                    {allNames.map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => { setNameFilter(n); setFilter("all"); setNamesOpen(false); }}
+                        className={`rounded-full px-3 py-1 text-xs font-body border transition ${nameFilter === n ? "bg-gradient-primary text-white border-transparent" : "border-sky/30 text-sky-200/80 hover:border-sky/60"}`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <button
+                type="button"
+                onClick={() => setShowAll((s) => !s)}
+                className="rounded-full border border-sky/40 bg-card/60 px-3 py-1 text-[10px] uppercase tracking-wider font-body text-sky-100 hover:border-sky/70 transition"
+              >
+                {showAll ? "Show videos only" : "Show all exercises"}
+              </button>
+            </div>
           </div>
+          {nameFilter && (
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-primary/20 border border-primary/40 px-3 py-1 text-[11px] font-body text-white">
+                Filter: {nameFilter}
+              </span>
+              <button
+                type="button"
+                onClick={() => setNameFilter(null)}
+                className="text-[11px] font-body text-sky-200/80 hover:text-white underline"
+              >
+                Clear
+              </button>
+            </div>
+          )}
           <div className="flex gap-1.5 overflow-x-auto pb-1">
             <FilterPill active={filter === "all"} onClick={() => setFilter("all")}>All</FilterPill>
             {bodyParts.map((bp) => (
