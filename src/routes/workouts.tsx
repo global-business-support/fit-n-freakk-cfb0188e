@@ -65,6 +65,9 @@ function WorkoutsPage() {
       </header>
 
       <main className="relative z-10 mx-auto max-w-lg px-4 py-4 space-y-4">
+        {/* Workout history calendar — signed-in members only */}
+        {user && <WorkoutHistoryCalendar userId={user.id} />}
+
         {/* Gender Toggle */}
         <div className="grid grid-cols-2 gap-2">
           {(["male", "female"] as const).map((g) => (
