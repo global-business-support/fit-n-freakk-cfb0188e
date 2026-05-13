@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { X, Loader2, RefreshCw, Save, BadgeCheck, IndianRupee, Plus, Check, Trash2, CalendarDays, Dumbbell } from "lucide-react";
+import { X, Loader2, RefreshCw, Save, BadgeCheck, IndianRupee, Plus, Check, Trash2, CalendarDays, Dumbbell, KeyRound, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { adminResetMemberPassword } from "@/lib/admin-actions.functions";
 
 const DAYS = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
