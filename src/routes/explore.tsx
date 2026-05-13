@@ -225,6 +225,12 @@ function ExplorePage() {
               </button>
             </div>
           )}
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            <FilterPill active={filter === "all"} onClick={() => setFilter("all")}>All</FilterPill>
+            {bodyParts.map((bp) => (
+              <FilterPill key={bp} active={filter === bp} onClick={() => setFilter(bp)}>{bp}</FilterPill>
+            ))}
+          </div>
 
           {loading ? (
             <div className="py-12 text-center text-sky-200/70 font-body">Loading exercises…</div>
