@@ -56,6 +56,7 @@ serve(async (req) => {
       gender,
       activity_level = "moderate",
       duration_days = 60,
+      diet_preference = "non_veg",
     } = body;
 
     // Fetch the gym's exercise library so the AI can ONLY pick from existing exercises
@@ -91,6 +92,9 @@ ${libraryText}`;
 - Gender: ${gender}
 - Activity level: ${activity_level}
 - Plan duration: ${duration_days} days
+- Diet preference: ${diet_preference === "veg" ? "VEGETARIAN ONLY (no meat, no fish, no eggs — use paneer, tofu, dal, soya, milk, nuts)" : diet_preference === "egg" ? "EGGETARIAN (veg + eggs allowed, no meat/fish)" : "NON-VEGETARIAN (chicken, fish, eggs, meat allowed alongside veg)"}
+
+IMPORTANT: All diet tips and food suggestions MUST strictly follow the diet preference above.
 
 Rules:
 - 6 training days (Monday to Saturday) + Sunday FULL REST
