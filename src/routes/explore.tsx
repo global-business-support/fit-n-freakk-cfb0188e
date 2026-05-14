@@ -49,7 +49,28 @@ const toTitleCase = (value: string) =>
     .join(" ");
 
 const normalizeName = (name: string) => normalizeTextKey(name);
-const normalizeBodyPart = (bodyPart: string) => normalizeTextKey(bodyPart);
+const normalizeBodyPart = (bodyPart: string) => {
+  const key = normalizeTextKey(bodyPart);
+  const aliases: Record<string, string> = {
+    ab: "abs",
+    abs: "abs",
+    arm: "arms",
+    arms: "arms",
+    bicep: "biceps",
+    biceps: "biceps",
+    calf: "calves",
+    calves: "calves",
+    glute: "glutes",
+    glutes: "glutes",
+    leg: "legs",
+    legs: "legs",
+    shoulder: "shoulders",
+    shoulders: "shoulders",
+    tricep: "triceps",
+    triceps: "triceps",
+  };
+  return aliases[key] ?? key;
+};
 const formatBodyPart = (bodyPart: string) => toTitleCase(bodyPart || "Other");
 
 // Dedupe by name (normalize spaces/punct, case-insensitive). Prefer entries with media.
@@ -94,7 +115,7 @@ function ExplorePage() {
     for (const exercise of pool) {
       const key = normalizeBodyPart(exercise.body_part);
       if (!key || labels.has(key)) continue;
-      labels.set(key, formatBodyPart(exercise.body_part));
+      labels.set(key, formatBodyPart(key));
     }
     return Array.from(labels.entries())
       .map(([key, label]) => ({ key, label }))
@@ -102,7 +123,7 @@ function ExplorePage() {
   }, [pool]);
   const filtered = useMemo(() => {
     let v = filter === "all" ? pool : pool.filter((e) => normalizeBodyPart(e.body_part) === filter);
-    if (nameFilter) v = v.filter((e) => e.name.toLowerCase() === nameFilter.toLowerCase());
+    if (nameFilter) v = v.filter((e) => normalizeName(e.name) === nameFilter);
     return v;
   }, [pool, filter, nameFilter]);
   const PAGE = 18;
@@ -113,10 +134,17 @@ function ExplorePage() {
     () => playable.filter((e) => !!e.gif_url).concat(playable.filter((e) => !e.gif_url)).slice(0, 3),
     [playable],
   );
-  const allNames = useMemo(
-    () => Array.from(new Set(uniqueExercises.map((e) => e.name).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
-    [uniqueExercises],
-  );
+  const allNames = useMemo(() => {
+    const names = new Map<string, string>();
+    for (const exercise of uniqueExercises) {
+      const key = normalizeName(exercise.name);
+      if (!key || names.has(key)) continue;
+      names.set(key, toTitleCase(exercise.name));
+    }
+    return Array.from(names.entries())
+      .map(([key, label]) => ({ key, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [uniqueExercises]);
 
   return (
     <div className="relative min-h-screen pb-24">
