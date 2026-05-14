@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
@@ -53,28 +53,47 @@ function ExplorePage() {
       });
   }, []);
 
-  // Dedupe by name (case-insensitive). Prefer entries with media.
+  // Dedupe by name (normalize spaces/punct, case-insensitive). Prefer entries with media.
+  const normalizeName = (n: string) =>
+    (n || "")
+      .toLowerCase()
+      .replace(/[\s\-_]+/g, " ")
+      .replace(/[^a-z0-9 ]/g, "")
+      .trim();
   const dedupeByName = (list: Exercise[]) => {
     const map = new Map<string, Exercise>();
     for (const ex of list) {
-      const key = (ex.name || "").trim().toLowerCase();
+      const key = normalizeName(ex.name);
       if (!key) continue;
       const existing = map.get(key);
       const hasMedia = !!ex.video_url || !!ex.gif_url;
       const existingHasMedia = existing && (!!existing.video_url || !!existing.gif_url);
       if (!existing || (hasMedia && !existingHasMedia)) map.set(key, ex);
     }
-    return Array.from(map.values());
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   };
 
-  const uniqueExercises = dedupeByName(exercises);
-  const playable = uniqueExercises.filter((e) => !!e.video_url || !!e.gif_url);
+  const uniqueExercises = useMemo(() => dedupeByName(exercises), [exercises]);
+  const playable = useMemo(() => uniqueExercises.filter((e) => !!e.video_url || !!e.gif_url), [uniqueExercises]);
   const pool = showAll ? uniqueExercises : playable;
-  const bodyParts = Array.from(new Set(pool.map((e) => e.body_part))).sort();
-  let visible = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
-  if (nameFilter) visible = visible.filter((e) => e.name.toLowerCase() === nameFilter.toLowerCase());
-  const featured = playable.filter((e) => !!e.gif_url).concat(playable.filter((e) => !e.gif_url)).slice(0, 3);
-  const allNames = Array.from(new Set(uniqueExercises.map((e) => e.name).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  const bodyParts = useMemo(() => Array.from(new Set(pool.map((e) => e.body_part))).sort(), [pool]);
+  const filtered = useMemo(() => {
+    let v = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
+    if (nameFilter) v = v.filter((e) => e.name.toLowerCase() === nameFilter.toLowerCase());
+    return v;
+  }, [pool, filter, nameFilter]);
+  const PAGE = 18;
+  const [limit, setLimit] = useState(PAGE);
+  useEffect(() => { setLimit(PAGE); }, [filter, nameFilter, showAll]);
+  const visible = filtered.slice(0, limit);
+  const featured = useMemo(
+    () => playable.filter((e) => !!e.gif_url).concat(playable.filter((e) => !e.gif_url)).slice(0, 3),
+    [playable],
+  );
+  const allNames = useMemo(
+    () => Array.from(new Set(uniqueExercises.map((e) => e.name).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
+    [uniqueExercises],
+  );
 
   return (
     <div className="relative min-h-screen pb-24">
@@ -266,6 +285,17 @@ function ExplorePage() {
                   </Link>
                 </TiltCard>
               ))}
+            </div>
+          )}
+          {!loading && filtered.length > visible.length && (
+            <div className="flex justify-center pt-2">
+              <button
+                type="button"
+                onClick={() => setLimit((l) => l + PAGE)}
+                className="rounded-full border border-sky/40 bg-card/60 px-5 py-2 text-xs uppercase tracking-wider font-body text-sky-100 hover:border-sky/70 transition"
+              >
+                Load more ({filtered.length - visible.length} left)
+              </button>
             </div>
           )}
         </section>
