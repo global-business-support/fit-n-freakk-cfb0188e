@@ -191,7 +191,7 @@ function ExplorePage() {
                     <AutoExerciseMedia exercise={ex} />
                     <div className="p-3">
                       <p className="font-heading text-lg tracking-wider text-white">{ex.name.toUpperCase()}</p>
-                      <p className="text-xs font-body text-sky-200/70 uppercase tracking-wider">{ex.body_part}</p>
+                      <p className="text-xs font-body text-sky-200/70 uppercase tracking-wider">{formatBodyPart(ex.body_part)}</p>
                     </div>
                   </div>
                 </TiltCard>
@@ -270,7 +270,7 @@ function ExplorePage() {
           <div className="flex gap-1.5 overflow-x-auto pb-1">
             <FilterPill active={filter === "all"} onClick={() => setFilter("all")}>All</FilterPill>
             {bodyParts.map((bp) => (
-              <FilterPill key={bp} active={filter === bp} onClick={() => setFilter(bp)}>{bp}</FilterPill>
+              <FilterPill key={bp.key} active={filter === bp.key} onClick={() => setFilter(bp.key)}>{bp.label}</FilterPill>
             ))}
           </div>
 
@@ -295,7 +295,7 @@ function ExplorePage() {
                       )}
                       <div>
                         <p className="font-heading text-lg tracking-wider text-white">{ex.name.toUpperCase()}</p>
-                        <p className="text-[10px] font-body text-sky-200/70 uppercase tracking-[0.2em]">{ex.body_part}</p>
+                        <p className="text-[10px] font-body text-sky-200/70 uppercase tracking-[0.2em]">{formatBodyPart(ex.body_part)}</p>
                       </div>
                       {/* Locked details teaser */}
                       <div className="flex items-center gap-2 rounded-lg border border-sky/20 bg-background/40 px-2.5 py-1.5">
