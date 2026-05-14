@@ -249,7 +249,30 @@ function AICoachPage() {
                 <option value={90}>90 days</option>
                 <option value={180}>6 months</option>
               </select>
+            <div className="col-span-2">
+              <Label className="text-xs uppercase tracking-wider font-body">Diet preference</Label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                {([
+                  { v: "veg", label: "🥗 Veg" },
+                  { v: "egg", label: "🥚 Egg" },
+                  { v: "non_veg", label: "🍗 Non-Veg" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.v}
+                    type="button"
+                    onClick={() => setForm({ ...form, diet_preference: opt.v })}
+                    className={`rounded-lg border py-2 text-sm font-body transition-all ${
+                      form.diet_preference === opt.v
+                        ? "border-primary bg-primary/15 text-primary font-bold"
+                        : "border-border bg-secondary/60 text-muted-foreground"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
+          </div>
           </div>
           <Button
             onClick={handleGenerate}
