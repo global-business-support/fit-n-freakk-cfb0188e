@@ -33,6 +33,60 @@ interface Exercise {
   reps: string | null;
 }
 
+const normalizeTextKey = (value: string) =>
+  (value || "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[\s\-_]+/g, " ")
+    .replace(/[^a-z0-9 ]/g, "")
+    .trim();
+
+const toTitleCase = (value: string) =>
+  normalizeTextKey(value)
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+const normalizeName = (name: string) => normalizeTextKey(name);
+const normalizeBodyPart = (bodyPart: string) => {
+  const key = normalizeTextKey(bodyPart);
+  const aliases: Record<string, string> = {
+    ab: "abs",
+    abs: "abs",
+    arm: "arms",
+    arms: "arms",
+    bicep: "biceps",
+    biceps: "biceps",
+    calf: "calves",
+    calves: "calves",
+    glute: "glutes",
+    glutes: "glutes",
+    leg: "legs",
+    legs: "legs",
+    shoulder: "shoulders",
+    shoulders: "shoulders",
+    tricep: "triceps",
+    triceps: "triceps",
+  };
+  return aliases[key] ?? key;
+};
+const formatBodyPart = (bodyPart: string) => toTitleCase(bodyPart || "Other");
+
+// Dedupe by name (normalize spaces/punct, case-insensitive). Prefer entries with media.
+const dedupeByName = (list: Exercise[]) => {
+  const map = new Map<string, Exercise>();
+  for (const ex of list) {
+    const key = normalizeName(ex.name);
+    if (!key) continue;
+    const existing = map.get(key);
+    const hasMedia = !!ex.video_url || !!ex.gif_url;
+    const existingHasMedia = existing && (!!existing.video_url || !!existing.gif_url);
+    if (!existing || (hasMedia && !existingHasMedia)) map.set(key, ex);
+  }
+  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+};
+
 function ExplorePage() {
   const { appName, logoUrl } = useBranding();
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -53,33 +107,23 @@ function ExplorePage() {
       });
   }, []);
 
-  // Dedupe by name (normalize spaces/punct, case-insensitive). Prefer entries with media.
-  const normalizeName = (n: string) =>
-    (n || "")
-      .toLowerCase()
-      .replace(/[\s\-_]+/g, " ")
-      .replace(/[^a-z0-9 ]/g, "")
-      .trim();
-  const dedupeByName = (list: Exercise[]) => {
-    const map = new Map<string, Exercise>();
-    for (const ex of list) {
-      const key = normalizeName(ex.name);
-      if (!key) continue;
-      const existing = map.get(key);
-      const hasMedia = !!ex.video_url || !!ex.gif_url;
-      const existingHasMedia = existing && (!!existing.video_url || !!existing.gif_url);
-      if (!existing || (hasMedia && !existingHasMedia)) map.set(key, ex);
-    }
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
-  };
-
   const uniqueExercises = useMemo(() => dedupeByName(exercises), [exercises]);
   const playable = useMemo(() => uniqueExercises.filter((e) => !!e.video_url || !!e.gif_url), [uniqueExercises]);
   const pool = showAll ? uniqueExercises : playable;
-  const bodyParts = useMemo(() => Array.from(new Set(pool.map((e) => e.body_part))).sort(), [pool]);
+  const bodyParts = useMemo(() => {
+    const labels = new Map<string, string>();
+    for (const exercise of pool) {
+      const key = normalizeBodyPart(exercise.body_part);
+      if (!key || labels.has(key)) continue;
+      labels.set(key, formatBodyPart(key));
+    }
+    return Array.from(labels.entries())
+      .map(([key, label]) => ({ key, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [pool]);
   const filtered = useMemo(() => {
-    let v = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
-    if (nameFilter) v = v.filter((e) => e.name.toLowerCase() === nameFilter.toLowerCase());
+    let v = filter === "all" ? pool : pool.filter((e) => normalizeBodyPart(e.body_part) === filter);
+    if (nameFilter) v = v.filter((e) => normalizeName(e.name) === nameFilter);
     return v;
   }, [pool, filter, nameFilter]);
   const PAGE = 18;
@@ -90,10 +134,17 @@ function ExplorePage() {
     () => playable.filter((e) => !!e.gif_url).concat(playable.filter((e) => !e.gif_url)).slice(0, 3),
     [playable],
   );
-  const allNames = useMemo(
-    () => Array.from(new Set(uniqueExercises.map((e) => e.name).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
-    [uniqueExercises],
-  );
+  const allNames = useMemo(() => {
+    const names = new Map<string, string>();
+    for (const exercise of uniqueExercises) {
+      const key = normalizeName(exercise.name);
+      if (!key || names.has(key)) continue;
+      names.set(key, toTitleCase(exercise.name));
+    }
+    return Array.from(names.entries())
+      .map(([key, label]) => ({ key, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [uniqueExercises]);
 
   return (
     <div className="relative min-h-screen pb-24">
@@ -168,7 +219,7 @@ function ExplorePage() {
                     <AutoExerciseMedia exercise={ex} />
                     <div className="p-3">
                       <p className="font-heading text-lg tracking-wider text-white">{ex.name.toUpperCase()}</p>
-                      <p className="text-xs font-body text-sky-200/70 uppercase tracking-wider">{ex.body_part}</p>
+                      <p className="text-xs font-body text-sky-200/70 uppercase tracking-wider">{formatBodyPart(ex.body_part)}</p>
                     </div>
                   </div>
                 </TiltCard>
@@ -210,12 +261,12 @@ function ExplorePage() {
                     </button>
                     {allNames.map((n) => (
                       <button
-                        key={n}
+                        key={n.key}
                         type="button"
-                        onClick={() => { setNameFilter(n); setFilter("all"); setNamesOpen(false); }}
-                        className={`rounded-full px-3 py-1 text-xs font-body border transition ${nameFilter === n ? "bg-gradient-primary text-white border-transparent" : "border-sky/30 text-sky-200/80 hover:border-sky/60"}`}
+                        onClick={() => { setNameFilter(n.key); setFilter("all"); setNamesOpen(false); }}
+                        className={`rounded-full px-3 py-1 text-xs font-body border transition ${nameFilter === n.key ? "bg-gradient-primary text-white border-transparent" : "border-sky/30 text-sky-200/80 hover:border-sky/60"}`}
                       >
-                        {n}
+                        {n.label}
                       </button>
                     ))}
                   </div>
@@ -247,7 +298,7 @@ function ExplorePage() {
           <div className="flex gap-1.5 overflow-x-auto pb-1">
             <FilterPill active={filter === "all"} onClick={() => setFilter("all")}>All</FilterPill>
             {bodyParts.map((bp) => (
-              <FilterPill key={bp} active={filter === bp} onClick={() => setFilter(bp)}>{bp}</FilterPill>
+              <FilterPill key={bp.key} active={filter === bp.key} onClick={() => setFilter(bp.key)}>{bp.label}</FilterPill>
             ))}
           </div>
 
@@ -272,7 +323,7 @@ function ExplorePage() {
                       )}
                       <div>
                         <p className="font-heading text-lg tracking-wider text-white">{ex.name.toUpperCase()}</p>
-                        <p className="text-[10px] font-body text-sky-200/70 uppercase tracking-[0.2em]">{ex.body_part}</p>
+                        <p className="text-[10px] font-body text-sky-200/70 uppercase tracking-[0.2em]">{formatBodyPart(ex.body_part)}</p>
                       </div>
                       {/* Locked details teaser */}
                       <div className="flex items-center gap-2 rounded-lg border border-sky/20 bg-background/40 px-2.5 py-1.5">
