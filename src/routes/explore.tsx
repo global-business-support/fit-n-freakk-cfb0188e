@@ -287,6 +287,17 @@ function ExplorePage() {
               ))}
             </div>
           )}
+          {!loading && filtered.length > visible.length && (
+            <div className="flex justify-center pt-2">
+              <button
+                type="button"
+                onClick={() => setLimit((l) => l + PAGE)}
+                className="rounded-full border border-sky/40 bg-card/60 px-5 py-2 text-xs uppercase tracking-wider font-body text-sky-100 hover:border-sky/70 transition"
+              >
+                Load more ({filtered.length - visible.length} left)
+              </button>
+            </div>
+          )}
         </section>
 
         {/* CTA */}
