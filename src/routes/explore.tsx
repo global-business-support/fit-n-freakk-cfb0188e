@@ -261,12 +261,12 @@ function ExplorePage() {
                     </button>
                     {allNames.map((n) => (
                       <button
-                        key={n}
+                        key={n.key}
                         type="button"
-                        onClick={() => { setNameFilter(n); setFilter("all"); setNamesOpen(false); }}
-                        className={`rounded-full px-3 py-1 text-xs font-body border transition ${nameFilter === n ? "bg-gradient-primary text-white border-transparent" : "border-sky/30 text-sky-200/80 hover:border-sky/60"}`}
+                        onClick={() => { setNameFilter(n.key); setFilter("all"); setNamesOpen(false); }}
+                        className={`rounded-full px-3 py-1 text-xs font-body border transition ${nameFilter === n.key ? "bg-gradient-primary text-white border-transparent" : "border-sky/30 text-sky-200/80 hover:border-sky/60"}`}
                       >
-                        {n}
+                        {n.label}
                       </button>
                     ))}
                   </div>
