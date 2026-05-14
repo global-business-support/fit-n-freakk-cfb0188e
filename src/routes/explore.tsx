@@ -73,14 +73,27 @@ function ExplorePage() {
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   };
 
-  const uniqueExercises = dedupeByName(exercises);
-  const playable = uniqueExercises.filter((e) => !!e.video_url || !!e.gif_url);
+  const uniqueExercises = useMemo(() => dedupeByName(exercises), [exercises]);
+  const playable = useMemo(() => uniqueExercises.filter((e) => !!e.video_url || !!e.gif_url), [uniqueExercises]);
   const pool = showAll ? uniqueExercises : playable;
-  const bodyParts = Array.from(new Set(pool.map((e) => e.body_part))).sort();
-  let visible = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
-  if (nameFilter) visible = visible.filter((e) => e.name.toLowerCase() === nameFilter.toLowerCase());
-  const featured = playable.filter((e) => !!e.gif_url).concat(playable.filter((e) => !e.gif_url)).slice(0, 3);
-  const allNames = Array.from(new Set(uniqueExercises.map((e) => e.name).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  const bodyParts = useMemo(() => Array.from(new Set(pool.map((e) => e.body_part))).sort(), [pool]);
+  const filtered = useMemo(() => {
+    let v = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
+    if (nameFilter) v = v.filter((e) => e.name.toLowerCase() === nameFilter.toLowerCase());
+    return v;
+  }, [pool, filter, nameFilter]);
+  const PAGE = 18;
+  const [limit, setLimit] = useState(PAGE);
+  useEffect(() => { setLimit(PAGE); }, [filter, nameFilter, showAll]);
+  const visible = filtered.slice(0, limit);
+  const featured = useMemo(
+    () => playable.filter((e) => !!e.gif_url).concat(playable.filter((e) => !e.gif_url)).slice(0, 3),
+    [playable],
+  );
+  const allNames = useMemo(
+    () => Array.from(new Set(uniqueExercises.map((e) => e.name).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
+    [uniqueExercises],
+  );
 
   return (
     <div className="relative min-h-screen pb-24">
