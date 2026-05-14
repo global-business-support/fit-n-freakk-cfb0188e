@@ -32,6 +32,7 @@ function AICoachPage() {
     gender: "male",
     activity_level: "moderate",
     duration_days: 60,
+    diet_preference: "non_veg" as "veg" | "non_veg" | "egg",
   });
 
   useEffect(() => {
@@ -100,6 +101,7 @@ function AICoachPage() {
           gender: form.gender,
           activity_level: form.activity_level,
           duration_days: Number(form.duration_days),
+          diet_preference: form.diet_preference,
         },
       });
       if (error) throw error;
@@ -121,7 +123,7 @@ function AICoachPage() {
             gender: form.gender,
             activity_level: form.activity_level,
             duration_days: Number(form.duration_days),
-            plan_data: data.plan,
+            plan_data: { ...data.plan, diet_preference: form.diet_preference },
           })
           .select()
           .single();
