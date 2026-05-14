@@ -20,14 +20,28 @@ export const Route = createFileRoute("/workouts")({
   component: WorkoutsPage,
 });
 
+const DAY_PLAN: { key: string; label: string; focus: string | null }[] = [
+  { key: "Mon", label: "Mon", focus: "Chest" },
+  { key: "Tue", label: "Tue", focus: "Back" },
+  { key: "Wed", label: "Wed", focus: "Legs" },
+  { key: "Thu", label: "Thu", focus: "Shoulders" },
+  { key: "Fri", label: "Fri", focus: "Arms" },
+  { key: "Sat", label: "Sat", focus: "Abs" },
+  { key: "Sun", label: "Sun", focus: null }, // mixed / free pick
+];
+
 function WorkoutsPage() {
   const { user, profile } = useAuth();
   const [gender, setGender] = useState<"male" | "female">("male");
   const [exercises, setExercises] = useState<any[]>([]);
   const [expandedPart, setExpandedPart] = useState<string | null>(null);
+  const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0..Sun=6
+  const [activeDay, setActiveDay] = useState<number>(todayIdx);
 
   useEffect(() => {
-    if (profile?.gender) setGender(profile.gender as "male" | "female");
+    if (profile?.gender === "female" || profile?.gender === "male") {
+      setGender(profile.gender);
+    }
   }, [profile]);
 
   useEffect(() => {
@@ -38,12 +52,17 @@ function WorkoutsPage() {
     const { data } = await supabase
       .from("exercises")
       .select("*")
-      .eq("gender_target", gender)
+      .or(`gender_target.eq.${gender},gender_target.eq.both`)
       .order("body_part");
     setExercises(data || []);
   };
 
-  const bodyParts = [...new Set(exercises.map((e: any) => e.body_part))];
+  const bodyParts = [...new Set(exercises.map((e: any) => e.body_part))].sort();
+  const day = DAY_PLAN[activeDay];
+  const dayExercises = day.focus
+    ? exercises.filter((e: any) => (e.body_part || "").toLowerCase() === day.focus!.toLowerCase())
+    : // Sunday: mix — one from each body part
+      bodyParts.map((bp) => exercises.find((e: any) => e.body_part === bp)).filter(Boolean) as any[];
 
   return (
     <div className="relative min-h-screen pb-20 overflow-hidden">
@@ -84,6 +103,59 @@ function WorkoutsPage() {
               {g} Workouts
             </button>
           ))}
+        </div>
+
+        {/* Day-wise plan */}
+        <div className="rounded-2xl border border-primary/20 bg-card/60 backdrop-blur-md p-3 space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <p className="font-heading text-base tracking-wider text-primary">DAY PLAN</p>
+            <p className="text-[10px] text-muted-foreground font-body uppercase tracking-wider">
+              {day.focus ? `Focus: ${day.focus}` : "Sunday · Mix / Free pick"}
+            </p>
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {DAY_PLAN.map((d, i) => (
+              <button
+                key={d.key}
+                onClick={() => setActiveDay(i)}
+                className={cn(
+                  "rounded-lg py-2 text-[11px] font-bold uppercase font-body transition-all",
+                  activeDay === i
+                    ? "bg-gradient-primary text-primary-foreground shadow-glow"
+                    : i === todayIdx
+                      ? "bg-primary/15 text-primary border border-primary/30"
+                      : "bg-secondary/60 text-muted-foreground"
+                )}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+          <div className="space-y-2">
+            {dayExercises.length === 0 ? (
+              <p className="text-center text-xs text-muted-foreground font-body py-4">
+                No exercises for this focus yet.
+              </p>
+            ) : (
+              dayExercises.slice(0, 8).map((ex: any) => (
+                <Link
+                  key={ex.id}
+                  to="/exercise/$id"
+                  params={{ id: ex.id }}
+                  className="flex items-center justify-between gap-2 rounded-lg bg-secondary/40 p-2.5 hover:bg-secondary/60 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold font-body truncate">{ex.name}</p>
+                    <p className="text-[10px] text-sky font-body uppercase tracking-wider">{ex.body_part}</p>
+                  </div>
+                  <Play className="h-4 w-4 text-primary shrink-0" />
+                </Link>
+              ))
+            )}
+          </div>
+          <p className="text-[10px] text-center text-muted-foreground font-body">
+            Want different exercises? Pick any body part below 👇
+          </p>
         </div>
 
         {/* Body part groups */}

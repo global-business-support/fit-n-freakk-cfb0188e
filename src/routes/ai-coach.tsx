@@ -32,6 +32,7 @@ function AICoachPage() {
     gender: "male",
     activity_level: "moderate",
     duration_days: 60,
+    diet_preference: "non_veg" as "veg" | "non_veg" | "egg",
   });
 
   useEffect(() => {
@@ -100,6 +101,7 @@ function AICoachPage() {
           gender: form.gender,
           activity_level: form.activity_level,
           duration_days: Number(form.duration_days),
+          diet_preference: form.diet_preference,
         },
       });
       if (error) throw error;
@@ -121,7 +123,7 @@ function AICoachPage() {
             gender: form.gender,
             activity_level: form.activity_level,
             duration_days: Number(form.duration_days),
-            plan_data: data.plan,
+            plan_data: { ...data.plan, diet_preference: form.diet_preference },
           })
           .select()
           .single();
@@ -247,7 +249,30 @@ function AICoachPage() {
                 <option value={90}>90 days</option>
                 <option value={180}>6 months</option>
               </select>
+            <div className="col-span-2">
+              <Label className="text-xs uppercase tracking-wider font-body">Diet preference</Label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                {([
+                  { v: "veg", label: "🥗 Veg" },
+                  { v: "egg", label: "🥚 Egg" },
+                  { v: "non_veg", label: "🍗 Non-Veg" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.v}
+                    type="button"
+                    onClick={() => setForm({ ...form, diet_preference: opt.v })}
+                    className={`rounded-lg border py-2 text-sm font-body transition-all ${
+                      form.diet_preference === opt.v
+                        ? "border-primary bg-primary/15 text-primary font-bold"
+                        : "border-border bg-secondary/60 text-muted-foreground"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
+          </div>
           </div>
           <Button
             onClick={handleGenerate}
