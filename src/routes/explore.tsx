@@ -53,18 +53,24 @@ function ExplorePage() {
       });
   }, []);
 
-  // Dedupe by name (case-insensitive). Prefer entries with media.
+  // Dedupe by name (normalize spaces/punct, case-insensitive). Prefer entries with media.
+  const normalizeName = (n: string) =>
+    (n || "")
+      .toLowerCase()
+      .replace(/[\s\-_]+/g, " ")
+      .replace(/[^a-z0-9 ]/g, "")
+      .trim();
   const dedupeByName = (list: Exercise[]) => {
     const map = new Map<string, Exercise>();
     for (const ex of list) {
-      const key = (ex.name || "").trim().toLowerCase();
+      const key = normalizeName(ex.name);
       if (!key) continue;
       const existing = map.get(key);
       const hasMedia = !!ex.video_url || !!ex.gif_url;
       const existingHasMedia = existing && (!!existing.video_url || !!existing.gif_url);
       if (!existing || (hasMedia && !existingHasMedia)) map.set(key, ex);
     }
-    return Array.from(map.values());
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const uniqueExercises = dedupeByName(exercises);
