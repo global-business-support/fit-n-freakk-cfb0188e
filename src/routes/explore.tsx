@@ -33,6 +33,39 @@ interface Exercise {
   reps: string | null;
 }
 
+const normalizeTextKey = (value: string) =>
+  (value || "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[\s\-_]+/g, " ")
+    .replace(/[^a-z0-9 ]/g, "")
+    .trim();
+
+const toTitleCase = (value: string) =>
+  normalizeTextKey(value)
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+const normalizeName = (name: string) => normalizeTextKey(name);
+const normalizeBodyPart = (bodyPart: string) => normalizeTextKey(bodyPart);
+const formatBodyPart = (bodyPart: string) => toTitleCase(bodyPart || "Other");
+
+// Dedupe by name (normalize spaces/punct, case-insensitive). Prefer entries with media.
+const dedupeByName = (list: Exercise[]) => {
+  const map = new Map<string, Exercise>();
+  for (const ex of list) {
+    const key = normalizeName(ex.name);
+    if (!key) continue;
+    const existing = map.get(key);
+    const hasMedia = !!ex.video_url || !!ex.gif_url;
+    const existingHasMedia = existing && (!!existing.video_url || !!existing.gif_url);
+    if (!existing || (hasMedia && !existingHasMedia)) map.set(key, ex);
+  }
+  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+};
+
 function ExplorePage() {
   const { appName, logoUrl } = useBranding();
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -53,32 +86,22 @@ function ExplorePage() {
       });
   }, []);
 
-  // Dedupe by name (normalize spaces/punct, case-insensitive). Prefer entries with media.
-  const normalizeName = (n: string) =>
-    (n || "")
-      .toLowerCase()
-      .replace(/[\s\-_]+/g, " ")
-      .replace(/[^a-z0-9 ]/g, "")
-      .trim();
-  const dedupeByName = (list: Exercise[]) => {
-    const map = new Map<string, Exercise>();
-    for (const ex of list) {
-      const key = normalizeName(ex.name);
-      if (!key) continue;
-      const existing = map.get(key);
-      const hasMedia = !!ex.video_url || !!ex.gif_url;
-      const existingHasMedia = existing && (!!existing.video_url || !!existing.gif_url);
-      if (!existing || (hasMedia && !existingHasMedia)) map.set(key, ex);
-    }
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
-  };
-
   const uniqueExercises = useMemo(() => dedupeByName(exercises), [exercises]);
   const playable = useMemo(() => uniqueExercises.filter((e) => !!e.video_url || !!e.gif_url), [uniqueExercises]);
   const pool = showAll ? uniqueExercises : playable;
-  const bodyParts = useMemo(() => Array.from(new Set(pool.map((e) => e.body_part))).sort(), [pool]);
+  const bodyParts = useMemo(() => {
+    const labels = new Map<string, string>();
+    for (const exercise of pool) {
+      const key = normalizeBodyPart(exercise.body_part);
+      if (!key || labels.has(key)) continue;
+      labels.set(key, formatBodyPart(exercise.body_part));
+    }
+    return Array.from(labels.entries())
+      .map(([key, label]) => ({ key, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [pool]);
   const filtered = useMemo(() => {
-    let v = filter === "all" ? pool : pool.filter((e) => e.body_part === filter);
+    let v = filter === "all" ? pool : pool.filter((e) => normalizeBodyPart(e.body_part) === filter);
     if (nameFilter) v = v.filter((e) => e.name.toLowerCase() === nameFilter.toLowerCase());
     return v;
   }, [pool, filter, nameFilter]);
