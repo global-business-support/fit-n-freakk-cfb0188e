@@ -3,18 +3,19 @@ import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
 import { WorkoutHistoryCalendar } from "@/components/WorkoutHistoryCalendar";
-import { Dumbbell, ChevronRight, LogIn, Play } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Dumbbell, ChevronRight, LogIn, Play, Check, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/workouts")({
   head: () => ({
     meta: [
       { title: "Workouts — Feet & Freakk" },
-      { name: "description", content: "Browse exercises for men and women with muscle diagrams and full video tutorials." },
+      { name: "description", content: "Day-wise workouts for men and women — pick exercises, mark complete and track history." },
     ],
   }),
   component: WorkoutsPage,
@@ -27,16 +28,31 @@ const DAY_PLAN: { key: string; label: string; focus: string | null }[] = [
   { key: "Thu", label: "Thu", focus: "Shoulders" },
   { key: "Fri", label: "Fri", focus: "Arms" },
   { key: "Sat", label: "Sat", focus: "Abs" },
-  { key: "Sun", label: "Sun", focus: null }, // mixed / free pick
+  { key: "Sun", label: "Sun", focus: null },
 ];
+
+const focusMatch = (bodyPart: string, focus: string) => {
+  const bp = (bodyPart || "").toLowerCase();
+  const f = focus.toLowerCase();
+  if (f === "arms") return bp.includes("arm") || bp.includes("bicep") || bp.includes("tricep");
+  if (f === "legs") return bp.includes("leg") || bp.includes("quad") || bp.includes("ham") || bp.includes("calf") || bp.includes("calves") || bp.includes("glute");
+  if (f === "abs") return bp.includes("abs") || bp.includes("core");
+  if (f === "shoulders") return bp.includes("shoulder");
+  if (f === "back") return bp.includes("back");
+  if (f === "chest") return bp.includes("chest");
+  return bp === f;
+};
 
 function WorkoutsPage() {
   const { user, profile } = useAuth();
-  const [gender, setGender] = useState<"male" | "female">("male");
+  const [gender, setGender] = useState<"male" | "female" | "both">("both");
   const [exercises, setExercises] = useState<any[]>([]);
   const [expandedPart, setExpandedPart] = useState<string | null>(null);
-  const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0..Sun=6
+  const todayIdx = (new Date().getDay() + 6) % 7;
   const [activeDay, setActiveDay] = useState<number>(todayIdx);
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [completions, setCompletions] = useState<Record<string, string>>({}); // exercise_id -> latest date
+  const todayKey = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
     if (profile?.gender === "female" || profile?.gender === "male") {
@@ -45,24 +61,75 @@ function WorkoutsPage() {
   }, [profile]);
 
   useEffect(() => {
-    loadExercises();
+    let q = supabase.from("exercises").select("*").order("body_part");
+    if (gender !== "both") {
+      q = q.or(`gender_target.eq.${gender},gender_target.eq.both`) as any;
+    }
+    q.then(({ data }) => setExercises(data || []));
   }, [gender]);
 
-  const loadExercises = async () => {
-    const { data } = await supabase
-      .from("exercises")
-      .select("*")
-      .or(`gender_target.eq.${gender},gender_target.eq.both`)
-      .order("body_part");
-    setExercises(data || []);
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("workout_completions")
+      .select("exercise_id, completed_on")
+      .eq("user_id", user.id)
+      .order("completed_on", { ascending: false })
+      .then(({ data }) => {
+        const map: Record<string, string> = {};
+        for (const r of data ?? []) {
+          if (!map[r.exercise_id]) map[r.exercise_id] = r.completed_on as string;
+        }
+        setCompletions(map);
+      });
+  }, [user, activeDay]);
+
+  const bodyParts = useMemo(() => [...new Set(exercises.map((e: any) => e.body_part))].sort(), [exercises]);
+  const day = DAY_PLAN[activeDay];
+  const dayExercises = useMemo(() => {
+    if (day.focus) return exercises.filter((e: any) => focusMatch(e.body_part, day.focus!));
+    // Sunday mix — 2 from each major group
+    const groups = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Abs"];
+    return groups.flatMap((g) => exercises.filter((e: any) => focusMatch(e.body_part, g)).slice(0, 2));
+  }, [exercises, day]);
+
+  // Auto-select first 5 by default whenever day/exercises change
+  useEffect(() => {
+    if (dayExercises.length === 0) return;
+    setSelected((prev) => {
+      const hasAny = dayExercises.some((ex: any) => prev[ex.id]);
+      if (hasAny) return prev;
+      const next: Record<string, boolean> = {};
+      dayExercises.slice(0, 5).forEach((ex: any) => { next[ex.id] = true; });
+      return next;
+    });
+  }, [dayExercises]);
+
+  const toggle = (id: string) => setSelected((s) => ({ ...s, [id]: !s[id] }));
+
+  const markComplete = async (exId: string) => {
+    if (!user) {
+      toast.error("Please sign in to track workouts");
+      return;
+    }
+    const { error } = await supabase.from("workout_completions").insert({
+      user_id: user.id,
+      exercise_id: exId,
+      scheduled_day: activeDay,
+      completed_on: todayKey,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setCompletions((c) => ({ ...c, [exId]: todayKey }));
+    toast.success("Marked complete ✔");
   };
 
-  const bodyParts = [...new Set(exercises.map((e: any) => e.body_part))].sort();
-  const day = DAY_PLAN[activeDay];
-  const dayExercises = day.focus
-    ? exercises.filter((e: any) => (e.body_part || "").toLowerCase() === day.focus!.toLowerCase())
-    : // Sunday: mix — one from each body part
-      bodyParts.map((bp) => exercises.find((e: any) => e.body_part === bp)).filter(Boolean) as any[];
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  };
 
   return (
     <div className="relative min-h-screen pb-20 overflow-hidden">
@@ -71,7 +138,7 @@ function WorkoutsPage() {
         <div className="mx-auto max-w-lg flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl font-heading tracking-wider bg-gradient-primary bg-clip-text text-transparent truncate">WORKOUTS</h1>
-            <p className="text-xs text-muted-foreground font-body">{user ? "Exercises with muscle diagrams" : "Free preview · Tap any exercise"}</p>
+            <p className="text-xs text-muted-foreground font-body">{user ? "Day-wise plan · pick & track" : "Free preview"}</p>
           </div>
           {!user && (
             <Link to="/login">
@@ -84,23 +151,22 @@ function WorkoutsPage() {
       </header>
 
       <main className="relative z-10 mx-auto max-w-lg px-4 py-4 space-y-4">
-        {/* Workout history calendar — signed-in members only */}
         {user && <WorkoutHistoryCalendar userId={user.id} />}
 
-        {/* Gender Toggle */}
-        <div className="grid grid-cols-2 gap-2">
-          {(["male", "female"] as const).map((g) => (
+        {/* Gender Toggle — male / female / both */}
+        <div className="grid grid-cols-3 gap-2">
+          {(["male", "female", "both"] as const).map((g) => (
             <button
               key={g}
               onClick={() => setGender(g)}
               className={cn(
-                "rounded-xl border py-2.5 text-sm font-semibold uppercase tracking-wider font-body transition-all",
+                "rounded-xl border py-2.5 text-xs font-semibold uppercase tracking-wider font-body transition-all",
                 gender === g
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border bg-card text-muted-foreground hover:border-primary/30"
               )}
             >
-              {g} Workouts
+              {g}
             </button>
           ))}
         </div>
@@ -110,7 +176,7 @@ function WorkoutsPage() {
           <div className="flex items-center justify-between px-1">
             <p className="font-heading text-base tracking-wider text-primary">DAY PLAN</p>
             <p className="text-[10px] text-muted-foreground font-body uppercase tracking-wider">
-              {day.focus ? `Focus: ${day.focus}` : "Sunday · Mix / Free pick"}
+              {day.focus ? `${day.label} · ${day.focus}` : "Sun · Mix"}
             </p>
           </div>
           <div className="grid grid-cols-7 gap-1">
@@ -131,34 +197,76 @@ function WorkoutsPage() {
               </button>
             ))}
           </div>
+
+          <p className="text-[10px] text-center text-muted-foreground font-body">
+            ✓ auto-selected · tap to add/remove · mark complete to save date
+          </p>
+
           <div className="space-y-2">
             {dayExercises.length === 0 ? (
               <p className="text-center text-xs text-muted-foreground font-body py-4">
                 No exercises for this focus yet.
               </p>
             ) : (
-              dayExercises.slice(0, 8).map((ex: any) => (
-                <Link
-                  key={ex.id}
-                  to="/exercise/$id"
-                  params={{ id: ex.id }}
-                  className="flex items-center justify-between gap-2 rounded-lg bg-secondary/40 p-2.5 hover:bg-secondary/60 transition-colors"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold font-body truncate">{ex.name}</p>
-                    <p className="text-[10px] text-sky font-body uppercase tracking-wider">{ex.body_part}</p>
+              dayExercises.map((ex: any) => {
+                const isSel = !!selected[ex.id];
+                const doneOn = completions[ex.id];
+                const doneToday = doneOn === todayKey;
+                return (
+                  <div
+                    key={ex.id}
+                    className={cn(
+                      "rounded-lg border p-2.5 transition-all",
+                      isSel ? "border-primary/50 bg-primary/5" : "border-border bg-secondary/30"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => toggle(ex.id)}
+                        className={cn(
+                          "h-5 w-5 shrink-0 rounded border flex items-center justify-center transition",
+                          isSel ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/40"
+                        )}
+                        aria-label="Select exercise"
+                      >
+                        {isSel && <Check className="h-3.5 w-3.5" />}
+                      </button>
+                      <Link
+                        to="/exercise/$id"
+                        params={{ id: ex.id }}
+                        className="min-w-0 flex-1"
+                      >
+                        <p className="text-sm font-bold font-body truncate">{ex.name}</p>
+                        <p className="text-[10px] text-sky font-body uppercase tracking-wider">
+                          {ex.body_part}
+                          {doneOn && (
+                            <span className={cn("ml-2", doneToday ? "text-emerald-400" : "text-muted-foreground")}>
+                              · last done {formatDate(doneOn)}
+                            </span>
+                          )}
+                        </p>
+                      </Link>
+                      {doneToday ? (
+                        <span className="flex items-center gap-1 text-[10px] font-body uppercase tracking-wider text-emerald-400">
+                          <CheckCircle2 className="h-4 w-4" /> Done
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => markComplete(ex.id)}
+                          className="rounded-md bg-gradient-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2 py-1 shadow-glow"
+                        >
+                          Done
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <Play className="h-4 w-4 text-primary shrink-0" />
-                </Link>
-              ))
+                );
+              })
             )}
           </div>
-          <p className="text-[10px] text-center text-muted-foreground font-body">
-            Want different exercises? Pick any body part below 👇
-          </p>
         </div>
 
-        {/* Body part groups */}
+        {/* Body part groups (browse all) */}
         <div className="space-y-3">
           {bodyParts.map((part) => {
             const partExercises = exercises.filter((e: any) => e.body_part === part);
@@ -243,7 +351,20 @@ function ExerciseCard({ exercise }: { exercise: any }) {
         </div>
       ))}
       {exercise.video_url ? (
-        <InlineVideoPlayer url={exercise.video_url} title={exercise.name} thumbnailUrl={exercise.thumbnail_url} />
+        isVideoMedia(exercise.video_url) && !exercise.gif_url ? (
+          <video
+            src={exercise.video_url}
+            className="w-full aspect-video rounded-lg border border-border object-cover bg-black"
+            autoPlay
+            muted
+            loop
+            playsInline
+            controls
+            preload="metadata"
+          />
+        ) : (
+          <InlineVideoPlayer url={exercise.video_url} title={exercise.name} thumbnailUrl={exercise.thumbnail_url} />
+        )
       ) : !exercise.gif_url ? (
         <div className="aspect-video rounded-lg bg-secondary flex items-center justify-center text-muted-foreground/40">
           <Play className="h-6 w-6" />

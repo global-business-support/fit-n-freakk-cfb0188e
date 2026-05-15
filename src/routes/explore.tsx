@@ -312,10 +312,8 @@ function ExplorePage() {
                 <TiltCard key={ex.id}>
                   <Link to="/exercise/$id" params={{ id: ex.id }} className="block">
                     <div className="rounded-2xl border border-sky/30 bg-gradient-card p-3 space-y-3 shadow-card hover:border-sky/60 transition">
-                      {ex.gif_url ? (
+                      {ex.gif_url || ex.video_url ? (
                         <AutoExerciseMedia exercise={ex} />
-                      ) : ex.video_url ? (
-                        <InlineVideoPlayer url={ex.video_url} title={ex.name} thumbnailUrl={ex.thumbnail_url} />
                       ) : (
                         <div className="aspect-video rounded-xl bg-secondary/60 flex items-center justify-center">
                           <Dumbbell className="h-10 w-10 text-sky/50" />
@@ -394,10 +392,10 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
 }
 
 function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
+  const isDirectVideo = (u?: string | null) => !!u && /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u);
   const mediaUrl = exercise.gif_url;
   if (mediaUrl) {
-    const isVideo = /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(mediaUrl);
-    return isVideo ? (
+    return isDirectVideo(mediaUrl) ? (
       <video
         src={mediaUrl}
         className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
@@ -414,6 +412,21 @@ function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
         alt={`${exercise.name} animation`}
         className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
         loading="lazy"
+      />
+    );
+  }
+  // Auto-play direct mp4/webm video previews (no click needed)
+  if (isDirectVideo(exercise.video_url)) {
+    return (
+      <video
+        src={exercise.video_url!}
+        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+        controls
+        preload="metadata"
       />
     );
   }
