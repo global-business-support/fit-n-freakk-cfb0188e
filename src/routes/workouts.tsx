@@ -31,6 +31,18 @@ const DAY_PLAN: { key: string; label: string; focus: string | null }[] = [
   { key: "Sun", label: "Sun", focus: null },
 ];
 
+interface Exercise {
+  id: string;
+  name: string;
+  body_part: string;
+  video_url: string | null;
+  thumbnail_url: string | null;
+  gif_url?: string | null;
+  description: string | null;
+  sets: number | null;
+  reps: string | null;
+}
+
 const normalizeTextKey = (value: string) =>
   (value || "")
     .toLowerCase()
@@ -70,8 +82,8 @@ const formatLabel = (value: string) =>
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 
-const dedupeExercisesByName = (list: any[]) => {
-  const map = new Map<string, any>();
+const dedupeExercisesByName = (list: Exercise[]) => {
+  const map = new Map<string, Exercise>();
   for (const exercise of list) {
     const key = normalizeTextKey(exercise?.name || "");
     if (!key) continue;
