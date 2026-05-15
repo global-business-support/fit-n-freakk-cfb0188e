@@ -31,15 +31,67 @@ const DAY_PLAN: { key: string; label: string; focus: string | null }[] = [
   { key: "Sun", label: "Sun", focus: null },
 ];
 
+const normalizeTextKey = (value: string) =>
+  (value || "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[\s\-_]+/g, " ")
+    .replace(/[^a-z0-9 ]/g, "")
+    .trim();
+
+const normalizeBodyPart = (bodyPart: string) => {
+  const key = normalizeTextKey(bodyPart);
+  const aliases: Record<string, string> = {
+    ab: "abs",
+    abs: "abs",
+    core: "abs",
+    arm: "arms",
+    arms: "arms",
+    bicep: "biceps",
+    biceps: "biceps",
+    calf: "calves",
+    calves: "calves",
+    glute: "glutes",
+    glutes: "glutes",
+    leg: "legs",
+    legs: "legs",
+    shoulder: "shoulders",
+    shoulders: "shoulders",
+    tricep: "triceps",
+    triceps: "triceps",
+  };
+  return aliases[key] ?? key;
+};
+
+const formatLabel = (value: string) =>
+  normalizeTextKey(value)
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+const dedupeExercisesByName = (list: any[]) => {
+  const map = new Map<string, any>();
+  for (const exercise of list) {
+    const key = normalizeTextKey(exercise?.name || "");
+    if (!key) continue;
+    const current = map.get(key);
+    const hasMedia = !!exercise.gif_url || !!exercise.video_url;
+    const currentHasMedia = !!current?.gif_url || !!current?.video_url;
+    if (!current || (hasMedia && !currentHasMedia)) map.set(key, exercise);
+  }
+  return Array.from(map.values()).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+};
+
 const focusMatch = (bodyPart: string, focus: string) => {
-  const bp = (bodyPart || "").toLowerCase();
+  const bp = normalizeBodyPart(bodyPart);
   const f = focus.toLowerCase();
-  if (f === "arms") return bp.includes("arm") || bp.includes("bicep") || bp.includes("tricep");
-  if (f === "legs") return bp.includes("leg") || bp.includes("quad") || bp.includes("ham") || bp.includes("calf") || bp.includes("calves") || bp.includes("glute");
+  if (f === "arms") return ["arms", "biceps", "triceps"].includes(bp);
+  if (f === "legs") return ["legs", "quad", "quads", "hamstring", "hamstrings", "calves", "glutes"].includes(bp);
   if (f === "abs") return bp.includes("abs") || bp.includes("core");
-  if (f === "shoulders") return bp.includes("shoulder");
-  if (f === "back") return bp.includes("back");
-  if (f === "chest") return bp.includes("chest");
+  if (f === "shoulders") return bp === "shoulders";
+  if (f === "back") return bp === "back";
+  if (f === "chest") return bp === "chest";
   return bp === f;
 };
 
