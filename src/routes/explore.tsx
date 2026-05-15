@@ -394,10 +394,10 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
 }
 
 function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
+  const isDirectVideo = (u?: string | null) => !!u && /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u);
   const mediaUrl = exercise.gif_url;
   if (mediaUrl) {
-    const isVideo = /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(mediaUrl);
-    return isVideo ? (
+    return isDirectVideo(mediaUrl) ? (
       <video
         src={mediaUrl}
         className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
@@ -414,6 +414,21 @@ function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
         alt={`${exercise.name} animation`}
         className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
         loading="lazy"
+      />
+    );
+  }
+  // Auto-play direct mp4/webm video previews (no click needed)
+  if (isDirectVideo(exercise.video_url)) {
+    return (
+      <video
+        src={exercise.video_url!}
+        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+        controls
+        preload="metadata"
       />
     );
   }
