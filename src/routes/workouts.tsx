@@ -110,7 +110,7 @@ const focusMatch = (bodyPart: string, focus: string) => {
 function WorkoutsPage() {
   const { user, profile } = useAuth();
   const [gender, setGender] = useState<"male" | "female" | "both">("both");
-  const [exercises, setExercises] = useState<any[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [expandedPart, setExpandedPart] = useState<string | null>(null);
   const todayIdx = (new Date().getDay() + 6) % 7;
   const [activeDay, setActiveDay] = useState<number>(todayIdx);
@@ -127,9 +127,9 @@ function WorkoutsPage() {
   useEffect(() => {
     let q = supabase.from("exercises").select("*").order("body_part");
     if (gender !== "both") {
-      q = q.or(`gender_target.eq.${gender},gender_target.eq.both`) as any;
+      q = q.or(`gender_target.eq.${gender},gender_target.eq.both`);
     }
-    q.then(({ data }) => setExercises(data || []));
+    q.then(({ data }) => setExercises((data || []) as Exercise[]));
   }, [gender]);
 
   useEffect(() => {
@@ -150,7 +150,7 @@ function WorkoutsPage() {
 
   const uniqueExercises = useMemo(() => dedupeExercisesByName(exercises), [exercises]);
   const bodyParts = useMemo(() => {
-    const groups = new Map<string, { key: string; label: string; exercises: any[] }>();
+    const groups = new Map<string, { key: string; label: string; exercises: Exercise[] }>();
     for (const exercise of uniqueExercises) {
       const key = normalizeBodyPart(exercise.body_part);
       if (!key) continue;
@@ -162,20 +162,20 @@ function WorkoutsPage() {
   }, [uniqueExercises]);
   const day = DAY_PLAN[activeDay];
   const dayExercises = useMemo(() => {
-    if (day.focus) return uniqueExercises.filter((e: any) => focusMatch(e.body_part, day.focus!));
+    if (day.focus) return uniqueExercises.filter((e) => focusMatch(e.body_part, day.focus!));
     // Sunday mix — 2 from each major group
     const groups = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Abs"];
-    return groups.flatMap((g) => uniqueExercises.filter((e: any) => focusMatch(e.body_part, g)).slice(0, 2));
+    return groups.flatMap((g) => uniqueExercises.filter((e) => focusMatch(e.body_part, g)).slice(0, 2));
   }, [uniqueExercises, day]);
 
   // Auto-select first 5 by default whenever day/exercises change
   useEffect(() => {
     if (dayExercises.length === 0) return;
     setSelected((prev) => {
-      const hasAny = dayExercises.some((ex: any) => prev[ex.id]);
+      const hasAny = dayExercises.some((ex) => prev[ex.id]);
       if (hasAny) return prev;
       const next: Record<string, boolean> = {};
-      dayExercises.slice(0, 5).forEach((ex: any) => { next[ex.id] = true; });
+      dayExercises.slice(0, 5).forEach((ex) => { next[ex.id] = true; });
       return next;
     });
   }, [dayExercises]);
