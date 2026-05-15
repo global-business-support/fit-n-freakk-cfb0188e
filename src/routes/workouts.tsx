@@ -136,14 +136,25 @@ function WorkoutsPage() {
       });
   }, [user, activeDay]);
 
-  const bodyParts = useMemo(() => [...new Set(exercises.map((e: any) => e.body_part))].sort(), [exercises]);
+  const uniqueExercises = useMemo(() => dedupeExercisesByName(exercises), [exercises]);
+  const bodyParts = useMemo(() => {
+    const groups = new Map<string, { key: string; label: string; exercises: any[] }>();
+    for (const exercise of uniqueExercises) {
+      const key = normalizeBodyPart(exercise.body_part);
+      if (!key) continue;
+      const group = groups.get(key) ?? { key, label: formatLabel(key), exercises: [] };
+      group.exercises.push(exercise);
+      groups.set(key, group);
+    }
+    return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [uniqueExercises]);
   const day = DAY_PLAN[activeDay];
   const dayExercises = useMemo(() => {
-    if (day.focus) return exercises.filter((e: any) => focusMatch(e.body_part, day.focus!));
+    if (day.focus) return uniqueExercises.filter((e: any) => focusMatch(e.body_part, day.focus!));
     // Sunday mix — 2 from each major group
     const groups = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Abs"];
-    return groups.flatMap((g) => exercises.filter((e: any) => focusMatch(e.body_part, g)).slice(0, 2));
-  }, [exercises, day]);
+    return groups.flatMap((g) => uniqueExercises.filter((e: any) => focusMatch(e.body_part, g)).slice(0, 2));
+  }, [uniqueExercises, day]);
 
   // Auto-select first 5 by default whenever day/exercises change
   useEffect(() => {
@@ -321,12 +332,11 @@ function WorkoutsPage() {
         {/* Body part groups (browse all) */}
         <div className="space-y-3">
           {bodyParts.map((part) => {
-            const partExercises = exercises.filter((e: any) => e.body_part === part);
-            const isOpen = expandedPart === part;
+            const isOpen = expandedPart === part.key;
             return (
-              <div key={part} className="rounded-xl border border-border bg-card overflow-hidden">
+              <div key={part.key} className="rounded-xl border border-border bg-card overflow-hidden">
                 <button
-                  onClick={() => setExpandedPart(isOpen ? null : part)}
+                  onClick={() => setExpandedPart(isOpen ? null : part.key)}
                   className="flex w-full items-center justify-between p-4"
                 >
                   <div className="flex items-center gap-3">
@@ -334,8 +344,8 @@ function WorkoutsPage() {
                       <Dumbbell className="h-5 w-5" />
                     </div>
                     <div className="text-left">
-                      <p className="font-heading text-lg tracking-wider">{part.toUpperCase()}</p>
-                      <p className="text-xs text-muted-foreground font-body">{partExercises.length} exercises</p>
+                      <p className="font-heading text-lg tracking-wider">{part.label.toUpperCase()}</p>
+                      <p className="text-xs text-muted-foreground font-body">{part.exercises.length} exercises</p>
                     </div>
                   </div>
                   <ChevronRight className={cn("h-5 w-5 text-muted-foreground transition-transform", isOpen && "rotate-90")} />
@@ -344,7 +354,7 @@ function WorkoutsPage() {
                 {isOpen && (
                   <div className="border-t border-border px-4 pb-4 pt-3 space-y-4 animate-fade-in">
                     <div className="space-y-3">
-                      {partExercises.map((exercise: any) => (
+                      {part.exercises.map((exercise: any) => (
                         <ExerciseCard key={exercise.id} exercise={exercise} />
                       ))}
                     </div>
