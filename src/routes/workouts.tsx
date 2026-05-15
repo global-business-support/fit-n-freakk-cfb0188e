@@ -283,7 +283,7 @@ function WorkoutsPage() {
                 No exercises for this focus yet.
               </p>
             ) : (
-              dayExercises.map((ex: any) => {
+              dayExercises.map((ex) => {
                 const isSel = !!selected[ex.id];
                 const doneOn = completions[ex.id];
                 const doneToday = doneOn === todayKey;
@@ -366,7 +366,7 @@ function WorkoutsPage() {
                 {isOpen && (
                   <div className="border-t border-border px-4 pb-4 pt-3 space-y-4 animate-fade-in">
                     <div className="space-y-3">
-                      {part.exercises.map((exercise: any) => (
+                      {part.exercises.map((exercise) => (
                         <ExerciseCard key={exercise.id} exercise={exercise} />
                       ))}
                     </div>
@@ -388,7 +388,7 @@ function WorkoutsPage() {
   );
 }
 
-function ExerciseCard({ exercise }: { exercise: any }) {
+function ExerciseCard({ exercise }: { exercise: Exercise }) {
   if (!exercise) return null;
   const impact = getExerciseImpact(exercise.body_part);
   return (
