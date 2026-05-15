@@ -31,22 +31,86 @@ const DAY_PLAN: { key: string; label: string; focus: string | null }[] = [
   { key: "Sun", label: "Sun", focus: null },
 ];
 
+interface Exercise {
+  id: string;
+  name: string;
+  body_part: string;
+  video_url: string | null;
+  thumbnail_url: string | null;
+  gif_url?: string | null;
+  description: string | null;
+  sets: number | null;
+  reps: string | null;
+}
+
+const normalizeTextKey = (value: string) =>
+  (value || "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[\s\-_]+/g, " ")
+    .replace(/[^a-z0-9 ]/g, "")
+    .trim();
+
+const normalizeBodyPart = (bodyPart: string) => {
+  const key = normalizeTextKey(bodyPart);
+  const aliases: Record<string, string> = {
+    ab: "abs",
+    abs: "abs",
+    core: "abs",
+    arm: "arms",
+    arms: "arms",
+    bicep: "biceps",
+    biceps: "biceps",
+    calf: "calves",
+    calves: "calves",
+    glute: "glutes",
+    glutes: "glutes",
+    leg: "legs",
+    legs: "legs",
+    shoulder: "shoulders",
+    shoulders: "shoulders",
+    tricep: "triceps",
+    triceps: "triceps",
+  };
+  return aliases[key] ?? key;
+};
+
+const formatLabel = (value: string) =>
+  normalizeTextKey(value)
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+const dedupeExercisesByName = (list: Exercise[]) => {
+  const map = new Map<string, Exercise>();
+  for (const exercise of list) {
+    const key = normalizeTextKey(exercise?.name || "");
+    if (!key) continue;
+    const current = map.get(key);
+    const hasMedia = !!exercise.gif_url || !!exercise.video_url;
+    const currentHasMedia = !!current?.gif_url || !!current?.video_url;
+    if (!current || (hasMedia && !currentHasMedia)) map.set(key, exercise);
+  }
+  return Array.from(map.values()).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+};
+
 const focusMatch = (bodyPart: string, focus: string) => {
-  const bp = (bodyPart || "").toLowerCase();
+  const bp = normalizeBodyPart(bodyPart);
   const f = focus.toLowerCase();
-  if (f === "arms") return bp.includes("arm") || bp.includes("bicep") || bp.includes("tricep");
-  if (f === "legs") return bp.includes("leg") || bp.includes("quad") || bp.includes("ham") || bp.includes("calf") || bp.includes("calves") || bp.includes("glute");
+  if (f === "arms") return ["arms", "biceps", "triceps"].includes(bp);
+  if (f === "legs") return ["legs", "quad", "quads", "hamstring", "hamstrings", "calves", "glutes"].includes(bp);
   if (f === "abs") return bp.includes("abs") || bp.includes("core");
-  if (f === "shoulders") return bp.includes("shoulder");
-  if (f === "back") return bp.includes("back");
-  if (f === "chest") return bp.includes("chest");
+  if (f === "shoulders") return bp === "shoulders";
+  if (f === "back") return bp === "back";
+  if (f === "chest") return bp === "chest";
   return bp === f;
 };
 
 function WorkoutsPage() {
   const { user, profile } = useAuth();
   const [gender, setGender] = useState<"male" | "female" | "both">("both");
-  const [exercises, setExercises] = useState<any[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [expandedPart, setExpandedPart] = useState<string | null>(null);
   const todayIdx = (new Date().getDay() + 6) % 7;
   const [activeDay, setActiveDay] = useState<number>(todayIdx);
@@ -63,9 +127,9 @@ function WorkoutsPage() {
   useEffect(() => {
     let q = supabase.from("exercises").select("*").order("body_part");
     if (gender !== "both") {
-      q = q.or(`gender_target.eq.${gender},gender_target.eq.both`) as any;
+      q = q.or(`gender_target.eq.${gender},gender_target.eq.both`);
     }
-    q.then(({ data }) => setExercises(data || []));
+    q.then(({ data }) => setExercises((data || []) as Exercise[]));
   }, [gender]);
 
   useEffect(() => {
@@ -84,23 +148,34 @@ function WorkoutsPage() {
       });
   }, [user, activeDay]);
 
-  const bodyParts = useMemo(() => [...new Set(exercises.map((e: any) => e.body_part))].sort(), [exercises]);
+  const uniqueExercises = useMemo(() => dedupeExercisesByName(exercises), [exercises]);
+  const bodyParts = useMemo(() => {
+    const groups = new Map<string, { key: string; label: string; exercises: Exercise[] }>();
+    for (const exercise of uniqueExercises) {
+      const key = normalizeBodyPart(exercise.body_part);
+      if (!key) continue;
+      const group = groups.get(key) ?? { key, label: formatLabel(key), exercises: [] };
+      group.exercises.push(exercise);
+      groups.set(key, group);
+    }
+    return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [uniqueExercises]);
   const day = DAY_PLAN[activeDay];
   const dayExercises = useMemo(() => {
-    if (day.focus) return exercises.filter((e: any) => focusMatch(e.body_part, day.focus!));
+    if (day.focus) return uniqueExercises.filter((e) => focusMatch(e.body_part, day.focus!));
     // Sunday mix — 2 from each major group
     const groups = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Abs"];
-    return groups.flatMap((g) => exercises.filter((e: any) => focusMatch(e.body_part, g)).slice(0, 2));
-  }, [exercises, day]);
+    return groups.flatMap((g) => uniqueExercises.filter((e) => focusMatch(e.body_part, g)).slice(0, 2));
+  }, [uniqueExercises, day]);
 
   // Auto-select first 5 by default whenever day/exercises change
   useEffect(() => {
     if (dayExercises.length === 0) return;
     setSelected((prev) => {
-      const hasAny = dayExercises.some((ex: any) => prev[ex.id]);
+      const hasAny = dayExercises.some((ex) => prev[ex.id]);
       if (hasAny) return prev;
       const next: Record<string, boolean> = {};
-      dayExercises.slice(0, 5).forEach((ex: any) => { next[ex.id] = true; });
+      dayExercises.slice(0, 5).forEach((ex) => { next[ex.id] = true; });
       return next;
     });
   }, [dayExercises]);
@@ -208,7 +283,7 @@ function WorkoutsPage() {
                 No exercises for this focus yet.
               </p>
             ) : (
-              dayExercises.map((ex: any) => {
+              dayExercises.map((ex) => {
                 const isSel = !!selected[ex.id];
                 const doneOn = completions[ex.id];
                 const doneToday = doneOn === todayKey;
@@ -269,12 +344,11 @@ function WorkoutsPage() {
         {/* Body part groups (browse all) */}
         <div className="space-y-3">
           {bodyParts.map((part) => {
-            const partExercises = exercises.filter((e: any) => e.body_part === part);
-            const isOpen = expandedPart === part;
+            const isOpen = expandedPart === part.key;
             return (
-              <div key={part} className="rounded-xl border border-border bg-card overflow-hidden">
+              <div key={part.key} className="rounded-xl border border-border bg-card overflow-hidden">
                 <button
-                  onClick={() => setExpandedPart(isOpen ? null : part)}
+                  onClick={() => setExpandedPart(isOpen ? null : part.key)}
                   className="flex w-full items-center justify-between p-4"
                 >
                   <div className="flex items-center gap-3">
@@ -282,8 +356,8 @@ function WorkoutsPage() {
                       <Dumbbell className="h-5 w-5" />
                     </div>
                     <div className="text-left">
-                      <p className="font-heading text-lg tracking-wider">{part.toUpperCase()}</p>
-                      <p className="text-xs text-muted-foreground font-body">{partExercises.length} exercises</p>
+                      <p className="font-heading text-lg tracking-wider">{part.label.toUpperCase()}</p>
+                      <p className="text-xs text-muted-foreground font-body">{part.exercises.length} exercises</p>
                     </div>
                   </div>
                   <ChevronRight className={cn("h-5 w-5 text-muted-foreground transition-transform", isOpen && "rotate-90")} />
@@ -292,7 +366,7 @@ function WorkoutsPage() {
                 {isOpen && (
                   <div className="border-t border-border px-4 pb-4 pt-3 space-y-4 animate-fade-in">
                     <div className="space-y-3">
-                      {partExercises.map((exercise: any) => (
+                      {part.exercises.map((exercise) => (
                         <ExerciseCard key={exercise.id} exercise={exercise} />
                       ))}
                     </div>
@@ -314,7 +388,7 @@ function WorkoutsPage() {
   );
 }
 
-function ExerciseCard({ exercise }: { exercise: any }) {
+function ExerciseCard({ exercise }: { exercise: Exercise }) {
   if (!exercise) return null;
   const impact = getExerciseImpact(exercise.body_part);
   return (
