@@ -317,7 +317,7 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
         </div>
       )}
 
-      {!isSunday && scheduled.length > 0 && (
+      {scheduled.length > 0 && (
         <div className="space-y-2">
           {scheduled.map((s) => {
             const key = `${selectedDay}-${s.id}`;
@@ -368,7 +368,7 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
       )}
 
       {/* Add more button when editing */}
-      {editing && !isSunday && !picking && (
+      {editing && !picking && (
         <button
           onClick={() => setPicking(true)}
           className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-primary/40 text-primary py-2.5 text-xs font-bold uppercase tracking-wider font-body hover:bg-primary/10"
@@ -378,7 +378,7 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
       )}
 
       {/* Picker — checkbox list grouped by body part */}
-      {editing && !isSunday && picking && (
+      {editing && picking && (
         <div className="rounded-xl border border-sky/30 bg-background/40 p-3 space-y-3 max-h-80 overflow-y-auto">
           <div className="flex items-center justify-between sticky top-0 bg-background/90 backdrop-blur py-1 -mx-3 px-3 border-b border-border/40">
             <p className="font-heading text-sm tracking-wider text-sky">PICK EXERCISES</p>
