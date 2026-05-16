@@ -74,22 +74,9 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
   const [editing, setEditing] = useState(false);
   const [picking, setPicking] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [completed, setCompleted] = useState<Record<string, boolean>>({}); // localStorage backed
-
-  const storageKey = useMemo(() => `workout-done-${userId}`, [userId]);
-
-  // Load completed map
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) setCompleted(JSON.parse(raw));
-    } catch {/* noop */}
-  }, [storageKey]);
-
-  const saveCompleted = (next: Record<string, boolean>) => {
-    setCompleted(next);
-    try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch {/* noop */}
-  };
+  const [completingId, setCompletingId] = useState<string | null>(null);
+  const [completed, setCompleted] = useState<Record<string, string>>({}); // exercise_id -> completion row id
+  const todayKey = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   // Load scheduled exercises for selected day
   const loadDay = async () => {
@@ -106,6 +93,23 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
     if (!userId) return;
     loadDay();
   }, [userId, selectedDay]);
+
+  const loadCompletions = async () => {
+    const { data } = await supabase
+      .from("workout_completions")
+      .select("id, exercise_id")
+      .eq("user_id", userId)
+      .eq("scheduled_day", selectedDay)
+      .eq("completed_on", todayKey);
+    const map: Record<string, string> = {};
+    (data || []).forEach((row: any) => { map[row.exercise_id] = row.id; });
+    setCompleted(map);
+  };
+
+  useEffect(() => {
+    if (!userId) return;
+    loadCompletions();
+  }, [userId, selectedDay, todayKey]);
 
   // Load all exercises for picker — filtered by user's gender
   useEffect(() => {
@@ -182,16 +186,37 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
     }
   };
 
-  const toggleDone = (rowId: string) => {
-    const key = `${selectedDay}-${rowId}`;
-    saveCompleted({ ...completed, [key]: !completed[key] });
+  const toggleDone = async (exerciseId: string) => {
+    setCompletingId(exerciseId);
+    const completionId = completed[exerciseId];
+    if (completionId) {
+      const { error } = await supabase.from("workout_completions").delete().eq("id", completionId).eq("user_id", userId);
+      setCompletingId(null);
+      if (error) { toast.error("Could not remove done"); return; }
+      setCompleted((prev) => {
+        const next = { ...prev };
+        delete next[exerciseId];
+        return next;
+      });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("workout_completions")
+      .insert({ user_id: userId, exercise_id: exerciseId, scheduled_day: selectedDay, completed_on: todayKey })
+      .select("id")
+      .single();
+    setCompletingId(null);
+    if (error) { toast.error("Could not mark done"); return; }
+    setCompleted((prev) => ({ ...prev, [exerciseId]: data.id }));
+    toast.success("Exercise done ✔");
   };
 
   const dayInfo = DAYS.find((d) => d.key === selectedDay)!;
   const dayLabel = dayInfo.full;
   const dayFocus = dayInfo.focus;
   const isSunday = selectedDay === 7;
-  const doneCount = scheduled.filter((s) => completed[`${selectedDay}-${s.id}`]).length;
+  const doneCount = scheduled.filter((s) => completed[s.exercise_id]).length;
 
   // Dedupe + normalize for picker
   const uniqueExercises = useMemo(() => dedupeByName(allExercises), [allExercises]);
