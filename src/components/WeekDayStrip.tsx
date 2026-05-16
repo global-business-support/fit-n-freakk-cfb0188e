@@ -9,14 +9,56 @@ interface WeekDayStripProps {
 
 // day_of_week convention: Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6, Sun=7
 const DAYS = [
-  { key: 1, short: "MON", full: "Monday" },
-  { key: 2, short: "TUE", full: "Tuesday" },
-  { key: 3, short: "WED", full: "Wednesday" },
-  { key: 4, short: "THU", full: "Thursday" },
-  { key: 5, short: "FRI", full: "Friday" },
-  { key: 6, short: "SAT", full: "Saturday" },
-  { key: 7, short: "SUN", full: "Sunday" },
+  { key: 1, short: "MON", full: "Monday", focus: "chest" as string | null },
+  { key: 2, short: "TUE", full: "Tuesday", focus: "back" },
+  { key: 3, short: "WED", full: "Wednesday", focus: "legs" },
+  { key: 4, short: "THU", full: "Thursday", focus: "shoulders" },
+  { key: 5, short: "FRI", full: "Friday", focus: "arms" },
+  { key: 6, short: "SAT", full: "Saturday", focus: "abs" },
+  { key: 7, short: "SUN", full: "Sunday", focus: null }, // mix
 ];
+
+const normalizeText = (v: string) =>
+  (v || "").toLowerCase().replace(/&/g, " and ").replace(/[\s\-_]+/g, " ").replace(/[^a-z0-9 ]/g, "").trim();
+
+const normalizeBodyPart = (bp: string) => {
+  const k = normalizeText(bp);
+  const aliases: Record<string, string> = {
+    ab: "abs", abs: "abs", core: "abs",
+    arm: "arms", arms: "arms",
+    bicep: "biceps", biceps: "biceps",
+    calf: "calves", calves: "calves",
+    glute: "glutes", glutes: "glutes",
+    leg: "legs", legs: "legs",
+    shoulder: "shoulders", shoulders: "shoulders",
+    tricep: "triceps", triceps: "triceps",
+  };
+  return aliases[k] ?? k;
+};
+
+const titleCase = (v: string) =>
+  normalizeText(v).split(" ").filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+
+const focusMatch = (bp: string, focus: string) => {
+  const n = normalizeBodyPart(bp);
+  if (focus === "arms") return ["arms", "biceps", "triceps"].includes(n);
+  if (focus === "legs") return ["legs", "calves", "glutes", "quads", "hamstrings"].includes(n);
+  if (focus === "abs") return n === "abs";
+  return n === focus;
+};
+
+const dedupeByName = <T extends { id: string; name: string; video_url?: string | null; gif_url?: string | null }>(list: T[]) => {
+  const m = new Map<string, T>();
+  for (const e of list) {
+    const k = normalizeText(e.name);
+    if (!k) continue;
+    const cur = m.get(k);
+    const has = !!e.video_url || !!e.gif_url;
+    const curHas = cur && (!!cur.video_url || !!cur.gif_url);
+    if (!cur || (has && !curHas)) m.set(k, e);
+  }
+  return Array.from(m.values());
+};
 
 // JS getDay(): Sun=0..Sat=6 → our: Sun=7, Mon=1..Sat=6
 const todayDow = () => {
