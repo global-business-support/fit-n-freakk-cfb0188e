@@ -389,7 +389,7 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
               </button>
             </div>
           </div>
-          {Object.entries(grouped).map(([part, list]) => (
+          {grouped.map(([part, list]) => (
             <div key={part}>
               <p className="text-[10px] font-bold text-ember uppercase tracking-wider font-body mb-1.5">{part}</p>
               <div className="space-y-1">
