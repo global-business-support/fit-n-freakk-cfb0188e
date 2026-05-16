@@ -187,20 +187,42 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
     saveCompleted({ ...completed, [key]: !completed[key] });
   };
 
-  const dayLabel = DAYS.find((d) => d.key === selectedDay)?.full || "";
+  const dayInfo = DAYS.find((d) => d.key === selectedDay)!;
+  const dayLabel = dayInfo.full;
+  const dayFocus = dayInfo.focus;
   const isSunday = selectedDay === 7;
   const doneCount = scheduled.filter((s) => completed[`${selectedDay}-${s.id}`]).length;
 
-  // Group all exercises by body part for picker
+  // Dedupe + normalize for picker
+  const uniqueExercises = useMemo(() => dedupeByName(allExercises), [allExercises]);
+
+  // Suggested exercises for the day (focus-matched, or mix for Sunday)
+  const suggested = useMemo(() => {
+    if (isSunday) {
+      const groups = ["chest", "back", "legs", "shoulders", "arms", "abs"];
+      return groups.flatMap((g) => uniqueExercises.filter((e) => focusMatch(e.body_part, g)).slice(0, 1));
+    }
+    if (!dayFocus) return [];
+    return uniqueExercises.filter((e) => focusMatch(e.body_part, dayFocus));
+  }, [uniqueExercises, dayFocus, isSunday]);
+
+  // Group all exercises by normalized body part for picker
   const grouped = useMemo(() => {
     const g: Record<string, any[]> = {};
-    allExercises.forEach((e) => {
-      const k = e.body_part || "Other";
+    uniqueExercises.forEach((e) => {
+      const k = titleCase(normalizeBodyPart(e.body_part || "Other")) || "Other";
       if (!g[k]) g[k] = [];
       g[k].push(e);
     });
-    return g;
-  }, [allExercises]);
+    // sort: focus group first
+    const focusKey = dayFocus ? titleCase(dayFocus) : "";
+    const entries = Object.entries(g).sort(([a], [b]) => {
+      if (a === focusKey) return -1;
+      if (b === focusKey) return 1;
+      return a.localeCompare(b);
+    });
+    return entries;
+  }, [uniqueExercises, dayFocus]);
 
   return (
     <div className="rounded-2xl border border-sky/20 bg-card/60 backdrop-blur-md p-4 space-y-4">
