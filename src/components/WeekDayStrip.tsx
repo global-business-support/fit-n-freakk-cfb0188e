@@ -269,39 +269,50 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
         <div>
           <p className="font-heading text-xl tracking-wider text-foreground">{dayLabel.toUpperCase()}</p>
           <p className="text-[10px] text-muted-foreground font-body uppercase tracking-wider">
-            {isSunday ? "Rest day" : `${scheduled.length} exercises • ${doneCount} done`}
+            {isSunday ? "Mix · pick anything" : `Focus: ${titleCase(dayFocus || "")} • ${scheduled.length} picked • ${doneCount} done`}
           </p>
         </div>
-        {!isSunday && (
-          <button
-            onClick={() => { setEditing(!editing); setPicking(false); }}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider font-body ring-1 transition-all
-              ${editing ? "bg-ember/20 text-ember ring-ember/40" : "bg-secondary/60 text-foreground ring-border hover:bg-secondary"}`}
-          >
-            {editing ? <Check className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}
-            {editing ? "Done" : "Edit"}
-          </button>
-        )}
+        <button
+          onClick={() => { setEditing(!editing); setPicking(false); }}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider font-body ring-1 transition-all
+            ${editing ? "bg-ember/20 text-ember ring-ember/40" : "bg-secondary/60 text-foreground ring-border hover:bg-secondary"}`}
+        >
+          {editing ? <Check className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}
+          {editing ? "Done" : "Edit"}
+        </button>
       </div>
 
-      {/* Sunday */}
-      {isSunday && (
-        <div className="rounded-xl bg-secondary/30 py-6 text-center">
-          <p className="text-3xl mb-1">🛌</p>
-          <p className="font-heading text-base tracking-wider text-muted-foreground">REST DAY</p>
-          <p className="text-[10px] text-muted-foreground font-body">Recover and refuel</p>
-        </div>
-      )}
-
-      {/* Exercise list */}
-      {!isSunday && scheduled.length === 0 && !picking && (
-        <div className="rounded-xl bg-secondary/30 py-6 text-center">
-          <p className="text-sm text-muted-foreground font-body mb-3">No exercises for {dayLabel} yet</p>
+      {/* Suggested for this day (when nothing scheduled) */}
+      {scheduled.length === 0 && !picking && suggested.length > 0 && (
+        <div className="rounded-xl bg-secondary/30 p-3 space-y-2">
+          <p className="text-[10px] font-bold text-ember uppercase tracking-wider font-body">
+            Suggested for {dayLabel} {isSunday ? "(mix)" : `· ${titleCase(dayFocus || "")}`}
+          </p>
+          <div className="space-y-1.5 max-h-72 overflow-y-auto">
+            {suggested.map((ex) => (
+              <label
+                key={ex.id}
+                className="flex items-center gap-2.5 rounded-lg bg-background/40 px-2.5 py-1.5 cursor-pointer hover:bg-background/70 transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={scheduledIds.has(ex.id)}
+                  onChange={() => toggleExercise(ex.id)}
+                  disabled={saving}
+                  className="h-4 w-4 accent-primary cursor-pointer"
+                />
+                <span className="text-xs font-bold font-body text-foreground flex-1 truncate">{ex.name}</span>
+                <span className="text-[9px] text-muted-foreground font-body uppercase tracking-wider">
+                  {titleCase(normalizeBodyPart(ex.body_part))}
+                </span>
+              </label>
+            ))}
+          </div>
           <button
             onClick={() => { setEditing(true); setPicking(true); }}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 text-primary px-4 py-2 text-xs font-bold uppercase tracking-wider font-body ring-1 ring-primary/30 hover:bg-primary/25"
+            className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary/15 text-primary px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider font-body ring-1 ring-primary/30 hover:bg-primary/25"
           >
-            <Plus className="h-3.5 w-3.5" /> Add exercises
+            <Plus className="h-3 w-3" /> Browse all exercises
           </button>
         </div>
       )}
