@@ -298,12 +298,12 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
           </p>
         </div>
         <button
-          onClick={() => { setEditing(!editing); setPicking(false); }}
+          onClick={() => { setEditing(!editing); setPicking(!editing); }}
           className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider font-body ring-1 transition-all
             ${editing ? "bg-ember/20 text-ember ring-ember/40" : "bg-secondary/60 text-foreground ring-border hover:bg-secondary"}`}
         >
           {editing ? <Check className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}
-          {editing ? "Done" : "Edit"}
+          {editing ? "Done" : "Pick Exercise"}
         </button>
       </div>
 
@@ -313,6 +313,7 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
           <p className="text-[10px] font-bold text-ember uppercase tracking-wider font-body">
             Suggested for {dayLabel} {isSunday ? "(mix)" : `· ${titleCase(dayFocus || "")}`}
           </p>
+          <p className="text-[10px] text-muted-foreground font-body">Select exercise here, then press Done after workout.</p>
           <div className="space-y-1.5 max-h-72 overflow-y-auto">
             {suggested.map((ex) => (
               <label
@@ -345,8 +346,7 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
       {scheduled.length > 0 && (
         <div className="space-y-2">
           {scheduled.map((s) => {
-            const key = `${selectedDay}-${s.id}`;
-            const done = !!completed[key];
+            const done = !!completed[s.exercise_id];
             return (
               <div
                 key={s.id}
@@ -354,12 +354,13 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
                   ${done ? "bg-success/10 ring-success/30" : "bg-secondary/40 ring-border/50"}`}
               >
                 <button
-                  onClick={() => toggleDone(s.id)}
+                  onClick={() => toggleDone(s.exercise_id)}
+                  disabled={completingId === s.exercise_id}
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ring-1 transition-all
                     ${done ? "bg-success text-success-foreground ring-success" : "bg-background ring-border hover:ring-primary"}`}
                   aria-label="Mark done"
                 >
-                  {done && <CheckCircle2 className="h-4 w-4" />}
+                  {completingId === s.exercise_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : done && <CheckCircle2 className="h-4 w-4" />}
                 </button>
                 {s.exercises?.thumbnail_url && (
                   <img
@@ -384,6 +385,16 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
                     aria-label="Remove"
                   >
                     <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                {!editing && (
+                  <button
+                    onClick={() => toggleDone(s.exercise_id)}
+                    disabled={completingId === s.exercise_id}
+                    className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider font-body ring-1 transition-all
+                      ${done ? "bg-success/15 text-success ring-success/30" : "bg-primary/15 text-primary ring-primary/30 hover:bg-primary/25"}`}
+                  >
+                    {completingId === s.exercise_id ? "Saving" : done ? "Done" : "Mark Done"}
                   </button>
                 )}
               </div>
