@@ -126,7 +126,6 @@ export function TodayVideoFeed({ userId }: TodayVideoFeedProps) {
                     url={ex.video_url}
                     title={ex.name}
                     thumbnailUrl={ex.thumbnail_url}
-                    previewSeconds={30}
                   />
                 ) : (
                   <div className="aspect-video rounded-xl bg-secondary/40 flex items-center justify-center text-muted-foreground text-xs font-body">
