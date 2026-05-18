@@ -78,9 +78,16 @@ function MachinesPage() {
         <div className="space-y-3">
           {filtered.map((machine: any) => (
             <div key={machine.id} className="rounded-2xl border border-sky/20 bg-gradient-card overflow-hidden shadow-card">
-              {machine.image_url && (
-                <img src={machine.image_url} alt={machine.name} className="w-full h-44 object-cover" />
-              )}
+              {machine.video_url ? (
+                <InlineVideoPlayer
+                  url={machine.video_url}
+                  title={machine.name}
+                  thumbnailUrl={machine.image_url}
+                  className="rounded-none border-0"
+                />
+              ) : machine.image_url ? (
+                <img src={machine.image_url} alt={machine.name} className="w-full h-44 object-cover" loading="lazy" />
+              ) : null}
               <div className="p-4 space-y-2">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2 min-w-0">
@@ -89,9 +96,6 @@ function MachinesPage() {
                     </div>
                     <h3 className="font-heading text-lg tracking-wider truncate">{machine.name.toUpperCase()}</h3>
                   </div>
-                  {machine.video_url && (
-                    <VideoPlayer url={machine.video_url} title={machine.name} size="md" />
-                  )}
                 </div>
                 {machine.description && (
                   <p className="text-sm text-muted-foreground font-body">{machine.description}</p>
