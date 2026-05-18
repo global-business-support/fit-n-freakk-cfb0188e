@@ -260,6 +260,17 @@ function WorkoutsPage() {
           ))}
         </div>
 
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky/70" />
+          <Input
+            placeholder="Search exercises or body part..."
+            className="pl-9 bg-secondary/60 border-border h-11"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
         {/* Day-wise plan */}
         <div className="rounded-2xl border border-primary/20 bg-card/60 backdrop-blur-md p-3 space-y-3">
           <div className="flex items-center justify-between px-1">
