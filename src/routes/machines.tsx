@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
-import { VideoPlayer } from "@/components/VideoPlayer";
+import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Cog, Search } from "lucide-react";
