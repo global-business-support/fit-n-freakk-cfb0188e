@@ -3,12 +3,13 @@ import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
 import { WorkoutHistoryCalendar } from "@/components/WorkoutHistoryCalendar";
-import { Dumbbell, ChevronRight, LogIn, Play, Check, CheckCircle2 } from "lucide-react";
+import { Dumbbell, ChevronRight, LogIn, Play, Check, CheckCircle2, Search } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/workouts")({
@@ -116,6 +117,7 @@ function WorkoutsPage() {
   const [activeDay, setActiveDay] = useState<number>(todayIdx);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [completions, setCompletions] = useState<Record<string, string>>({}); // exercise_id -> latest date
+  const [search, setSearch] = useState("");
   const todayKey = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
@@ -149,9 +151,18 @@ function WorkoutsPage() {
   }, [user, activeDay]);
 
   const uniqueExercises = useMemo(() => dedupeExercisesByName(exercises), [exercises]);
+  const searchKey = normalizeTextKey(search);
+  const matchesSearch = (ex: Exercise) => {
+    if (!searchKey) return true;
+    return (
+      normalizeTextKey(ex.name).includes(searchKey) ||
+      normalizeTextKey(ex.body_part).includes(searchKey)
+    );
+  };
   const bodyParts = useMemo(() => {
     const groups = new Map<string, { key: string; label: string; exercises: Exercise[] }>();
     for (const exercise of uniqueExercises) {
+      if (!matchesSearch(exercise)) continue;
       const key = normalizeBodyPart(exercise.body_part);
       if (!key) continue;
       const group = groups.get(key) ?? { key, label: formatLabel(key), exercises: [] };
@@ -159,14 +170,17 @@ function WorkoutsPage() {
       groups.set(key, group);
     }
     return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label));
-  }, [uniqueExercises]);
+  }, [uniqueExercises, searchKey]);
   const day = DAY_PLAN[activeDay];
   const dayExercises = useMemo(() => {
-    if (day.focus) return uniqueExercises.filter((e) => focusMatch(e.body_part, day.focus!));
-    // Sunday mix — 2 from each major group
-    const groups = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Abs"];
-    return groups.flatMap((g) => uniqueExercises.filter((e) => focusMatch(e.body_part, g)).slice(0, 2));
-  }, [uniqueExercises, day]);
+    const base = day.focus
+      ? uniqueExercises.filter((e) => focusMatch(e.body_part, day.focus!))
+      : (() => {
+          const groups = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Abs"];
+          return groups.flatMap((g) => uniqueExercises.filter((e) => focusMatch(e.body_part, g)).slice(0, 2));
+        })();
+    return base.filter(matchesSearch);
+  }, [uniqueExercises, day, searchKey]);
 
   // Auto-select first 5 by default whenever day/exercises change
   useEffect(() => {
@@ -244,6 +258,17 @@ function WorkoutsPage() {
               {g}
             </button>
           ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sky/70" />
+          <Input
+            placeholder="Search exercises or body part..."
+            className="pl-9 bg-secondary/60 border-border h-11"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
 
         {/* Day-wise plan */}
