@@ -1,11 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Cog, Search } from "lucide-react";
+import { ChevronDown, Cog, Dumbbell, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { getExercisesForMachine, type ExerciseLite } from "@/lib/machine-exercises";
 
 export const Route = createFileRoute("/machines")({
   head: () => ({
