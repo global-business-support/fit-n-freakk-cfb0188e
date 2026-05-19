@@ -1,11 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Cog, Search } from "lucide-react";
+import { ChevronDown, Cog, Dumbbell, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { getExercisesForMachine, type ExerciseLite } from "@/lib/machine-exercises";
 
 export const Route = createFileRoute("/machines")({
   head: () => ({
@@ -19,14 +20,27 @@ export const Route = createFileRoute("/machines")({
 
 function MachinesPage() {
   const [machines, setMachines] = useState<any[]>([]);
+  const [exercises, setExercises] = useState<ExerciseLite[]>([]);
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     supabase.from("machines").select("*").order("name").then(({ data }) => {
       setMachines(data || []);
     });
+    supabase.from("exercises").select("id,name,body_part,thumbnail_url,video_url").then(({ data }) => {
+      setExercises((data as ExerciseLite[]) || []);
+    });
   }, []);
+
+  const exercisesByMachine = useMemo(() => {
+    const map: Record<string, ExerciseLite[]> = {};
+    for (const m of machines) {
+      map[m.id] = getExercisesForMachine(m.name, exercises);
+    }
+    return map;
+  }, [machines, exercises]);
 
   const playable = machines.filter((m: any) => !!m.video_url);
   const pool = showAll ? machines : playable;
@@ -104,6 +118,57 @@ function MachinesPage() {
                   <div className="rounded-lg bg-secondary/50 p-3 ring-1 ring-sky/10">
                     <p className="text-[10px] uppercase tracking-wider text-sky font-body mb-1 font-bold">How to use</p>
                     <p className="text-sm font-body whitespace-pre-line">{machine.how_to_use}</p>
+                  </div>
+                )}
+
+                {exercisesByMachine[machine.id]?.length > 0 && (
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setExpanded((s) => ({ ...s, [machine.id]: !s[machine.id] }))}
+                      className="flex w-full items-center justify-between rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-left hover:bg-primary/20 transition"
+                    >
+                      <span className="flex items-center gap-2 text-xs font-heading tracking-wider text-primary uppercase">
+                        <Dumbbell className="h-4 w-4" />
+                        {exercisesByMachine[machine.id].length} exercises on this machine
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 text-primary transition-transform ${expanded[machine.id] ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {expanded[machine.id] && (
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {exercisesByMachine[machine.id].map((ex) => (
+                          <Link
+                            key={ex.id}
+                            to="/exercise/$id"
+                            params={{ id: ex.id }}
+                            className="flex items-center gap-2 rounded-lg border border-sky/15 bg-secondary/40 p-2 hover:border-primary/40 hover:bg-secondary/70 transition group"
+                          >
+                            {ex.thumbnail_url ? (
+                              <img
+                                src={ex.thumbnail_url}
+                                alt={ex.name}
+                                className="h-10 w-10 rounded-md object-cover shrink-0"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="h-10 w-10 rounded-md bg-gradient-primary/30 flex items-center justify-center shrink-0">
+                                <Dumbbell className="h-4 w-4 text-primary" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-xs font-body font-semibold truncate group-hover:text-primary transition">
+                                {ex.name}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                                {ex.body_part}
+                              </p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
