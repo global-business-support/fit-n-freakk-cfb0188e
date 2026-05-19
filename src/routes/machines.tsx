@@ -20,14 +20,27 @@ export const Route = createFileRoute("/machines")({
 
 function MachinesPage() {
   const [machines, setMachines] = useState<any[]>([]);
+  const [exercises, setExercises] = useState<ExerciseLite[]>([]);
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     supabase.from("machines").select("*").order("name").then(({ data }) => {
       setMachines(data || []);
     });
+    supabase.from("exercises").select("id,name,body_part,thumbnail_url,video_url").then(({ data }) => {
+      setExercises((data as ExerciseLite[]) || []);
+    });
   }, []);
+
+  const exercisesByMachine = useMemo(() => {
+    const map: Record<string, ExerciseLite[]> = {};
+    for (const m of machines) {
+      map[m.id] = getExercisesForMachine(m.name, exercises);
+    }
+    return map;
+  }, [machines, exercises]);
 
   const playable = machines.filter((m: any) => !!m.video_url);
   const pool = showAll ? machines : playable;
