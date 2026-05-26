@@ -345,6 +345,27 @@ function AdminPage() {
     setMachines((prev) => prev.filter((m) => m.id !== id));
   };
 
+  const [rowUploadingId, setRowUploadingId] = useState<string | null>(null);
+  const uploadVideoForMachine = async (machineId: string, file: File) => {
+    if (!file || !user) return;
+    setRowUploadingId(machineId);
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const path = `${user.id}/machine-${machineId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      const { error: updErr } = await supabase.from("machines").update({ video_url: pub.publicUrl }).eq("id", machineId);
+      if (updErr) { alert("Save failed: " + updErr.message); return; }
+      setMachines((prev) => prev.map((m) => (m.id === machineId ? { ...m, video_url: pub.publicUrl } : m)));
+    } finally {
+      setRowUploadingId(null);
+    }
+  };
+
+
   const assignSchedule = async () => {
     if (!scheduleUser || !scheduleExercise) return;
     await supabase.from("workout_schedules").insert({
@@ -874,6 +895,24 @@ function AdminPage() {
                     {m.video_url && (
                       <div className="mt-2"><VideoPlayer url={m.video_url} title={m.name} size="sm" /></div>
                     )}
+                    <div className="mt-2">
+                      <input
+                        id={`machine-video-${m.id}`}
+                        type="file"
+                        accept="video/*"
+                        className="hidden"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadVideoForMachine(m.id, f); e.currentTarget.value = ""; }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={rowUploadingId === m.id}
+                        onClick={() => document.getElementById(`machine-video-${m.id}`)?.click()}
+                      >
+                        {rowUploadingId === m.id ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> {m.video_url ? "Replace Video" : "Upload Video"}</>)}
+                      </Button>
+                    </div>
                   </div>
                   <button onClick={() => deleteMachine(m.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
                     <Trash2 className="h-4 w-4" />
@@ -881,6 +920,7 @@ function AdminPage() {
                 </div>
               </div>
             ))}
+
           </div>
         )}
 
