@@ -345,6 +345,27 @@ function AdminPage() {
     setMachines((prev) => prev.filter((m) => m.id !== id));
   };
 
+  const [rowUploadingId, setRowUploadingId] = useState<string | null>(null);
+  const uploadVideoForMachine = async (machineId: string, file: File) => {
+    if (!file || !user) return;
+    setRowUploadingId(machineId);
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const path = `${user.id}/machine-${machineId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      const { error: updErr } = await supabase.from("machines").update({ video_url: pub.publicUrl }).eq("id", machineId);
+      if (updErr) { alert("Save failed: " + updErr.message); return; }
+      setMachines((prev) => prev.map((m) => (m.id === machineId ? { ...m, video_url: pub.publicUrl } : m)));
+    } finally {
+      setRowUploadingId(null);
+    }
+  };
+
+
   const assignSchedule = async () => {
     if (!scheduleUser || !scheduleExercise) return;
     await supabase.from("workout_schedules").insert({
