@@ -895,6 +895,24 @@ function AdminPage() {
                     {m.video_url && (
                       <div className="mt-2"><VideoPlayer url={m.video_url} title={m.name} size="sm" /></div>
                     )}
+                    <div className="mt-2">
+                      <input
+                        id={`machine-video-${m.id}`}
+                        type="file"
+                        accept="video/*"
+                        className="hidden"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadVideoForMachine(m.id, f); e.currentTarget.value = ""; }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={rowUploadingId === m.id}
+                        onClick={() => document.getElementById(`machine-video-${m.id}`)?.click()}
+                      >
+                        {rowUploadingId === m.id ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> {m.video_url ? "Replace Video" : "Upload Video"}</>)}
+                      </Button>
+                    </div>
                   </div>
                   <button onClick={() => deleteMachine(m.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
                     <Trash2 className="h-4 w-4" />
@@ -902,6 +920,7 @@ function AdminPage() {
                 </div>
               </div>
             ))}
+
           </div>
         )}
 
