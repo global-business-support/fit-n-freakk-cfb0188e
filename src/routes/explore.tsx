@@ -208,25 +208,6 @@ function ExplorePage() {
           </div>
         </section>
 
-        {/* Featured auto-running videos */}
-        {featured.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="font-heading text-2xl tracking-wider text-sky">FEATURED MOVES</h2>
-            <div className="grid gap-4 md:grid-cols-3">
-              {featured.map((ex) => (
-                <TiltCard key={ex.id}>
-                  <div className="rounded-2xl border border-sky/30 bg-gradient-card overflow-hidden shadow-card">
-                    <AutoExerciseMedia exercise={ex} />
-                    <div className="p-3">
-                      <p className="font-heading text-lg tracking-wider text-white">{ex.name.toUpperCase()}</p>
-                      <p className="text-xs font-body text-sky-200/70 uppercase tracking-wider">{formatBodyPart(ex.body_part)}</p>
-                    </div>
-                  </div>
-                </TiltCard>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Filters */}
         <section className="space-y-3">
