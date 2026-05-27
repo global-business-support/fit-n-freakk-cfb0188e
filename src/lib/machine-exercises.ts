@@ -62,8 +62,6 @@ export function getMachineCategory(name: string): MachineCategory {
 }
 
 export interface MachineExerciseMap {
-
-export interface MachineExerciseMap {
   /** Exercise name keywords (substring match, case-insensitive) */
   keywords?: string[];
   /** Pull every exercise from these body_part categories */
