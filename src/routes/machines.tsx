@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown, Cog, Dumbbell, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { getExercisesForMachine, type ExerciseLite } from "@/lib/machine-exercises";
+import { getExercisesForMachine, getMachineCategory, MACHINE_CATEGORIES, type MachineCategory, type ExerciseLite } from "@/lib/machine-exercises";
 
 export const Route = createFileRoute("/machines")({
   head: () => ({
@@ -23,6 +23,7 @@ function MachinesPage() {
   const [exercises, setExercises] = useState<ExerciseLite[]>([]);
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [category, setCategory] = useState<MachineCategory | "All">("All");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -44,9 +45,20 @@ function MachinesPage() {
 
   const playable = machines.filter((m: any) => !!m.video_url);
   const pool = showAll ? machines : playable;
-  const filtered = pool.filter((m: any) =>
-    m.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = pool.filter((m: any) => {
+    const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCat = category === "All" || getMachineCategory(m.name) === category;
+    return matchesSearch && matchesCat;
+  });
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { All: pool.length };
+    for (const m of pool) {
+      const cat = getMachineCategory(m.name);
+      c[cat] = (c[cat] || 0) + 1;
+    }
+    return c;
+  }, [pool]);
 
   return (
     <div className="relative min-h-screen pb-20 overflow-hidden">
@@ -80,6 +92,30 @@ function MachinesPage() {
           >
             {showAll ? "Videos only" : "Show all"}
           </button>
+        </div>
+
+        <div className="-mx-4 px-4 overflow-x-auto scrollbar-none">
+          <div className="flex gap-2 pb-1 min-w-max">
+            {(["All", ...MACHINE_CATEGORIES] as const).map((cat) => {
+              const active = category === cat;
+              const count = counts[cat] || 0;
+              if (cat !== "All" && count === 0) return null;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setCategory(cat as MachineCategory | "All")}
+                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-heading tracking-wider uppercase border transition ${
+                    active
+                      ? "bg-gradient-primary text-primary-foreground border-transparent shadow-glow"
+                      : "border-sky/30 bg-card/60 text-sky-100 hover:border-primary/60"
+                  }`}
+                >
+                  {cat} <span className="opacity-70">({count})</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {filtered.length === 0 && (

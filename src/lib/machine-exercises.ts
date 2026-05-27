@@ -2,6 +2,65 @@
 // Matching is case-insensitive "contains". A machine entry can also pull all exercises
 // of a given body_part via `bodyParts`.
 
+export const MACHINE_CATEGORIES = [
+  "Chest",
+  "Back",
+  "Shoulders",
+  "Arms",
+  "Legs",
+  "Abs",
+  "Cardio",
+  "Full Body",
+  "Warmup",
+] as const;
+export type MachineCategory = typeof MACHINE_CATEGORIES[number];
+
+/** Group each machine into one body-part category for the gallery filter. */
+export const MACHINE_CATEGORY: Record<string, MachineCategory> = {
+  "Lat Pull Down": "Back",
+  "Seated Row Machine": "Back",
+  "Long Pull Machine": "Back",
+  "T-Bar Row": "Back",
+  "Chest Press Machine (Plate Loaded)": "Chest",
+  "Pec Fly Machine": "Chest",
+  "Cable Crossover": "Chest",
+  "Olympic Bench": "Chest",
+  "Functional Trainer": "Full Body",
+  "Functional Trainer (Dual Adjustable Pulley)": "Full Body",
+  "Biceps Curl Machine": "Arms",
+  "Triceps Press Machine": "Arms",
+  "Forearm Machine": "Arms",
+  "Dip & Chin Station": "Arms",
+  "Shoulder Press Machine": "Shoulders",
+  "Rear Delt Machine": "Shoulders",
+  "Leg Extension": "Legs",
+  "Leg Curl": "Legs",
+  "Leg Press 45 Degree": "Legs",
+  "Seated Leg Press": "Legs",
+  "Super / Hack Squat Machine": "Legs",
+  "Inner Thigh (Adductor) Machine": "Legs",
+  "Outer Thigh (Abductor) Machine": "Legs",
+  "Seated Calf Raise": "Legs",
+  "Power Cage (Squat Rack)": "Legs",
+  "Roman Chair": "Abs",
+  "Smith Machine": "Full Body",
+  "Adjustable Bench": "Full Body",
+  "Dumbbells": "Full Body",
+  "Barbells": "Full Body",
+  "Kettlebells": "Full Body",
+  "Treadmill": "Cardio",
+  "Spin Bike": "Cardio",
+  "Cross Trainer": "Cardio",
+  "Air Rower": "Cardio",
+  "Stair Climber": "Cardio",
+  "SKI Erg": "Cardio",
+  "WARMUP Stretching": "Warmup",
+};
+
+export function getMachineCategory(name: string): MachineCategory {
+  return MACHINE_CATEGORY[name.trim()] || "Full Body";
+}
+
 export interface MachineExerciseMap {
   /** Exercise name keywords (substring match, case-insensitive) */
   keywords?: string[];
