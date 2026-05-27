@@ -34,6 +34,12 @@ export const MACHINE_EXERCISES: Record<string, MachineExerciseMap> = {
   "Functional Trainer (Dual Adjustable Pulley)": {
     keywords: ["cable", "ft shrug", "ft upright", "low pulley", "rope cable", "tricep rope"],
   },
+  "Functional Trainer": {
+    keywords: ["cable", "ft shrug", "ft upright", "low pulley", "rope cable", "tricep rope", "cable crossover", "cable pushdown", "cable kickback"],
+  },
+  "WARMUP Stretching": {
+    keywords: ["stretch", "warm up", "warmup", "mobility", "dynamic"],
+  },
   "Biceps Curl Machine": {
     keywords: ["bicep curl", "preacher curl", "standing curl", "seating curl", "spider curl", "concentration curl", "short head curl", "long head curl"],
   },
