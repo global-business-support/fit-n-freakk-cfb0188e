@@ -23,6 +23,7 @@ function MachinesPage() {
   const [exercises, setExercises] = useState<ExerciseLite[]>([]);
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [category, setCategory] = useState<MachineCategory | "All">("All");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
