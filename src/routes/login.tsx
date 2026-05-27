@@ -287,8 +287,8 @@ function LoginPage() {
           </p>
 
           <p className="text-center text-xs text-sky-200/60 font-body">
-            <Link to="/explore" className="hover:text-white underline-offset-4 hover:underline">
-              ← Back to public exercise library
+            <Link to="/" className="hover:text-white underline-offset-4 hover:underline">
+              ← Home
             </Link>
           </p>
         </div>
