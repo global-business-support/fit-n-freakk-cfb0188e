@@ -45,9 +45,20 @@ function MachinesPage() {
 
   const playable = machines.filter((m: any) => !!m.video_url);
   const pool = showAll ? machines : playable;
-  const filtered = pool.filter((m: any) =>
-    m.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = pool.filter((m: any) => {
+    const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCat = category === "All" || getMachineCategory(m.name) === category;
+    return matchesSearch && matchesCat;
+  });
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { All: pool.length };
+    for (const m of pool) {
+      const cat = getMachineCategory(m.name);
+      c[cat] = (c[cat] || 0) + 1;
+    }
+    return c;
+  }, [pool]);
 
   return (
     <div className="relative min-h-screen pb-20 overflow-hidden">
