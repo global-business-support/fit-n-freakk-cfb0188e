@@ -54,7 +54,7 @@ function ExerciseDetailPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background text-center px-4">
         <p className="font-heading text-2xl text-white">Exercise not found</p>
-        <Link to="/explore"><Button variant="outline">Back to library</Button></Link>
+        <Link to="/"><Button variant="outline">Home</Button></Link>
       </div>
     );
   }
