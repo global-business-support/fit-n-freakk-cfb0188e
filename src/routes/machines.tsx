@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown, Cog, Dumbbell, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { getExercisesForMachine, type ExerciseLite } from "@/lib/machine-exercises";
+import { getExercisesForMachine, getMachineCategory, MACHINE_CATEGORIES, type MachineCategory, type ExerciseLite } from "@/lib/machine-exercises";
 
 export const Route = createFileRoute("/machines")({
   head: () => ({
