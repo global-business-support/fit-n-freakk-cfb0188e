@@ -94,6 +94,30 @@ function MachinesPage() {
           </button>
         </div>
 
+        <div className="-mx-4 px-4 overflow-x-auto scrollbar-none">
+          <div className="flex gap-2 pb-1 min-w-max">
+            {(["All", ...MACHINE_CATEGORIES] as const).map((cat) => {
+              const active = category === cat;
+              const count = counts[cat] || 0;
+              if (cat !== "All" && count === 0) return null;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setCategory(cat as MachineCategory | "All")}
+                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-heading tracking-wider uppercase border transition ${
+                    active
+                      ? "bg-gradient-primary text-primary-foreground border-transparent shadow-glow"
+                      : "border-sky/30 bg-card/60 text-sky-100 hover:border-primary/60"
+                  }`}
+                >
+                  {cat} <span className="opacity-70">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {filtered.length === 0 && (
           <div className="py-12 text-center text-muted-foreground font-body">
             <Cog className="h-8 w-8 mx-auto mb-2 opacity-30" />
