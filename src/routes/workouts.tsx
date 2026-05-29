@@ -129,7 +129,7 @@ function WorkoutsPage() {
     });
     return init;
   });
-  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  
   const [completions, setCompletions] = useState<Record<string, string>>({}); // exercise_id -> latest date
   const [search, setSearch] = useState("");
   const todayKey = new Date().toISOString().slice(0, 10);
