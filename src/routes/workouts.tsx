@@ -105,10 +105,14 @@ const focusMatch = (bodyPart: string, focus: string) => {
   if (f === "shoulders") return bp === "shoulders";
   if (f === "back") return bp === "back";
   if (f === "chest") return bp === "chest";
+  if (f === "triceps") return bp === "triceps";
+  if (f === "biceps") return bp === "biceps";
+  if (f === "traps") return bp === "traps" || bp.includes("trap");
+  if (f === "cardio") return bp.includes("cardio");
   return bp === f;
 };
 
-const FOCUS_GROUPS = ["Chest", "Back", "Shoulders", "Arms", "Legs", "Abs"] as const;
+const FOCUS_GROUPS = ["Chest", "Back", "Shoulders", "Arms", "Biceps", "Triceps", "Traps", "Legs", "Abs", "Cardio"] as const;
 type FocusGroup = typeof FOCUS_GROUPS[number];
 
 function WorkoutsPage() {
