@@ -299,95 +299,164 @@ function WorkoutsPage() {
           <div className="flex items-center justify-between px-1">
             <p className="font-heading text-base tracking-wider text-primary">DAY PLAN</p>
             <p className="text-[10px] text-muted-foreground font-body uppercase tracking-wider">
-              {day.focus ? `${day.label} · ${day.focus}` : "Sun · Mix"}
+              Tap a day to open
             </p>
           </div>
-          <div className="grid grid-cols-7 gap-1">
-            {DAY_PLAN.map((d, i) => (
-              <button
-                key={d.key}
-                onClick={() => setActiveDay(i)}
-                className={cn(
-                  "rounded-lg py-2 text-[11px] font-bold uppercase font-body transition-all",
-                  activeDay === i
-                    ? "bg-gradient-primary text-primary-foreground shadow-glow"
-                    : i === todayIdx
-                      ? "bg-primary/15 text-primary border border-primary/30"
-                      : "bg-secondary/60 text-muted-foreground"
-                )}
-              >
-                {d.label}
-              </button>
-            ))}
-          </div>
-
-          <p className="text-[10px] text-center text-muted-foreground font-body">
-            ✓ auto-selected · tap to add/remove · mark complete to save date
-          </p>
 
           <div className="space-y-2">
-            {dayExercises.length === 0 ? (
-              <p className="text-center text-xs text-muted-foreground font-body py-4">
-                No exercises for this focus yet.
-              </p>
-            ) : (
-              dayExercises.map((ex) => {
-                const isSel = !!selected[ex.id];
-                const doneOn = completions[ex.id];
-                const doneToday = doneOn === todayKey;
-                return (
-                  <div
-                    key={ex.id}
-                    className={cn(
-                      "rounded-lg border p-2.5 transition-all",
-                      isSel ? "border-primary/50 bg-primary/5" : "border-border bg-secondary/30"
-                    )}
+            {DAY_PLAN.map((d, i) => {
+              const isOpen = openDay === i;
+              const groupsForDay = dayGroups[i] ?? [];
+              const isMix = groupsForDay.length === FOCUS_GROUPS.length;
+              return (
+                <div
+                  key={d.key}
+                  className={cn(
+                    "rounded-xl border transition-all overflow-hidden",
+                    isOpen ? "border-primary/50 bg-primary/5" : "border-border bg-secondary/30"
+                  )}
+                >
+                  <button
+                    onClick={() => setOpenDay(isOpen ? null : i)}
+                    className="flex w-full items-center justify-between px-3 py-2.5"
                   >
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggle(ex.id)}
+                      <span
                         className={cn(
-                          "h-5 w-5 shrink-0 rounded border flex items-center justify-center transition",
-                          isSel ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/40"
+                          "rounded-md px-2 py-1 text-[11px] font-bold uppercase font-body",
+                          isOpen
+                            ? "bg-gradient-primary text-primary-foreground shadow-glow"
+                            : i === todayIdx
+                              ? "bg-primary/15 text-primary border border-primary/30"
+                              : "bg-secondary text-muted-foreground"
                         )}
-                        aria-label="Select exercise"
                       >
-                        {isSel && <Check className="h-3.5 w-3.5" />}
-                      </button>
-                      <Link
-                        to="/exercise/$id"
-                        params={{ id: ex.id }}
-                        className="min-w-0 flex-1"
-                      >
-                        <p className="text-sm font-bold font-body truncate">{ex.name}</p>
-                        <p className="text-[10px] text-sky font-body uppercase tracking-wider">
-                          {ex.body_part}
-                          {doneOn && (
-                            <span className={cn("ml-2", doneToday ? "text-emerald-400" : "text-muted-foreground")}>
-                              · last done {formatDate(doneOn)}
-                            </span>
-                          )}
-                        </p>
-                      </Link>
-                      {doneToday ? (
-                        <span className="flex items-center gap-1 text-[10px] font-body uppercase tracking-wider text-emerald-400">
-                          <CheckCircle2 className="h-4 w-4" /> Done
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => markComplete(ex.id)}
-                          className="rounded-md bg-gradient-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2 py-1 shadow-glow"
-                        >
-                          Done
-                        </button>
-                      )}
+                        {d.label}
+                      </span>
+                      <span className="text-[10px] font-body text-muted-foreground uppercase tracking-wider">
+                        {groupsForDay.length === 0
+                          ? "no groups"
+                          : isMix
+                            ? "Mix · all groups"
+                            : groupsForDay.join(" · ")}
+                      </span>
                     </div>
-                  </div>
-                );
-              })
-            )}
+                    <ChevronRight className={cn("h-4 w-4 text-muted-foreground transition-transform", isOpen && "rotate-90")} />
+                  </button>
+
+                  {isOpen && (
+                    <div className="border-t border-border px-3 py-3 space-y-3 animate-fade-in">
+                      {/* Group selector chips */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {FOCUS_GROUPS.map((g) => {
+                          const on = groupsForDay.includes(g);
+                          return (
+                            <button
+                              key={g}
+                              onClick={() => toggleGroup(i, g)}
+                              className={cn(
+                                "rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wider font-body transition",
+                                on
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40"
+                              )}
+                            >
+                              {g}
+                            </button>
+                          );
+                        })}
+                        <button
+                          onClick={() => setMixForDay(i)}
+                          className={cn(
+                            "rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wider font-body transition",
+                            isMix
+                              ? "border-ember bg-ember text-white"
+                              : "border-ember/40 text-ember hover:bg-ember/10"
+                          )}
+                        >
+                          Mix
+                        </button>
+                      </div>
+
+                      <p className="text-[10px] text-muted-foreground font-body">
+                        Select groups to load exercises · tap an exercise to add it · Done saves today's date
+                      </p>
+
+                      {/* Exercises for selected groups */}
+                      <div className="space-y-2">
+                        {groupsForDay.length === 0 ? (
+                          <p className="text-center text-xs text-muted-foreground font-body py-3">
+                            Pick one or more groups above.
+                          </p>
+                        ) : dayExercises.length === 0 ? (
+                          <p className="text-center text-xs text-muted-foreground font-body py-3">
+                            No exercises for the selected groups yet.
+                          </p>
+                        ) : (
+                          dayExercises.map((ex) => {
+                            const isSel = !!selected[ex.id];
+                            const doneOn = completions[ex.id];
+                            const doneToday = doneOn === todayKey;
+                            return (
+                              <div
+                                key={ex.id}
+                                className={cn(
+                                  "rounded-lg border p-2.5 transition-all",
+                                  isSel ? "border-primary/50 bg-primary/10" : "border-border bg-card/60"
+                                )}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => toggle(ex.id)}
+                                    className={cn(
+                                      "h-5 w-5 shrink-0 rounded border flex items-center justify-center transition",
+                                      isSel ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/40"
+                                    )}
+                                    aria-label="Select exercise"
+                                  >
+                                    {isSel && <Check className="h-3.5 w-3.5" />}
+                                  </button>
+                                  <Link
+                                    to="/exercise/$id"
+                                    params={{ id: ex.id }}
+                                    className="min-w-0 flex-1"
+                                  >
+                                    <p className="text-sm font-bold font-body truncate">{ex.name}</p>
+                                    <p className="text-[10px] text-sky font-body uppercase tracking-wider">
+                                      {ex.body_part}
+                                      {doneOn && (
+                                        <span className={cn("ml-2", doneToday ? "text-emerald-400" : "text-muted-foreground")}>
+                                          · last done {formatDate(doneOn)}
+                                        </span>
+                                      )}
+                                    </p>
+                                  </Link>
+                                  {doneToday ? (
+                                    <span className="flex items-center gap-1 text-[10px] font-body uppercase tracking-wider text-emerald-400">
+                                      <CheckCircle2 className="h-4 w-4" /> Done
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => markComplete(ex.id)}
+                                      className="rounded-md bg-gradient-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2 py-1 shadow-glow"
+                                    >
+                                      Done
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
+
 
         {/* Body part groups (browse all) */}
         <div className="space-y-3">
