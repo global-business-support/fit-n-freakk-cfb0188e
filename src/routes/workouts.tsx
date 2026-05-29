@@ -227,7 +227,7 @@ function WorkoutsPage() {
     const { error } = await supabase.from("workout_completions").insert({
       user_id: user.id,
       exercise_id: exId,
-      scheduled_day: activeDay,
+      scheduled_day: openDay ?? todayIdx,
       completed_on: todayKey,
     });
     if (error) {
