@@ -113,7 +113,7 @@ type FocusGroup = typeof FOCUS_GROUPS[number];
 
 function WorkoutsPage() {
   const { user, profile } = useAuth();
-  const [gender, setGender] = useState<"male" | "female" | "both">("both");
+  const [gender, setGender] = useState<"male" | "female">("male");
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [expandedPart, setExpandedPart] = useState<string | null>(null);
   const todayIdx = (new Date().getDay() + 6) % 7;
@@ -138,10 +138,11 @@ function WorkoutsPage() {
   }, [profile]);
 
   useEffect(() => {
-    let q = supabase.from("exercises").select("*").order("body_part");
-    if (gender !== "both") {
-      q = q.or(`gender_target.eq.${gender},gender_target.eq.both`);
-    }
+    const q = supabase
+      .from("exercises")
+      .select("*")
+      .or(`gender_target.eq.${gender},gender_target.eq.both`)
+      .order("body_part");
     q.then(({ data }) => setExercises((data || []) as Exercise[]));
   }, [gender]);
 
@@ -265,9 +266,9 @@ function WorkoutsPage() {
       <main className="relative z-10 mx-auto max-w-lg px-4 py-4 space-y-4">
         {user && <WorkoutHistoryCalendar userId={user.id} />}
 
-        {/* Gender Toggle — male / female / both */}
-        <div className="grid grid-cols-3 gap-2">
-          {(["male", "female", "both"] as const).map((g) => (
+        {/* Gender Toggle — male / female */}
+        <div className="grid grid-cols-2 gap-2">
+          {(["male", "female"] as const).map((g) => (
             <button
               key={g}
               onClick={() => setGender(g)}
@@ -394,28 +395,14 @@ function WorkoutsPage() {
                           </p>
                         ) : (
                           dayExercises.map((ex) => {
-                            const isSel = !!selected[ex.id];
                             const doneOn = completions[ex.id];
                             const doneToday = doneOn === todayKey;
                             return (
                               <div
                                 key={ex.id}
-                                className={cn(
-                                  "rounded-lg border p-2.5 transition-all",
-                                  isSel ? "border-primary/50 bg-primary/10" : "border-border bg-card/60"
-                                )}
+                                className="rounded-lg border border-border bg-card/60 p-2.5 transition-all"
                               >
                                 <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() => toggle(ex.id)}
-                                    className={cn(
-                                      "h-5 w-5 shrink-0 rounded border flex items-center justify-center transition",
-                                      isSel ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/40"
-                                    )}
-                                    aria-label="Select exercise"
-                                  >
-                                    {isSel && <Check className="h-3.5 w-3.5" />}
-                                  </button>
                                   <Link
                                     to="/exercise/$id"
                                     params={{ id: ex.id }}
