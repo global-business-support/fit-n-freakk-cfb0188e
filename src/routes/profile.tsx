@@ -104,7 +104,6 @@ function ProfilePage() {
     await supabase
       .from("profiles")
       .update({
-        name,
         phone,
         age: age ? parseInt(age) : null,
         height: height || null,
