@@ -312,12 +312,19 @@ function WorkoutsPage() {
           <div className="grid grid-cols-7 gap-1.5">
             {DAY_PLAN.map((d, i) => {
               const isOpen = openDay === i;
+              const groupsForDay = dayGroups[i] ?? [];
+              const isMix = groupsForDay.length === FOCUS_GROUPS.length;
+              const suggestion = isMix
+                ? "Mix"
+                : groupsForDay.length > 0
+                  ? groupsForDay[0]
+                  : d.focus || "Rest";
               return (
                 <button
                   key={d.key}
                   onClick={() => setOpenDay(isOpen ? null : i)}
                   className={cn(
-                    "rounded-lg border py-2 text-[11px] font-bold uppercase tracking-wider font-body transition-all",
+                    "rounded-lg border py-1.5 px-0.5 flex flex-col items-center gap-0.5 transition-all",
                     isOpen
                       ? "border-primary bg-gradient-primary text-primary-foreground shadow-glow"
                       : i === todayIdx
@@ -325,7 +332,15 @@ function WorkoutsPage() {
                         : "border-border bg-secondary/40 text-muted-foreground hover:border-primary/30"
                   )}
                 >
-                  {d.label}
+                  <span className="text-[11px] font-bold uppercase tracking-wider font-body">{d.label}</span>
+                  <span
+                    className={cn(
+                      "text-[9px] font-body uppercase tracking-wide truncate max-w-full",
+                      isOpen ? "text-primary-foreground/85" : "text-muted-foreground/80"
+                    )}
+                  >
+                    {suggestion}
+                  </span>
                 </button>
               );
             })}
