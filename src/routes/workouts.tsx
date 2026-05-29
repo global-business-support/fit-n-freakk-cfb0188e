@@ -108,17 +108,28 @@ const focusMatch = (bodyPart: string, focus: string) => {
   return bp === f;
 };
 
+const FOCUS_GROUPS = ["Chest", "Back", "Shoulders", "Arms", "Legs", "Abs"] as const;
+type FocusGroup = typeof FOCUS_GROUPS[number];
+
 function WorkoutsPage() {
   const { user, profile } = useAuth();
   const [gender, setGender] = useState<"male" | "female" | "both">("both");
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [expandedPart, setExpandedPart] = useState<string | null>(null);
   const todayIdx = (new Date().getDay() + 6) % 7;
-  const [activeDay, setActiveDay] = useState<number>(todayIdx);
+  const [openDay, setOpenDay] = useState<number | null>(todayIdx);
+  const [dayGroups, setDayGroups] = useState<Record<number, FocusGroup[]>>(() => {
+    const init: Record<number, FocusGroup[]> = {};
+    DAY_PLAN.forEach((d, i) => {
+      init[i] = d.focus ? [d.focus as FocusGroup] : [];
+    });
+    return init;
+  });
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [completions, setCompletions] = useState<Record<string, string>>({}); // exercise_id -> latest date
   const [search, setSearch] = useState("");
   const todayKey = new Date().toISOString().slice(0, 10);
+
 
   useEffect(() => {
     if (profile?.gender === "female" || profile?.gender === "male") {
