@@ -3,7 +3,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
 import { WorkoutHistoryCalendar } from "@/components/WorkoutHistoryCalendar";
-import { Dumbbell, ChevronRight, LogIn, Play, Check, CheckCircle2, Search } from "lucide-react";
+import { Dumbbell, ChevronRight, LogIn, Play, CheckCircle2, Search } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
