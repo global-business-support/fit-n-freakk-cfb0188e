@@ -113,7 +113,7 @@ type FocusGroup = typeof FOCUS_GROUPS[number];
 
 function WorkoutsPage() {
   const { user, profile } = useAuth();
-  const [gender, setGender] = useState<"male" | "female" | "both">("both");
+  const [gender, setGender] = useState<"male" | "female">("male");
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [expandedPart, setExpandedPart] = useState<string | null>(null);
   const todayIdx = (new Date().getDay() + 6) % 7;
