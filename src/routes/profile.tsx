@@ -51,8 +51,37 @@ function ProfilePage() {
       setAge(profile.age?.toString() || "");
       setHeight(profile.height || "");
       setWeight(profile.weight?.toString() || "");
+      setPhotoUrl(profile.photo_url || null);
     }
   }, [profile]);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
+      return;
+    }
+    setUploadingPhoto(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("media").upload(path, file, { upsert: true });
+    if (upErr) {
+      toast.error(upErr.message);
+      setUploadingPhoto(false);
+      return;
+    }
+    const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+    const url = pub.publicUrl;
+    const { error: updErr } = await supabase.from("profiles").update({ photo_url: url }).eq("user_id", user.id);
+    if (updErr) {
+      toast.error(updErr.message);
+    } else {
+      setPhotoUrl(url);
+      toast.success("Photo updated");
+    }
+    setUploadingPhoto(false);
+  };
 
   useEffect(() => {
     if (!user) return;
