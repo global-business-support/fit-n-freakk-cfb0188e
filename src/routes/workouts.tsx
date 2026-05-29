@@ -138,10 +138,11 @@ function WorkoutsPage() {
   }, [profile]);
 
   useEffect(() => {
-    let q = supabase.from("exercises").select("*").order("body_part");
-    if (gender !== "both") {
-      q = q.or(`gender_target.eq.${gender},gender_target.eq.both`);
-    }
+    const q = supabase
+      .from("exercises")
+      .select("*")
+      .or(`gender_target.eq.${gender},gender_target.eq.both`)
+      .order("body_part");
     q.then(({ data }) => setExercises((data || []) as Exercise[]));
   }, [gender]);
 
