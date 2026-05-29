@@ -303,6 +303,9 @@ function MemberDashboard() {
           weeklyDone={weeklyDone}
         />
 
+        {/* Birthday banner — visible to everyone */}
+        {user && <BirthdayBanner currentUserId={user.id} />}
+
         {/* Today's Present/Absent toggle */}
         {user && <AttendanceToggle userId={user.id} />}
 
