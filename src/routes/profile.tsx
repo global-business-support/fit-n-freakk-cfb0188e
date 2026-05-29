@@ -153,13 +153,28 @@ function ProfilePage() {
       <main className="mx-auto max-w-lg px-4 py-4 space-y-5">
         {/* Avatar & Member ID */}
         <div className="flex flex-col items-center gap-2">
-          {profile?.photo_url ? (
-            <img src={profile.photo_url} alt={profile.name} className="h-24 w-24 rounded-2xl object-cover border-2 border-primary/30" />
-          ) : (
-            <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-secondary border-2 border-dashed border-border">
-              <User className="h-10 w-10 text-muted-foreground" />
+          <label className="relative cursor-pointer group">
+            {photoUrl ? (
+              <img src={photoUrl} alt={profile?.name || "Profile"} className="h-24 w-24 rounded-2xl object-cover border-2 border-primary/30" />
+            ) : (
+              <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-secondary border-2 border-dashed border-border">
+                <User className="h-10 w-10 text-muted-foreground" />
+              </div>
+            )}
+            <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+              {uploadingPhoto ? <Loader2 className="h-6 w-6 text-white animate-spin" /> : <Camera className="h-6 w-6 text-white" />}
             </div>
-          )}
+            <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow">
+              <Camera className="h-3.5 w-3.5" />
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoUpload}
+              disabled={uploadingPhoto}
+            />
+          </label>
           {profile?.member_id && (
             <div className="flex items-center gap-1.5 rounded-full bg-sky/15 px-3 py-1 ring-1 ring-sky/30">
               <BadgeCheck className="h-3.5 w-3.5 text-sky" />
@@ -172,8 +187,8 @@ function ProfilePage() {
         <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
           <h2 className="font-heading text-lg tracking-wider text-sky">PERSONAL DETAILS</h2>
           <div className="space-y-2">
-            <Label className="text-xs uppercase tracking-wider font-body">Name</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-secondary border-border h-11" />
+            <Label className="text-xs uppercase tracking-wider font-body">Name <span className="text-muted-foreground/60 normal-case">(locked)</span></Label>
+            <Input value={name} disabled className="bg-secondary/50 border-border h-11 text-muted-foreground" />
           </div>
           <div className="space-y-2">
             <Label className="text-xs uppercase tracking-wider font-body">Phone</Label>
