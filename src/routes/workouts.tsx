@@ -205,7 +205,7 @@ function WorkoutsPage() {
     return out.filter(matchesSearch);
   }, [uniqueExercises, openDay, activeGroups, searchKey]);
 
-  const toggle = (id: string) => setSelected((s) => ({ ...s, [id]: !s[id] }));
+  
 
   const toggleGroup = (dayIdx: number, group: FocusGroup) => {
     setDayGroups((prev) => {
