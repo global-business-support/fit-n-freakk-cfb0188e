@@ -159,7 +159,7 @@ function WorkoutsPage() {
         }
         setCompletions(map);
       });
-  }, [user, activeDay]);
+  }, [user, openDay]);
 
   const uniqueExercises = useMemo(() => dedupeExercisesByName(exercises), [exercises]);
   const searchKey = normalizeTextKey(search);
@@ -182,30 +182,42 @@ function WorkoutsPage() {
     }
     return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label));
   }, [uniqueExercises, searchKey]);
-  const day = DAY_PLAN[activeDay];
-  const dayExercises = useMemo(() => {
-    const base = day.focus
-      ? uniqueExercises.filter((e) => focusMatch(e.body_part, day.focus!))
-      : (() => {
-          const groups = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Abs"];
-          return groups.flatMap((g) => uniqueExercises.filter((e) => focusMatch(e.body_part, g)).slice(0, 2));
-        })();
-    return base.filter(matchesSearch);
-  }, [uniqueExercises, day, searchKey]);
 
-  // Auto-select first 5 by default whenever day/exercises change
-  useEffect(() => {
-    if (dayExercises.length === 0) return;
-    setSelected((prev) => {
-      const hasAny = dayExercises.some((ex) => prev[ex.id]);
-      if (hasAny) return prev;
-      const next: Record<string, boolean> = {};
-      dayExercises.slice(0, 5).forEach((ex) => { next[ex.id] = true; });
-      return next;
-    });
-  }, [dayExercises]);
+  const activeGroups = openDay !== null ? (dayGroups[openDay] ?? []) : [];
+  const dayExercises = useMemo(() => {
+    if (openDay === null) return [];
+    const groups = activeGroups.length > 0 ? activeGroups : FOCUS_GROUPS;
+    const seen = new Set<string>();
+    const out: Exercise[] = [];
+    for (const g of groups) {
+      for (const e of uniqueExercises) {
+        if (focusMatch(e.body_part, g) && !seen.has(e.id)) {
+          seen.add(e.id);
+          out.push(e);
+        }
+      }
+    }
+    return out.filter(matchesSearch);
+  }, [uniqueExercises, openDay, activeGroups, searchKey]);
 
   const toggle = (id: string) => setSelected((s) => ({ ...s, [id]: !s[id] }));
+
+  const toggleGroup = (dayIdx: number, group: FocusGroup) => {
+    setDayGroups((prev) => {
+      const cur = prev[dayIdx] ?? [];
+      const next = cur.includes(group) ? cur.filter((g) => g !== group) : [...cur, group];
+      return { ...prev, [dayIdx]: next };
+    });
+  };
+
+  const setMixForDay = (dayIdx: number) => {
+    setDayGroups((prev) => {
+      const cur = prev[dayIdx] ?? [];
+      const isMix = cur.length === FOCUS_GROUPS.length;
+      return { ...prev, [dayIdx]: isMix ? [] : [...FOCUS_GROUPS] };
+    });
+  };
+
 
   const markComplete = async (exId: string) => {
     if (!user) {
