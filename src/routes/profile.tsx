@@ -29,6 +29,8 @@ function ProfilePage() {
   const [weight, setWeight] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   // Fees
   const [fees, setFees] = useState<any[]>([]);
