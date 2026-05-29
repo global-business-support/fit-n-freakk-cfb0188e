@@ -395,28 +395,14 @@ function WorkoutsPage() {
                           </p>
                         ) : (
                           dayExercises.map((ex) => {
-                            const isSel = !!selected[ex.id];
                             const doneOn = completions[ex.id];
                             const doneToday = doneOn === todayKey;
                             return (
                               <div
                                 key={ex.id}
-                                className={cn(
-                                  "rounded-lg border p-2.5 transition-all",
-                                  isSel ? "border-primary/50 bg-primary/10" : "border-border bg-card/60"
-                                )}
+                                className="rounded-lg border border-border bg-card/60 p-2.5 transition-all"
                               >
                                 <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() => toggle(ex.id)}
-                                    className={cn(
-                                      "h-5 w-5 shrink-0 rounded border flex items-center justify-center transition",
-                                      isSel ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/40"
-                                    )}
-                                    aria-label="Select exercise"
-                                  >
-                                    {isSel && <Check className="h-3.5 w-3.5" />}
-                                  </button>
                                   <Link
                                     to="/exercise/$id"
                                     params={{ id: ex.id }}
