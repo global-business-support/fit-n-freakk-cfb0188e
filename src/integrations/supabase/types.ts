@@ -215,6 +215,42 @@ export type Database = {
         }
         Relationships: []
       }
+      machine_exercises: {
+        Row: {
+          created_at: string
+          exercise_id: string
+          id: string
+          machine_id: string
+        }
+        Insert: {
+          created_at?: string
+          exercise_id: string
+          id?: string
+          machine_id: string
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          machine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machine_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "machine_exercises_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       machines: {
         Row: {
           created_at: string
