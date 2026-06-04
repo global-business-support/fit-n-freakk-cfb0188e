@@ -812,6 +812,13 @@ function AdminPage() {
               <div className="rounded-xl border border-ember/30 bg-card p-4 space-y-3">
                 <Input placeholder="Exercise name" className="bg-secondary border-border" value={newEx.name} onChange={(e) => setNewEx({ ...newEx, name: e.target.value })} />
                 <Input placeholder="Body part (e.g. Chest, Back, Legs)" className="bg-secondary border-border" value={newEx.body_part} onChange={(e) => setNewEx({ ...newEx, body_part: e.target.value })} />
+                <div className="flex gap-1 flex-wrap">
+                  {EXERCISE_GROUPS.map((g) => (
+                    <button key={g.name} type="button" onClick={() => setNewEx({ ...newEx, body_part: g.name })} className={cn("rounded-full border px-2 py-1 text-[10px] font-body uppercase", newEx.body_part === g.name ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}>
+                      {g.name}
+                    </button>
+                  ))}
+                </div>
                 <Input placeholder="Description" className="bg-secondary border-border" value={newEx.description} onChange={(e) => setNewEx({ ...newEx, description: e.target.value })} />
                 <div className="grid grid-cols-2 gap-2">
                   <Input placeholder="Sets" type="number" className="bg-secondary border-border" value={newEx.sets} onChange={(e) => setNewEx({ ...newEx, sets: e.target.value })} />
