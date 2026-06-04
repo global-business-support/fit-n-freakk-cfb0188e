@@ -1013,6 +1013,81 @@ function AdminPage() {
                         {rowUploadingId === m.id ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> {m.video_url ? "Replace Video" : "Upload Video"}</>)}
                       </Button>
                     </div>
+
+                    {/* Linked exercises management */}
+                    <div className="mt-3 rounded-lg border border-primary/20 bg-secondary/30 p-3">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedMachineId(expandedMachineId === m.id ? null : m.id)}
+                        className="flex w-full items-center justify-between text-left"
+                      >
+                        <span className="text-xs font-heading tracking-wider text-primary uppercase flex items-center gap-2">
+                          <Dumbbell className="h-4 w-4" />
+                          {(machineLinks[m.id] || []).length} exercises linked
+                        </span>
+                        <ChevronRight className={cn("h-4 w-4 text-primary transition-transform", expandedMachineId === m.id && "rotate-90")} />
+                      </button>
+
+                      {expandedMachineId === m.id && (
+                        <div className="mt-3 space-y-2">
+                          {/* Current linked exercises */}
+                          {(machineLinks[m.id] || []).length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {(machineLinks[m.id] || []).map((exId) => {
+                                const ex = exercises.find((e: any) => e.id === exId);
+                                if (!ex) return null;
+                                return (
+                                  <span key={exId} className="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/30 px-2 py-1 text-[11px] font-body">
+                                    {ex.name}
+                                    <button
+                                      onClick={() => removeExerciseFromMachineLink(m.id, exId)}
+                                      className="text-destructive hover:text-destructive/70"
+                                      title="Remove"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Add exercise */}
+                          <div className="space-y-1.5">
+                            <div className="relative">
+                              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                              <Input
+                                placeholder="Search exercises..."
+                                className="bg-secondary border-border h-8 pl-7 text-xs"
+                                value={exerciseSearch[m.id] || ""}
+                                onChange={(e) => setExerciseSearch((s) => ({ ...s, [m.id]: e.target.value }))}
+                              />
+                            </div>
+                            <div className="max-h-40 overflow-y-auto rounded border border-border bg-background/40">
+                              {exercises
+                                .filter((ex: any) => !(machineLinks[m.id] || []).includes(ex.id))
+                                .filter((ex: any) => {
+                                  const q = (exerciseSearch[m.id] || "").toLowerCase().trim();
+                                  if (!q) return true;
+                                  return ex.name.toLowerCase().includes(q) || (ex.body_part || "").toLowerCase().includes(q);
+                                })
+                                .slice(0, 50)
+                                .map((ex: any) => (
+                                  <button
+                                    key={ex.id}
+                                    type="button"
+                                    onClick={() => addExerciseToMachineLink(m.id, ex.id)}
+                                    className="flex w-full items-center justify-between gap-2 border-b border-border/50 px-2 py-1.5 text-left text-xs hover:bg-primary/10 last:border-b-0"
+                                  >
+                                    <span className="truncate font-body">{ex.name}</span>
+                                    <span className="text-[10px] text-muted-foreground uppercase shrink-0">{ex.body_part}</span>
+                                  </button>
+                                ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <button onClick={() => deleteMachine(m.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
                     <Trash2 className="h-4 w-4" />
