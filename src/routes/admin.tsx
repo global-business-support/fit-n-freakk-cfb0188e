@@ -125,6 +125,7 @@ function AdminPage() {
   const [addExToMachine, setAddExToMachine] = useState<Record<string, string>>({});
   const [expandedMachineId, setExpandedMachineId] = useState<string | null>(null);
   const [exerciseSearch, setExerciseSearch] = useState<Record<string, string>>({});
+  const [openExGroup, setOpenExGroup] = useState<string | null>("Abs");
 
   // Schedule assignment
   const [scheduleUser, setScheduleUser] = useState("");
