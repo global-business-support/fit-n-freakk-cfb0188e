@@ -864,50 +864,80 @@ function AdminPage() {
 
             {exercises.map((ex: any) => (
               <div key={ex.id} className="rounded-xl border border-border bg-card p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-heading text-lg tracking-wider">{ex.name}</p>
-                    <div className="flex gap-2 mt-1 flex-wrap">
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-body uppercase">{ex.body_part}</span>
-                      <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full font-body uppercase">{ex.gender_target}</span>
-                      {ex.gif_url && <span className="text-xs bg-ember/10 text-ember px-2 py-0.5 rounded-full font-body uppercase">GIF</span>}
+                {editingExId === ex.id ? (
+                  <div className="space-y-2">
+                    <Input placeholder="Name" className="bg-secondary border-border" value={editEx.name} onChange={(e) => setEditEx({ ...editEx, name: e.target.value })} />
+                    <Input placeholder="Group / Body part" className="bg-secondary border-border" value={editEx.body_part} onChange={(e) => setEditEx({ ...editEx, body_part: e.target.value })} />
+                    <Input placeholder="Description" className="bg-secondary border-border" value={editEx.description} onChange={(e) => setEditEx({ ...editEx, description: e.target.value })} />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input placeholder="Sets" type="number" className="bg-secondary border-border" value={editEx.sets} onChange={(e) => setEditEx({ ...editEx, sets: e.target.value })} />
+                      <Input placeholder="Reps" className="bg-secondary border-border" value={editEx.reps} onChange={(e) => setEditEx({ ...editEx, reps: e.target.value })} />
                     </div>
-                    {ex.sets && <p className="text-xs text-primary font-body mt-1">{ex.sets} sets × {ex.reps}</p>}
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      {ex.gif_url && (
-                        isVideoMedia(ex.gif_url) ? (
-                          <video src={ex.gif_url} className="aspect-video w-full rounded-lg object-cover border border-border bg-secondary" autoPlay muted loop playsInline controls />
-                        ) : (
-                          <img src={ex.gif_url} alt={ex.name} className="aspect-video w-full rounded-lg object-cover border border-border" />
-                        )
-                      )}
-                      {ex.video_url && (
-                        <VideoPlayer url={ex.video_url} title={ex.name} size="sm" />
-                      )}
+                    <Input placeholder="Video URL" className="bg-secondary border-border" value={editEx.video_url} onChange={(e) => setEditEx({ ...editEx, video_url: e.target.value })} />
+                    <Input placeholder="GIF / animation URL" className="bg-secondary border-border" value={editEx.gif_url} onChange={(e) => setEditEx({ ...editEx, gif_url: e.target.value })} />
+                    <div className="flex gap-2">
+                      {["both", "male", "female"].map((g) => (
+                        <button key={g} onClick={() => setEditEx({ ...editEx, gender_target: g })} className={cn("rounded-lg border px-3 py-1.5 text-xs font-body uppercase", editEx.gender_target === g ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}>
+                          {g}
+                        </button>
+                      ))}
                     </div>
-                    <input
-                      ref={exerciseMediaUploadingId === ex.id ? directExerciseGifInputRef : undefined}
-                      id={`exercise-gif-${ex.id}`}
-                      type="file"
-                      accept="image/gif,image/webp,image/apng,video/mp4,video/webm,video/*"
-                      className="hidden"
-                      onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadGifForExercise(ex.id, f); }}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => document.getElementById(`exercise-gif-${ex.id}`)?.click()}
-                      disabled={exerciseMediaUploadingId === ex.id}
-                      className="mt-3 w-full"
-                    >
-                      {exerciseMediaUploadingId === ex.id ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> Upload GIF / Animation</>)}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="ember" size="sm" onClick={saveEditExercise}><Save className="h-4 w-4 mr-1" /> Save</Button>
+                      <Button variant="outline" size="sm" onClick={() => setEditingExId(null)}>Cancel</Button>
+                    </div>
                   </div>
-                  <button onClick={() => deleteExercise(ex.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 shrink-0">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-heading text-lg tracking-wider">{ex.name}</p>
+                      <div className="flex gap-2 mt-1 flex-wrap">
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-body uppercase">{ex.body_part}</span>
+                        <span className="text-xs bg-secondary text-muted-foreground px-2 py-0.5 rounded-full font-body uppercase">{ex.gender_target}</span>
+                        {ex.gif_url && <span className="text-xs bg-ember/10 text-ember px-2 py-0.5 rounded-full font-body uppercase">GIF</span>}
+                      </div>
+                      {ex.sets && <p className="text-xs text-primary font-body mt-1">{ex.sets} sets × {ex.reps}</p>}
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {ex.gif_url && (
+                          isVideoMedia(ex.gif_url) ? (
+                            <video src={ex.gif_url} className="aspect-video w-full rounded-lg object-cover border border-border bg-secondary" autoPlay muted loop playsInline controls />
+                          ) : (
+                            <img src={ex.gif_url} alt={ex.name} className="aspect-video w-full rounded-lg object-cover border border-border" />
+                          )
+                        )}
+                        {ex.video_url && (
+                          <VideoPlayer url={ex.video_url} title={ex.name} size="sm" />
+                        )}
+                      </div>
+                      <input
+                        ref={exerciseMediaUploadingId === ex.id ? directExerciseGifInputRef : undefined}
+                        id={`exercise-gif-${ex.id}`}
+                        type="file"
+                        accept="image/gif,image/webp,image/apng,video/mp4,video/webm,video/*"
+                        className="hidden"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadGifForExercise(ex.id, f); }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById(`exercise-gif-${ex.id}`)?.click()}
+                        disabled={exerciseMediaUploadingId === ex.id}
+                        className="mt-3 w-full"
+                      >
+                        {exerciseMediaUploadingId === ex.id ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> Upload GIF / Animation</>)}
+                      </Button>
+                    </div>
+                    <div className="flex flex-col gap-2 shrink-0">
+                      <button onClick={() => startEditExercise(ex)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Edit">
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => deleteExercise(ex.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20" title="Delete">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
