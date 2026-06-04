@@ -21,6 +21,7 @@ export const Route = createFileRoute("/machines")({
 function MachinesPage() {
   const [machines, setMachines] = useState<any[]>([]);
   const [exercises, setExercises] = useState<ExerciseLite[]>([]);
+  const [dbLinks, setDbLinks] = useState<Record<string, string[]>>({});
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
   const [category, setCategory] = useState<MachineCategory | "All">("All");
@@ -33,15 +34,33 @@ function MachinesPage() {
     supabase.from("exercises").select("id,name,body_part,thumbnail_url,video_url").then(({ data }) => {
       setExercises((data as ExerciseLite[]) || []);
     });
+    supabase.from("machine_exercises" as any).select("machine_id, exercise_id").then(({ data }) => {
+      const map: Record<string, string[]> = {};
+      for (const l of (data || []) as any[]) {
+        if (!map[l.machine_id]) map[l.machine_id] = [];
+        map[l.machine_id].push(l.exercise_id);
+      }
+      setDbLinks(map);
+    });
   }, []);
 
   const exercisesByMachine = useMemo(() => {
     const map: Record<string, ExerciseLite[]> = {};
+    const exById = new Map(exercises.map((e) => [e.id, e]));
     for (const m of machines) {
-      map[m.id] = getExercisesForMachine(m.name, exercises);
+      const linkedIds = dbLinks[m.id];
+      if (linkedIds && linkedIds.length > 0) {
+        // Admin curated: use only DB-linked exercises
+        map[m.id] = linkedIds
+          .map((id) => exById.get(id))
+          .filter((x): x is ExerciseLite => !!x)
+          .sort((a, b) => a.name.localeCompare(b.name));
+      } else {
+        map[m.id] = getExercisesForMachine(m.name, exercises);
+      }
     }
     return map;
-  }, [machines, exercises]);
+  }, [machines, exercises, dbLinks]);
 
   const playable = machines.filter((m: any) => !!m.video_url);
   const pool = showAll ? machines : playable;
