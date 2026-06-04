@@ -93,6 +93,16 @@ function AdminPage() {
   const [machineVideoUploading, setMachineVideoUploading] = useState(false);
   const machineVideoInputRef = useRef<HTMLInputElement>(null);
 
+  // Exercise edit state
+  const [editingExId, setEditingExId] = useState<string | null>(null);
+  const [editEx, setEditEx] = useState<any>({});
+
+  // Machine ↔ exercise links (machine_id -> exercise_id[])
+  const [machineLinks, setMachineLinks] = useState<Record<string, string[]>>({});
+  const [addExToMachine, setAddExToMachine] = useState<Record<string, string>>({});
+  const [expandedMachineId, setExpandedMachineId] = useState<string | null>(null);
+  const [exerciseSearch, setExerciseSearch] = useState<Record<string, string>>({});
+
   // Schedule assignment
   const [scheduleUser, setScheduleUser] = useState("");
   const [scheduleDay, setScheduleDay] = useState(1);
