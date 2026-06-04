@@ -141,7 +141,67 @@ function AdminPage() {
     setPlans(planRes.data || []);
     setSalaries(salRes.data || []);
     setPosts((postsRes as any).data || []);
+    // Load machine-exercise links
+    const { data: links } = await supabase.from("machine_exercises" as any).select("machine_id, exercise_id");
+    const map: Record<string, string[]> = {};
+    for (const l of (links || []) as any[]) {
+      if (!map[l.machine_id]) map[l.machine_id] = [];
+      map[l.machine_id].push(l.exercise_id);
+    }
+    setMachineLinks(map);
   };
+
+  // ───── Exercise edit ─────
+  const startEditExercise = (ex: any) => {
+    setEditingExId(ex.id);
+    setEditEx({
+      name: ex.name || "",
+      body_part: ex.body_part || "",
+      description: ex.description || "",
+      sets: ex.sets ?? "",
+      reps: ex.reps || "",
+      video_url: ex.video_url || "",
+      gif_url: ex.gif_url || "",
+      gender_target: ex.gender_target || "both",
+    });
+  };
+  const saveEditExercise = async () => {
+    if (!editingExId) return;
+    const patch: any = {
+      name: editEx.name,
+      body_part: editEx.body_part,
+      description: editEx.description || null,
+      sets: editEx.sets === "" ? null : parseInt(editEx.sets),
+      reps: editEx.reps || null,
+      video_url: editEx.video_url || null,
+      gif_url: editEx.gif_url || null,
+      gender_target: editEx.gender_target,
+    };
+    const { error } = await supabase.from("exercises").update(patch).eq("id", editingExId);
+    if (error) { alert(error.message); return; }
+    setExercises((arr) => arr.map((e: any) => e.id === editingExId ? { ...e, ...patch } : e));
+    setEditingExId(null);
+  };
+
+  // ───── Machine ↔ Exercise links ─────
+  const addExerciseToMachineLink = async (machineId: string, exerciseId: string) => {
+    if (!exerciseId) return;
+    if (machineLinks[machineId]?.includes(exerciseId)) return;
+    const { error } = await supabase.from("machine_exercises" as any).insert({ machine_id: machineId, exercise_id: exerciseId } as any);
+    if (error) { alert(error.message); return; }
+    setMachineLinks((m) => ({ ...m, [machineId]: [...(m[machineId] || []), exerciseId] }));
+    setAddExToMachine((s) => ({ ...s, [machineId]: "" }));
+  };
+  const removeExerciseFromMachineLink = async (machineId: string, exerciseId: string) => {
+    const { error } = await supabase
+      .from("machine_exercises" as any)
+      .delete()
+      .eq("machine_id", machineId)
+      .eq("exercise_id", exerciseId);
+    if (error) { alert(error.message); return; }
+    setMachineLinks((m) => ({ ...m, [machineId]: (m[machineId] || []).filter((id) => id !== exerciseId) }));
+  };
+
 
   const setPostStatus = async (id: string, status: "approved" | "rejected") => {
     await supabase.from("member_posts" as any).update({ status, approved_by: user?.id, approved_at: new Date().toISOString() } as any).eq("id", id);
