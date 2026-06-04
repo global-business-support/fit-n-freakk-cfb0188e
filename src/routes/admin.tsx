@@ -26,6 +26,29 @@ export const Route = createFileRoute("/admin")({
 
 const DAY_NAMES = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+const EXERCISE_GROUPS: { name: string; keywords: string[] }[] = [
+  { name: "Abs", keywords: ["abs", "core", "plank", "crunch", "sit up", "leg raise", "oblique"] },
+  { name: "Arms", keywords: ["arm", "forearm", "wrist"] },
+  { name: "Back", keywords: ["back", "lat", "row", "pull up", "pulldown", "pull down", "deadlift", "hyperextension"] },
+  { name: "Biceps", keywords: ["bicep", "curl"] },
+  { name: "Calves", keywords: ["calf", "calves"] },
+  { name: "Cardio", keywords: ["cardio", "treadmill", "bike", "row", "elliptical", "stair", "ski", "jog", "run", "sprint", "jump", "burpee"] },
+  { name: "Chest", keywords: ["chest", "pec", "bench press", "fly", "push up", "pushup", "press up"] },
+  { name: "Glutes", keywords: ["glute", "hip thrust", "booty", "bridge", "kickback"] },
+  { name: "Legs", keywords: ["leg", "squat", "lunge", "quad", "hamstring", "deadlift", "thigh", "adductor", "abductor"] },
+  { name: "Shoulders", keywords: ["shoulder", "delt", "lateral raise", "military press", "overhead press", "arnold", "upright row"] },
+  { name: "Standing", keywords: ["standing"] },
+  { name: "Traps", keywords: ["trap", "shrug"] },
+  { name: "Triceps", keywords: ["tricep", "pushdown", "skull", "dip", "kickback", "close grip"] },
+];
+
+function matchExerciseGroup(ex: any, group: { name: string; keywords: string[] }) {
+  const bp = (ex.body_part || "").toLowerCase();
+  const nm = (ex.name || "").toLowerCase();
+  if (bp === group.name.toLowerCase()) return true;
+  return group.keywords.some((k) => bp.includes(k) || nm.includes(k));
+}
+
 function AdminPage() {
   const { user, role, loading } = useAuth();
   const { appName, logoUrl, refresh: refreshBranding } = useBranding();
