@@ -161,9 +161,46 @@ Rules:
                     },
                   },
                   diet_tips: { type: "array", items: { type: "string" } },
+                  do_avoid: { type: "array", items: { type: "string" } },
+                  macros: {
+                    type: "object",
+                    properties: {
+                      protein_g: { type: "number" },
+                      carbs_g: { type: "number" },
+                      fat_g: { type: "number" },
+                    },
+                  },
+                  meal_plan: {
+                    type: "array",
+                    description: "5 meals for a typical day",
+                    items: {
+                      type: "object",
+                      properties: {
+                        meal_name: { type: "string", description: "Breakfast | Mid-Morning Snack | Lunch | Evening Snack | Dinner" },
+                        time: { type: "string" },
+                        total_calories: { type: "number" },
+                        items: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              food: { type: "string" },
+                              qty: { type: "string" },
+                              calories: { type: "number" },
+                              protein_g: { type: "number" },
+                              carbs_g: { type: "number" },
+                              fat_g: { type: "number" },
+                            },
+                            required: ["food", "qty", "calories"],
+                          },
+                        },
+                      },
+                      required: ["meal_name", "items", "total_calories"],
+                    },
+                  },
                   expected_outcome: { type: "string" },
                 },
-                required: ["summary", "daily_calories", "weekly_schedule", "diet_tips", "expected_outcome"],
+                required: ["summary", "daily_calories", "weekly_schedule", "diet_tips", "meal_plan", "expected_outcome"],
               },
             },
           },
