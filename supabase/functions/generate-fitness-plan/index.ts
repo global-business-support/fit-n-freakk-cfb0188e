@@ -101,8 +101,12 @@ Rules:
 - Each training day focuses on a muscle group: Mon=Chest, Tue=Back, Wed=Legs, Thu=Shoulders, Fri=Arms, Sat=Abs/Cardio
 - Each day must have 5-7 exercises picked ONLY from the library above (exact names)
 - For every exercise add a "benefit" string (one short line: which muscle it grows + why)
-- Include daily calorie target appropriate for the goal
-- Add 5-7 actionable diet tips
+- Include daily calorie target appropriate for the goal AND macro split (protein/carbs/fat in grams)
+- Build a DETAILED 1-day Indian meal plan with 5 meals: Breakfast, Mid-Morning Snack, Lunch, Evening Snack, Dinner.
+  For EACH meal include: meal_name, time (e.g. "8:00 AM"), items array (each item has food name, qty like "2 roti / 100g paneer", calories number, protein g, carbs g, fat g), and total calories for that meal.
+  Foods MUST match diet preference strictly. Use simple Indian foods (roti, dal, sabzi, paneer, curd, oats, eggs, chicken, fish, rice, fruits, nuts).
+- Add 5-7 actionable diet tips (hydration, timing, supplements, cheat day, etc.)
+- Add 3-5 "do_avoid" foods/habits for this goal
 - Include a brief motivational summary mentioning the timeframe & expected progress`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -157,9 +161,46 @@ Rules:
                     },
                   },
                   diet_tips: { type: "array", items: { type: "string" } },
+                  do_avoid: { type: "array", items: { type: "string" } },
+                  macros: {
+                    type: "object",
+                    properties: {
+                      protein_g: { type: "number" },
+                      carbs_g: { type: "number" },
+                      fat_g: { type: "number" },
+                    },
+                  },
+                  meal_plan: {
+                    type: "array",
+                    description: "5 meals for a typical day",
+                    items: {
+                      type: "object",
+                      properties: {
+                        meal_name: { type: "string", description: "Breakfast | Mid-Morning Snack | Lunch | Evening Snack | Dinner" },
+                        time: { type: "string" },
+                        total_calories: { type: "number" },
+                        items: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              food: { type: "string" },
+                              qty: { type: "string" },
+                              calories: { type: "number" },
+                              protein_g: { type: "number" },
+                              carbs_g: { type: "number" },
+                              fat_g: { type: "number" },
+                            },
+                            required: ["food", "qty", "calories"],
+                          },
+                        },
+                      },
+                      required: ["meal_name", "items", "total_calories"],
+                    },
+                  },
                   expected_outcome: { type: "string" },
                 },
-                required: ["summary", "daily_calories", "weekly_schedule", "diet_tips", "expected_outcome"],
+                required: ["summary", "daily_calories", "weekly_schedule", "diet_tips", "meal_plan", "expected_outcome"],
               },
             },
           },
