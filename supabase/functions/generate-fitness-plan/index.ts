@@ -101,8 +101,12 @@ Rules:
 - Each training day focuses on a muscle group: Mon=Chest, Tue=Back, Wed=Legs, Thu=Shoulders, Fri=Arms, Sat=Abs/Cardio
 - Each day must have 5-7 exercises picked ONLY from the library above (exact names)
 - For every exercise add a "benefit" string (one short line: which muscle it grows + why)
-- Include daily calorie target appropriate for the goal
-- Add 5-7 actionable diet tips
+- Include daily calorie target appropriate for the goal AND macro split (protein/carbs/fat in grams)
+- Build a DETAILED 1-day Indian meal plan with 5 meals: Breakfast, Mid-Morning Snack, Lunch, Evening Snack, Dinner.
+  For EACH meal include: meal_name, time (e.g. "8:00 AM"), items array (each item has food name, qty like "2 roti / 100g paneer", calories number, protein g, carbs g, fat g), and total calories for that meal.
+  Foods MUST match diet preference strictly. Use simple Indian foods (roti, dal, sabzi, paneer, curd, oats, eggs, chicken, fish, rice, fruits, nuts).
+- Add 5-7 actionable diet tips (hydration, timing, supplements, cheat day, etc.)
+- Add 3-5 "do_avoid" foods/habits for this goal
 - Include a brief motivational summary mentioning the timeframe & expected progress`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
