@@ -387,6 +387,62 @@ function AICoachPage() {
               </div>
             </div>
 
+            {/* Macros */}
+            {plan.macros && (
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { k: "protein_g", label: "Protein", cls: "border-ember/30 bg-ember/10 text-ember" },
+                  { k: "carbs_g", label: "Carbs", cls: "border-sky/30 bg-sky/10 text-sky" },
+                  { k: "fat_g", label: "Fat", cls: "border-success/30 bg-success/10 text-success" },
+                ] as const).map((m) => (
+                  <div key={m.k} className={`rounded-xl border p-2.5 text-center ${m.cls}`}>
+                    <p className="text-[9px] uppercase tracking-wider font-body">{m.label}</p>
+                    <p className="text-lg font-bold font-body">{(plan.macros as any)[m.k] ?? "-"}g</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Detailed Meal Plan */}
+            {Array.isArray(plan.meal_plan) && plan.meal_plan.length > 0 && (
+              <div>
+                <p className="font-heading text-lg tracking-wider text-success mb-2 px-1">🍽️ DAILY MEAL PLAN</p>
+                <div className="space-y-2">
+                  {plan.meal_plan.map((meal: any, i: number) => (
+                    <div key={i} className="rounded-2xl border border-success/25 bg-card/60 backdrop-blur-md p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="font-heading text-base tracking-wider text-foreground leading-none">{String(meal.meal_name || "").toUpperCase()}</p>
+                          {meal.time && <p className="text-[10px] text-muted-foreground font-body uppercase tracking-wider mt-0.5">{meal.time}</p>}
+                        </div>
+                        <span className="text-xs font-bold text-ember font-body">{meal.total_calories} kcal</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {(meal.items || []).map((it: any, j: number) => (
+                          <div key={j} className="rounded-lg bg-secondary/40 p-2 border border-border/40">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="text-sm font-body font-bold text-foreground truncate">{it.food}</p>
+                                <p className="text-[10px] text-sky font-body">{it.qty}</p>
+                              </div>
+                              <span className="text-[10px] font-bold text-ember font-body shrink-0">{it.calories} kcal</span>
+                            </div>
+                            {(it.protein_g != null || it.carbs_g != null || it.fat_g != null) && (
+                              <div className="flex gap-3 mt-1 text-[10px] font-body">
+                                {it.protein_g != null && <span className="text-ember">P {it.protein_g}g</span>}
+                                {it.carbs_g != null && <span className="text-sky">C {it.carbs_g}g</span>}
+                                {it.fat_g != null && <span className="text-success">F {it.fat_g}g</span>}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Diet Tips */}
             {plan.diet_tips && (
               <div className="rounded-2xl border border-success/30 bg-success/10 backdrop-blur-md p-4">
@@ -402,6 +458,18 @@ function AICoachPage() {
                       <span className="text-success font-bold shrink-0">{i + 1}.</span>
                       <span>{tip}</span>
                     </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Avoid */}
+            {Array.isArray(plan.do_avoid) && plan.do_avoid.length > 0 && (
+              <div className="rounded-2xl border border-destructive/30 bg-destructive/10 backdrop-blur-md p-4">
+                <p className="font-heading text-lg tracking-wider text-destructive mb-2">🚫 AVOID</p>
+                <ul className="space-y-1.5">
+                  {plan.do_avoid.map((x: string, i: number) => (
+                    <li key={i} className="text-sm font-body text-foreground/90">• {x}</li>
                   ))}
                 </ul>
               </div>
