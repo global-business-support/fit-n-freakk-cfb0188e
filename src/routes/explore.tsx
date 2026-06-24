@@ -90,11 +90,28 @@ const dedupeByName = (list: Exercise[]) => {
 function ExplorePage() {
   const { appName, logoUrl } = useBranding();
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [filter, setFilter] = useState<string>("all");
-  const [nameFilter, setNameFilter] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false);
+  const [filter, setFilter] = useState<string>(() => {
+    if (typeof window === "undefined") return "all";
+    return sessionStorage.getItem("explore:filter") ?? "all";
+  });
+  const [nameFilter, setNameFilter] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return sessionStorage.getItem("explore:nameFilter") || null;
+  });
+  const [showAll, setShowAll] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem("explore:showAll") === "1";
+  });
   const [namesOpen, setNamesOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => { sessionStorage.setItem("explore:filter", filter); }, [filter]);
+  useEffect(() => {
+    if (nameFilter) sessionStorage.setItem("explore:nameFilter", nameFilter);
+    else sessionStorage.removeItem("explore:nameFilter");
+  }, [nameFilter]);
+  useEffect(() => { sessionStorage.setItem("explore:showAll", showAll ? "1" : "0"); }, [showAll]);
+
 
   useEffect(() => {
     supabase
