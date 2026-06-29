@@ -68,6 +68,9 @@ const normalizeBodyPart = (bodyPart: string) => {
     shoulders: "shoulders",
     tricep: "triceps",
     triceps: "triceps",
+    standing: "warmup",
+    warmup: "warmup",
+    "warm up": "warmup",
   };
   return aliases[key] ?? key;
 };
