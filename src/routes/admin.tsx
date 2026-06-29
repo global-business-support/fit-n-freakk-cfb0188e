@@ -37,7 +37,7 @@ const EXERCISE_GROUPS: { name: string; keywords: string[] }[] = [
   { name: "Glutes", keywords: ["glute", "hip thrust", "booty", "bridge", "kickback"] },
   { name: "Legs", keywords: ["leg", "squat", "lunge", "quad", "hamstring", "deadlift", "thigh", "adductor", "abductor"] },
   { name: "Shoulders", keywords: ["shoulder", "delt", "lateral raise", "military press", "overhead press", "arnold", "upright row"] },
-  { name: "Standing", keywords: ["standing"] },
+  { name: "Warmup", keywords: ["warmup", "warm up", "stretch", "mobility", "standing"] },
   { name: "Traps", keywords: ["trap", "shrug"] },
   { name: "Triceps", keywords: ["tricep", "pushdown", "skull", "dip", "kickback", "close grip"] },
 ];
