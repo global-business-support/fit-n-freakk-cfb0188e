@@ -152,13 +152,10 @@ function MachinesPage() {
                     <p className="text-sm font-body whitespace-pre-line">{machine.how_to_use}</p>
                   </div>
                 )}
-
-              </div>
-
-                )}
               </div>
             </div>
           ))}
+
         </div>
       </main>
       <BottomNav />
