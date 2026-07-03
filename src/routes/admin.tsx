@@ -127,6 +127,12 @@ function AdminPage() {
   const [exerciseSearch, setExerciseSearch] = useState<Record<string, string>>({});
   const [openExGroup, setOpenExGroup] = useState<string | null>("Abs");
 
+  // Machine-only exercises (do NOT appear in workouts/library)
+  const [machineOnlyEx, setMachineOnlyEx] = useState<Record<string, any[]>>({});
+  const [moNewName, setMoNewName] = useState<Record<string, string>>({});
+  const [moUploadingId, setMoUploadingId] = useState<string | null>(null);
+  const [moPendingVideo, setMoPendingVideo] = useState<Record<string, string>>({});
+
   // Schedule assignment
   const [scheduleUser, setScheduleUser] = useState("");
   const [scheduleDay, setScheduleDay] = useState(1);
@@ -173,6 +179,58 @@ function AdminPage() {
       map[l.machine_id].push(l.exercise_id);
     }
     setMachineLinks(map);
+
+    // Load machine-only exercises (separate table, not shown in workouts)
+    const { data: moEx } = await supabase.from("machine_only_exercises" as any).select("*").order("name");
+    const moMap: Record<string, any[]> = {};
+    for (const e of (moEx || []) as any[]) {
+      if (!moMap[e.machine_id]) moMap[e.machine_id] = [];
+      moMap[e.machine_id].push(e);
+    }
+    setMachineOnlyEx(moMap);
+  };
+
+  // ───── Machine-only exercises ─────
+  const uploadMachineOnlyVideo = async (machineId: string, file: File) => {
+    if (!file || !user) return;
+    setMoUploadingId(machineId);
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const path = `${user.id}/mo-ex-${machineId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      setMoPendingVideo((s) => ({ ...s, [machineId]: pub.publicUrl }));
+    } finally {
+      setMoUploadingId(null);
+    }
+  };
+
+  const addMachineOnlyExercise = async (machineId: string) => {
+    const name = (moNewName[machineId] || "").trim();
+    if (!name) { alert("Enter exercise name"); return; }
+    const video_url = moPendingVideo[machineId] || null;
+    const { data, error } = await supabase
+      .from("machine_only_exercises" as any)
+      .insert({ machine_id: machineId, name, video_url, created_by: user?.id } as any)
+      .select()
+      .single();
+    if (error) { alert(error.message); return; }
+    setMachineOnlyEx((m) => {
+      const list = [...(m[machineId] || []), data as any].sort((a: any, b: any) => a.name.localeCompare(b.name));
+      return { ...m, [machineId]: list };
+    });
+    setMoNewName((s) => ({ ...s, [machineId]: "" }));
+    setMoPendingVideo((s) => { const n = { ...s }; delete n[machineId]; return n; });
+  };
+
+  const deleteMachineOnlyExercise = async (machineId: string, id: string) => {
+    if (!confirm("Delete this exercise?")) return;
+    const { error } = await supabase.from("machine_only_exercises" as any).delete().eq("id", id);
+    if (error) { alert(error.message); return; }
+    setMachineOnlyEx((m) => ({ ...m, [machineId]: (m[machineId] || []).filter((e: any) => e.id !== id) }));
   };
 
   // ───── Exercise edit ─────
@@ -1148,6 +1206,74 @@ function AdminPage() {
                           </div>
                         </div>
                       )}
+                    </div>
+
+                    {/* Machine-only exercises (not shown in workouts library) */}
+                    <div className="mt-3 rounded-lg border border-ember/30 bg-secondary/30 p-3">
+                      <p className="text-xs font-heading tracking-wider text-ember uppercase mb-2 flex items-center gap-2">
+                        <Dumbbell className="h-4 w-4" />
+                        Machine-only exercises ({(machineOnlyEx[m.id] || []).length})
+                      </p>
+                      {(machineOnlyEx[m.id] || []).length > 0 && (
+                        <div className="space-y-1.5 mb-2">
+                          {(machineOnlyEx[m.id] || []).map((ex: any) => (
+                            <div key={ex.id} className="flex items-center justify-between gap-2 rounded bg-background/40 px-2 py-1.5 text-xs">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="font-body truncate">{ex.name}</span>
+                                {ex.video_url && <span className="text-[10px] uppercase text-ember">▶ video</span>}
+                              </div>
+                              <button
+                                onClick={() => deleteMachineOnlyExercise(m.id, ex.id)}
+                                className="text-destructive hover:text-destructive/70 shrink-0"
+                                title="Delete"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="space-y-1.5">
+                        <Input
+                          placeholder="Exercise name (e.g. Incline Press)"
+                          className="bg-secondary border-border h-8 text-xs"
+                          value={moNewName[m.id] || ""}
+                          onChange={(e) => setMoNewName((s) => ({ ...s, [m.id]: e.target.value }))}
+                        />
+                        <div className="flex items-center gap-2">
+                          <input
+                            id={`mo-ex-video-${m.id}`}
+                            type="file"
+                            accept="video/*"
+                            className="hidden"
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadMachineOnlyVideo(m.id, f); e.currentTarget.value = ""; }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={moUploadingId === m.id}
+                            onClick={() => document.getElementById(`mo-ex-video-${m.id}`)?.click()}
+                            className="flex-1"
+                          >
+                            {moUploadingId === m.id ? (
+                              <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Uploading...</>
+                            ) : moPendingVideo[m.id] ? (
+                              <>✓ Video ready</>
+                            ) : (
+                              <><ImagePlus className="h-3 w-3 mr-1" /> Upload video</>
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => addMachineOnlyExercise(m.id)}
+                            className="flex-1"
+                          >
+                            <Plus className="h-3 w-3 mr-1" /> Add Exercise
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <button onClick={() => deleteMachine(m.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">

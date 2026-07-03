@@ -22,6 +22,7 @@ function MachinesPage() {
   const [machines, setMachines] = useState<any[]>([]);
   const [exercises, setExercises] = useState<ExerciseLite[]>([]);
   const [dbLinks, setDbLinks] = useState<Record<string, string[]>>({});
+  const [machineOnlyEx, setMachineOnlyEx] = useState<Record<string, any[]>>({});
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
   const [category, setCategory] = useState<MachineCategory | "All">("All");
@@ -41,6 +42,14 @@ function MachinesPage() {
         map[l.machine_id].push(l.exercise_id);
       }
       setDbLinks(map);
+    });
+    supabase.from("machine_only_exercises" as any).select("*").order("name").then(({ data }) => {
+      const map: Record<string, any[]> = {};
+      for (const e of (data || []) as any[]) {
+        if (!map[e.machine_id]) map[e.machine_id] = [];
+        map[e.machine_id].push(e);
+      }
+      setMachineOnlyEx(map);
     });
   }, []);
 
@@ -150,6 +159,26 @@ function MachinesPage() {
                   <div className="rounded-lg bg-secondary/50 p-3 ring-1 ring-sky/10">
                     <p className="text-[10px] uppercase tracking-wider text-sky font-body mb-1 font-bold">How to use</p>
                     <p className="text-sm font-body whitespace-pre-line">{machine.how_to_use}</p>
+                  </div>
+                )}
+
+                {(machineOnlyEx[machine.id] || []).length > 0 && (
+                  <div className="rounded-lg bg-secondary/40 p-3 ring-1 ring-primary/20 space-y-2">
+                    <p className="text-[10px] uppercase tracking-wider text-primary font-body font-bold">
+                      Exercises ({(machineOnlyEx[machine.id] || []).length})
+                    </p>
+                    <div className="space-y-2">
+                      {[...(machineOnlyEx[machine.id] || [])]
+                        .sort((a: any, b: any) => a.name.localeCompare(b.name))
+                        .map((ex: any) => (
+                          <div key={ex.id} className="rounded-md bg-background/40 p-2">
+                            <p className="text-sm font-body font-semibold mb-1">{ex.name}</p>
+                            {ex.video_url && (
+                              <InlineVideoPlayer url={ex.video_url} title={ex.name} thumbnailUrl={ex.thumbnail_url} className="rounded-md border-0" />
+                            )}
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 )}
               </div>
