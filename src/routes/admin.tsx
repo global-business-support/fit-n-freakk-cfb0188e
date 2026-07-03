@@ -232,7 +232,6 @@ function AdminPage() {
     if (error) { alert(error.message); return; }
     setMachineOnlyEx((m) => ({ ...m, [machineId]: (m[machineId] || []).filter((e: any) => e.id !== id) }));
   };
-  const _noop = () => {
 
   // ───── Exercise edit ─────
   const startEditExercise = (ex: any) => {
