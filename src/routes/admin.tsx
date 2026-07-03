@@ -1207,6 +1207,74 @@ function AdminPage() {
                         </div>
                       )}
                     </div>
+
+                    {/* Machine-only exercises (not shown in workouts library) */}
+                    <div className="mt-3 rounded-lg border border-ember/30 bg-secondary/30 p-3">
+                      <p className="text-xs font-heading tracking-wider text-ember uppercase mb-2 flex items-center gap-2">
+                        <Dumbbell className="h-4 w-4" />
+                        Machine-only exercises ({(machineOnlyEx[m.id] || []).length})
+                      </p>
+                      {(machineOnlyEx[m.id] || []).length > 0 && (
+                        <div className="space-y-1.5 mb-2">
+                          {(machineOnlyEx[m.id] || []).map((ex: any) => (
+                            <div key={ex.id} className="flex items-center justify-between gap-2 rounded bg-background/40 px-2 py-1.5 text-xs">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="font-body truncate">{ex.name}</span>
+                                {ex.video_url && <span className="text-[10px] uppercase text-ember">▶ video</span>}
+                              </div>
+                              <button
+                                onClick={() => deleteMachineOnlyExercise(m.id, ex.id)}
+                                className="text-destructive hover:text-destructive/70 shrink-0"
+                                title="Delete"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="space-y-1.5">
+                        <Input
+                          placeholder="Exercise name (e.g. Incline Press)"
+                          className="bg-secondary border-border h-8 text-xs"
+                          value={moNewName[m.id] || ""}
+                          onChange={(e) => setMoNewName((s) => ({ ...s, [m.id]: e.target.value }))}
+                        />
+                        <div className="flex items-center gap-2">
+                          <input
+                            id={`mo-ex-video-${m.id}`}
+                            type="file"
+                            accept="video/*"
+                            className="hidden"
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadMachineOnlyVideo(m.id, f); e.currentTarget.value = ""; }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={moUploadingId === m.id}
+                            onClick={() => document.getElementById(`mo-ex-video-${m.id}`)?.click()}
+                            className="flex-1"
+                          >
+                            {moUploadingId === m.id ? (
+                              <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Uploading...</>
+                            ) : moPendingVideo[m.id] ? (
+                              <>✓ Video ready</>
+                            ) : (
+                              <><ImagePlus className="h-3 w-3 mr-1" /> Upload video</>
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => addMachineOnlyExercise(m.id)}
+                            className="flex-1"
+                          >
+                            <Plus className="h-3 w-3 mr-1" /> Add Exercise
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <button onClick={() => deleteMachine(m.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
                     <Trash2 className="h-4 w-4" />
