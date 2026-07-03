@@ -179,7 +179,60 @@ function AdminPage() {
       map[l.machine_id].push(l.exercise_id);
     }
     setMachineLinks(map);
+
+    // Load machine-only exercises (separate table, not shown in workouts)
+    const { data: moEx } = await supabase.from("machine_only_exercises" as any).select("*").order("name");
+    const moMap: Record<string, any[]> = {};
+    for (const e of (moEx || []) as any[]) {
+      if (!moMap[e.machine_id]) moMap[e.machine_id] = [];
+      moMap[e.machine_id].push(e);
+    }
+    setMachineOnlyEx(moMap);
   };
+
+  // ───── Machine-only exercises ─────
+  const uploadMachineOnlyVideo = async (machineId: string, file: File) => {
+    if (!file || !user) return;
+    setMoUploadingId(machineId);
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const path = `${user.id}/mo-ex-${machineId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      setMoPendingVideo((s) => ({ ...s, [machineId]: pub.publicUrl }));
+    } finally {
+      setMoUploadingId(null);
+    }
+  };
+
+  const addMachineOnlyExercise = async (machineId: string) => {
+    const name = (moNewName[machineId] || "").trim();
+    if (!name) { alert("Enter exercise name"); return; }
+    const video_url = moPendingVideo[machineId] || null;
+    const { data, error } = await supabase
+      .from("machine_only_exercises" as any)
+      .insert({ machine_id: machineId, name, video_url, created_by: user?.id } as any)
+      .select()
+      .single();
+    if (error) { alert(error.message); return; }
+    setMachineOnlyEx((m) => {
+      const list = [...(m[machineId] || []), data as any].sort((a: any, b: any) => a.name.localeCompare(b.name));
+      return { ...m, [machineId]: list };
+    });
+    setMoNewName((s) => ({ ...s, [machineId]: "" }));
+    setMoPendingVideo((s) => { const n = { ...s }; delete n[machineId]; return n; });
+  };
+
+  const deleteMachineOnlyExercise = async (machineId: string, id: string) => {
+    if (!confirm("Delete this exercise?")) return;
+    const { error } = await supabase.from("machine_only_exercises" as any).delete().eq("id", id);
+    if (error) { alert(error.message); return; }
+    setMachineOnlyEx((m) => ({ ...m, [machineId]: (m[machineId] || []).filter((e: any) => e.id !== id) }));
+  };
+  const _noop = () => {
 
   // ───── Exercise edit ─────
   const startEditExercise = (ex: any) => {
