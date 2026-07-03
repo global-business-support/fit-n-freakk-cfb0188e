@@ -43,6 +43,14 @@ function MachinesPage() {
       }
       setDbLinks(map);
     });
+    supabase.from("machine_only_exercises" as any).select("*").order("name").then(({ data }) => {
+      const map: Record<string, any[]> = {};
+      for (const e of (data || []) as any[]) {
+        if (!map[e.machine_id]) map[e.machine_id] = [];
+        map[e.machine_id].push(e);
+      }
+      setMachineOnlyEx(map);
+    });
   }, []);
 
   const exercisesByMachine = useMemo(() => {
