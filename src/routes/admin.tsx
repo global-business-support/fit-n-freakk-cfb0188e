@@ -127,6 +127,12 @@ function AdminPage() {
   const [exerciseSearch, setExerciseSearch] = useState<Record<string, string>>({});
   const [openExGroup, setOpenExGroup] = useState<string | null>("Abs");
 
+  // Machine-only exercises (do NOT appear in workouts/library)
+  const [machineOnlyEx, setMachineOnlyEx] = useState<Record<string, any[]>>({});
+  const [moNewName, setMoNewName] = useState<Record<string, string>>({});
+  const [moUploadingId, setMoUploadingId] = useState<string | null>(null);
+  const [moPendingVideo, setMoPendingVideo] = useState<Record<string, string>>({});
+
   // Schedule assignment
   const [scheduleUser, setScheduleUser] = useState("");
   const [scheduleDay, setScheduleDay] = useState(1);
