@@ -22,6 +22,7 @@ function MachinesPage() {
   const [machines, setMachines] = useState<any[]>([]);
   const [exercises, setExercises] = useState<ExerciseLite[]>([]);
   const [dbLinks, setDbLinks] = useState<Record<string, string[]>>({});
+  const [machineOnlyEx, setMachineOnlyEx] = useState<Record<string, any[]>>({});
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
   const [category, setCategory] = useState<MachineCategory | "All">("All");
