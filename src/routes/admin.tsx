@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { downloadAdminExcel } from "@/lib/excel-export";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { MACHINE_CATEGORY } from "@/lib/machine-exercises";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
