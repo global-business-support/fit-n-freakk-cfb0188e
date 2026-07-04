@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { downloadAdminExcel } from "@/lib/excel-export";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { MACHINE_CATEGORY } from "@/lib/machine-exercises";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -1071,6 +1072,27 @@ function AdminPage() {
 
             {showMachineForm && (
               <div className="rounded-xl border border-ember/30 bg-card p-4 space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider font-body text-ember font-bold">Quick pick from workout machines</label>
+                  <select
+                    className="w-full rounded-lg bg-secondary border border-border px-3 py-2 text-sm font-body"
+                    value=""
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      if (!name) return;
+                      setNewMachine({ ...newMachine, name });
+                    }}
+                  >
+                    <option value="">— Select a machine —</option>
+                    {Object.keys(MACHINE_CATEGORY)
+                      .filter((n) => !machines.some((m: any) => (m.name || "").trim().toLowerCase() === n.trim().toLowerCase()))
+                      .sort((a, b) => a.localeCompare(b))
+                      .map((n) => (
+                        <option key={n} value={n}>{n} — {MACHINE_CATEGORY[n]}</option>
+                      ))}
+                  </select>
+                  <p className="text-[10px] text-muted-foreground font-body">Or type a custom name below</p>
+                </div>
                 <Input placeholder="Machine name" className="bg-secondary border-border" value={newMachine.name} onChange={(e) => setNewMachine({ ...newMachine, name: e.target.value })} />
                 <Input placeholder="Description" className="bg-secondary border-border" value={newMachine.description} onChange={(e) => setNewMachine({ ...newMachine, description: e.target.value })} />
                 <textarea placeholder="How to use this machine..." className="w-full rounded-lg bg-secondary border border-border p-3 text-sm font-body min-h-[80px] resize-none" value={newMachine.how_to_use} onChange={(e) => setNewMachine({ ...newMachine, how_to_use: e.target.value })} />
