@@ -4,7 +4,7 @@ import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronDown, Cog, Dumbbell, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, Cog, Dumbbell, Play, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { getExercisesForMachine, getMachineCategory, MACHINE_CATEGORIES, type MachineCategory, type ExerciseLite } from "@/lib/machine-exercises";
 
@@ -162,25 +162,56 @@ function MachinesPage() {
                   </div>
                 )}
 
-                {(machineOnlyEx[machine.id] || []).length > 0 && (
-                  <div className="rounded-lg bg-secondary/40 p-3 ring-1 ring-primary/20 space-y-2">
-                    <p className="text-[10px] uppercase tracking-wider text-primary font-body font-bold">
-                      Exercises ({(machineOnlyEx[machine.id] || []).length})
-                    </p>
-                    <div className="space-y-2">
-                      {[...(machineOnlyEx[machine.id] || [])]
-                        .sort((a: any, b: any) => a.name.localeCompare(b.name))
-                        .map((ex: any) => (
-                          <div key={ex.id} className="rounded-md bg-background/40 p-2">
-                            <p className="text-sm font-body font-semibold mb-1">{ex.name}</p>
-                            {ex.video_url && (
-                              <InlineVideoPlayer url={ex.video_url} title={ex.name} thumbnailUrl={ex.thumbnail_url} className="rounded-md border-0" />
-                            )}
-                          </div>
-                        ))}
+                {(machineOnlyEx[machine.id] || []).length > 0 && (() => {
+                  const list = [...(machineOnlyEx[machine.id] || [])].sort((a: any, b: any) =>
+                    a.name.localeCompare(b.name)
+                  );
+                  const isOpen = !!expanded[machine.id];
+                  return (
+                    <div className="rounded-lg bg-secondary/40 ring-1 ring-primary/30 overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setExpanded((e) => ({ ...e, [machine.id]: !e[machine.id] }))}
+                        className="w-full flex items-center justify-between px-3 py-2 bg-gradient-to-r from-primary/20 to-primary/5 hover:from-primary/30 transition"
+                      >
+                        <span className="text-[11px] uppercase tracking-wider text-primary font-body font-bold flex items-center gap-2">
+                          <Dumbbell className="h-3.5 w-3.5" />
+                          Exercises ({list.length})
+                        </span>
+                        {isOpen ? <ChevronUp className="h-4 w-4 text-primary" /> : <ChevronDown className="h-4 w-4 text-primary" />}
+                      </button>
+                      {isOpen && (
+                        <div className="p-2 space-y-1.5">
+                          {list.map((ex: any) => {
+                            const isEmbeddable = ex.video_url && /youtube\.com\/(watch|embed|shorts|v\/)|youtu\.be\//i.test(ex.video_url);
+                            return (
+                              <div key={ex.id} className="rounded-md bg-background/50">
+                                {isEmbeddable ? (
+                                  <div className="p-2">
+                                    <p className="text-sm font-body font-semibold mb-1.5">{ex.name}</p>
+                                    <InlineVideoPlayer url={ex.video_url} title={ex.name} thumbnailUrl={ex.thumbnail_url} className="rounded-md border-0" />
+                                  </div>
+                                ) : (
+                                  <a
+                                    href={ex.video_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-3 py-2 hover:bg-primary/10 transition"
+                                  >
+                                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-primary shrink-0">
+                                      <Play className="h-3.5 w-3.5 fill-current" />
+                                    </div>
+                                    <span className="text-sm font-body flex-1 truncate">{ex.name}</span>
+                                  </a>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           ))}
