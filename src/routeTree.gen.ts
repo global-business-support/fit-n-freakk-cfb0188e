@@ -15,6 +15,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MembersRouteImport } from './routes/members'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MachinesRouteImport } from './routes/machines'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -26,7 +27,10 @@ import { Route as AiCoachRouteImport } from './routes/ai-coach'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ExerciseIdRouteImport } from './routes/exercise.$id'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AdminMemberIdRouteImport } from './routes/admin.member.$id'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 
 const WorkoutsRoute = WorkoutsRouteImport.update({
   id: '/workouts',
@@ -56,6 +60,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const MembersRoute = MembersRouteImport.update({
   id: '/members',
   path: '/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MachinesRoute = MachinesRouteImport.update({
@@ -113,11 +122,29 @@ const ExerciseIdRoute = ExerciseIdRouteImport.update({
   path: '/exercise/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminMemberIdRoute = AdminMemberIdRouteImport.update({
   id: '/member/$id',
   path: '/member/$id',
   getParentRoute: () => AdminRoute,
 } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -130,13 +157,17 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/machines': typeof MachinesRoute
+  '/mcp': typeof McpRoute
   '/members': typeof MembersRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/workouts': typeof WorkoutsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/exercise/$id': typeof ExerciseIdRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/member/$id': typeof AdminMemberIdRoute
 }
 export interface FileRoutesByTo {
@@ -150,13 +181,17 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/machines': typeof MachinesRoute
+  '/mcp': typeof McpRoute
   '/members': typeof MembersRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/workouts': typeof WorkoutsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/exercise/$id': typeof ExerciseIdRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/member/$id': typeof AdminMemberIdRoute
 }
 export interface FileRoutesById {
@@ -171,13 +206,17 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/machines': typeof MachinesRoute
+  '/mcp': typeof McpRoute
   '/members': typeof MembersRoute
   '/profile': typeof ProfileRoute
   '/progress': typeof ProgressRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/workouts': typeof WorkoutsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/exercise/$id': typeof ExerciseIdRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/member/$id': typeof AdminMemberIdRoute
 }
 export interface FileRouteTypes {
@@ -193,13 +232,17 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/machines'
+    | '/mcp'
     | '/members'
     | '/profile'
     | '/progress'
     | '/register'
     | '/reset-password'
     | '/workouts'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/exercise/$id'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/member/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -213,13 +256,17 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/machines'
+    | '/mcp'
     | '/members'
     | '/profile'
     | '/progress'
     | '/register'
     | '/reset-password'
     | '/workouts'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/exercise/$id'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/member/$id'
   id:
     | '__root__'
@@ -233,13 +280,17 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/machines'
+    | '/mcp'
     | '/members'
     | '/profile'
     | '/progress'
     | '/register'
     | '/reset-password'
     | '/workouts'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/exercise/$id'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/member/$id'
   fileRoutesById: FileRoutesById
 }
@@ -254,13 +305,17 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   MachinesRoute: typeof MachinesRoute
+  McpRoute: typeof McpRoute
   MembersRoute: typeof MembersRoute
   ProfileRoute: typeof ProfileRoute
   ProgressRoute: typeof ProgressRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   WorkoutsRoute: typeof WorkoutsRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ExerciseIdRoute: typeof ExerciseIdRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -305,6 +360,13 @@ declare module '@tanstack/react-router' {
       path: '/members'
       fullPath: '/members'
       preLoaderRoute: typeof MembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/machines': {
@@ -384,12 +446,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExerciseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/member/$id': {
       id: '/admin/member/$id'
       path: '/member/$id'
       fullPath: '/admin/member/$id'
       preLoaderRoute: typeof AdminMemberIdRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -415,14 +498,28 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   MachinesRoute: MachinesRoute,
+  McpRoute: McpRoute,
   MembersRoute: MembersRoute,
   ProfileRoute: ProfileRoute,
   ProgressRoute: ProgressRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   WorkoutsRoute: WorkoutsRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ExerciseIdRoute: ExerciseIdRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
