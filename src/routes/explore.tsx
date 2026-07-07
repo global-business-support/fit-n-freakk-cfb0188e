@@ -368,6 +368,61 @@ function ExplorePage() {
           )}
         </section>
 
+        {/* Machine Exercises */}
+        {(() => {
+          const machinesWithEx = machines.filter((m: any) => (machineOnlyEx[m.id] || []).length > 0);
+          if (machinesWithEx.length === 0) return null;
+          const totalEx = machinesWithEx.reduce((n, m: any) => n + (machineOnlyEx[m.id] || []).length, 0);
+          return (
+            <section className="space-y-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="font-heading text-2xl tracking-wider text-sky">MACHINE EXERCISES</h2>
+                <span className="rounded-full bg-sky/15 border border-sky/30 px-2 py-0.5 text-[10px] uppercase tracking-wider font-body text-sky-100">
+                  {totalEx} exercises · {machinesWithEx.length} machines
+                </span>
+              </div>
+              <p className="text-xs font-body text-sky-200/70">
+                Tap an exercise name to play the video.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {machinesWithEx.map((m: any) => {
+                  const list = machineOnlyEx[m.id] || [];
+                  const isOpen = !!expandedMachine[m.id];
+                  return (
+                    <div key={m.id} className="rounded-2xl border border-sky/30 bg-gradient-card overflow-hidden shadow-card">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedMachine((e) => ({ ...e, [m.id]: !e[m.id] }))}
+                        className="w-full flex items-center justify-between gap-2 p-3 hover:bg-primary/5 transition"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary text-primary-foreground shrink-0">
+                            <Cog className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0 text-left">
+                            <p className="font-heading text-base tracking-wider text-white truncate">{m.name.toUpperCase()}</p>
+                            <p className="text-[10px] font-body uppercase tracking-wider text-sky-200/70">
+                              {list.length} exercises
+                            </p>
+                          </div>
+                        </div>
+                        {isOpen ? <ChevronUp className="h-4 w-4 text-sky shrink-0" /> : <ChevronDown className="h-4 w-4 text-sky shrink-0" />}
+                      </button>
+                      {isOpen && (
+                        <div className="p-3 pt-0">
+                          <MachineExerciseList exercises={list} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })()}
+
+
+
         {/* CTA */}
         <section className="rounded-3xl border border-sky/40 bg-gradient-card p-6 md:p-10 text-center space-y-3 shadow-glow">
           <Eye className="mx-auto h-8 w-8 text-sky" />
