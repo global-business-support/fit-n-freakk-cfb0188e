@@ -2,11 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
+import { MachineExerciseList } from "@/components/MachineExerciseList";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown, ChevronUp, Cog, Dumbbell, Play, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { getExercisesForMachine, getMachineCategory, MACHINE_CATEGORIES, type MachineCategory, type ExerciseLite } from "@/lib/machine-exercises";
+
 
 export const Route = createFileRoute("/machines")({
   head: () => ({
@@ -163,9 +165,7 @@ function MachinesPage() {
                 )}
 
                 {(machineOnlyEx[machine.id] || []).length > 0 && (() => {
-                  const list = [...(machineOnlyEx[machine.id] || [])].sort((a: any, b: any) =>
-                    a.name.localeCompare(b.name)
-                  );
+                  const list = machineOnlyEx[machine.id] || [];
                   const isOpen = !!expanded[machine.id];
                   return (
                     <div className="rounded-lg bg-secondary/40 ring-1 ring-primary/30 overflow-hidden">
@@ -181,37 +181,14 @@ function MachinesPage() {
                         {isOpen ? <ChevronUp className="h-4 w-4 text-primary" /> : <ChevronDown className="h-4 w-4 text-primary" />}
                       </button>
                       {isOpen && (
-                        <div className="p-2 space-y-1.5">
-                          {list.map((ex: any) => {
-                            const isEmbeddable = ex.video_url && /youtube\.com\/(watch|embed|shorts|v\/)|youtu\.be\//i.test(ex.video_url);
-                            return (
-                              <div key={ex.id} className="rounded-md bg-background/50">
-                                {isEmbeddable ? (
-                                  <div className="p-2">
-                                    <p className="text-sm font-body font-semibold mb-1.5">{ex.name}</p>
-                                    <InlineVideoPlayer url={ex.video_url} title={ex.name} thumbnailUrl={ex.thumbnail_url} className="rounded-md border-0" />
-                                  </div>
-                                ) : (
-                                  <a
-                                    href={ex.video_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 px-3 py-2 hover:bg-primary/10 transition"
-                                  >
-                                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-primary shrink-0">
-                                      <Play className="h-3.5 w-3.5 fill-current" />
-                                    </div>
-                                    <span className="text-sm font-body flex-1 truncate">{ex.name}</span>
-                                  </a>
-                                )}
-                              </div>
-                            );
-                          })}
+                        <div className="p-2">
+                          <MachineExerciseList exercises={list} />
                         </div>
                       )}
                     </div>
                   );
                 })()}
+
               </div>
             </div>
           ))}
