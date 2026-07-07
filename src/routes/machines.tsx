@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
-import { MachineExerciseList, isEmbeddableVideoUrl } from "@/components/MachineExerciseList";
+import { MachineExerciseList } from "@/components/MachineExerciseList";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown, ChevronUp, Cog, Dumbbell, Play, Search } from "lucide-react";
