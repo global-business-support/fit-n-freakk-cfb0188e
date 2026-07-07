@@ -131,7 +131,19 @@ function ExplorePage() {
         setExercises((data ?? []) as Exercise[]);
         setLoading(false);
       });
+    supabase.from("machines").select("*").order("name").then(({ data }) => {
+      setMachines(data || []);
+    });
+    supabase.from("machine_only_exercises" as any).select("*").order("name").then(({ data }) => {
+      const map: Record<string, any[]> = {};
+      for (const e of (data || []) as any[]) {
+        if (!map[e.machine_id]) map[e.machine_id] = [];
+        map[e.machine_id].push(e);
+      }
+      setMachineOnlyEx(map);
+    });
   }, []);
+
 
   const uniqueExercises = useMemo(() => dedupeByName(exercises), [exercises]);
   const playable = useMemo(() => uniqueExercises.filter((e) => !!e.video_url || !!e.gif_url), [uniqueExercises]);
