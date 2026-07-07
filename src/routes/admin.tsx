@@ -1266,20 +1266,50 @@ function AdminPage() {
                         Machine-only exercises ({(machineOnlyEx[m.id] || []).length})
                       </p>
                       {(machineOnlyEx[m.id] || []).length > 0 && (
-                        <div className="space-y-1.5 mb-2">
+                        <div className="space-y-1.5 mb-2 max-h-64 overflow-y-auto pr-1">
                           {(machineOnlyEx[m.id] || []).map((ex: any) => (
-                            <div key={ex.id} className="flex items-center justify-between gap-2 rounded bg-background/40 px-2 py-1.5 text-xs">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="font-body truncate">{ex.name}</span>
-                                {ex.video_url && <span className="text-[10px] uppercase text-ember">▶ video</span>}
-                              </div>
-                              <button
-                                onClick={() => deleteMachineOnlyExercise(m.id, ex.id)}
-                                className="text-destructive hover:text-destructive/70 shrink-0"
-                                title="Delete"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
+                            <div key={ex.id} className="rounded bg-background/40 px-2 py-1.5 text-xs">
+                              {moEditingId === ex.id ? (
+                                <div className="space-y-1.5">
+                                  <Input
+                                    className="bg-secondary border-border h-7 text-xs"
+                                    value={moEditName}
+                                    onChange={(e) => setMoEditName(e.target.value)}
+                                    placeholder="Exercise name"
+                                  />
+                                  <Input
+                                    className="bg-secondary border-border h-7 text-xs"
+                                    value={moEditUrl}
+                                    onChange={(e) => setMoEditUrl(e.target.value)}
+                                    placeholder="YouTube URL (https://youtu.be/... or /watch?v=...)"
+                                  />
+                                  <div className="flex gap-1">
+                                    <Button type="button" size="sm" onClick={() => saveEditMachineOnly(m.id)} className="h-7 text-xs flex-1">Save</Button>
+                                    <Button type="button" size="sm" variant="outline" onClick={() => setMoEditingId(null)} className="h-7 text-xs">Cancel</Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <span className="font-body truncate">{ex.name}</span>
+                                    {ex.video_url && <span className="text-[10px] uppercase text-ember shrink-0">▶</span>}
+                                  </div>
+                                  <button
+                                    onClick={() => startEditMachineOnly(ex)}
+                                    className="text-sky hover:text-sky/70 shrink-0 text-[10px] uppercase font-body"
+                                    title="Edit"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => deleteMachineOnlyExercise(m.id, ex.id)}
+                                    className="text-destructive hover:text-destructive/70 shrink-0"
+                                    title="Delete"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -1290,6 +1320,12 @@ function AdminPage() {
                           className="bg-secondary border-border h-8 text-xs"
                           value={moNewName[m.id] || ""}
                           onChange={(e) => setMoNewName((s) => ({ ...s, [m.id]: e.target.value }))}
+                        />
+                        <Input
+                          placeholder="YouTube URL (optional)"
+                          className="bg-secondary border-border h-8 text-xs"
+                          value={moNewYoutubeUrl[m.id] || ""}
+                          onChange={(e) => setMoNewYoutubeUrl((s) => ({ ...s, [m.id]: e.target.value }))}
                         />
                         <div className="flex items-center gap-2">
                           <input
@@ -1312,7 +1348,7 @@ function AdminPage() {
                             ) : moPendingVideo[m.id] ? (
                               <>✓ Video ready</>
                             ) : (
-                              <><ImagePlus className="h-3 w-3 mr-1" /> Upload video</>
+                              <><ImagePlus className="h-3 w-3 mr-1" /> Upload file</>
                             )}
                           </Button>
                           <Button
@@ -1321,10 +1357,11 @@ function AdminPage() {
                             onClick={() => addMachineOnlyExercise(m.id)}
                             className="flex-1"
                           >
-                            <Plus className="h-3 w-3 mr-1" /> Add Exercise
+                            <Plus className="h-3 w-3 mr-1" /> Add
                           </Button>
                         </div>
                       </div>
+
                     </div>
                   </div>
                   <button onClick={() => deleteMachine(m.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20">
