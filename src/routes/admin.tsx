@@ -133,6 +133,11 @@ function AdminPage() {
   const [moNewName, setMoNewName] = useState<Record<string, string>>({});
   const [moUploadingId, setMoUploadingId] = useState<string | null>(null);
   const [moPendingVideo, setMoPendingVideo] = useState<Record<string, string>>({});
+  const [moNewYoutubeUrl, setMoNewYoutubeUrl] = useState<Record<string, string>>({});
+  const [moEditingId, setMoEditingId] = useState<string | null>(null);
+  const [moEditName, setMoEditName] = useState("");
+  const [moEditUrl, setMoEditUrl] = useState("");
+
 
   // Schedule assignment
   const [scheduleUser, setScheduleUser] = useState("");
