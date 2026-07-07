@@ -2,11 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
+import { MachineExerciseList, isEmbeddableVideoUrl } from "@/components/MachineExerciseList";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronDown, ChevronUp, Cog, Dumbbell, Play, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { getExercisesForMachine, getMachineCategory, MACHINE_CATEGORIES, type MachineCategory, type ExerciseLite } from "@/lib/machine-exercises";
+
 
 export const Route = createFileRoute("/machines")({
   head: () => ({
