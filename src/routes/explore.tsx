@@ -108,7 +108,11 @@ function ExplorePage() {
     return sessionStorage.getItem("explore:showAll") === "1";
   });
   const [namesOpen, setNamesOpen] = useState(false);
+  const [machines, setMachines] = useState<any[]>([]);
+  const [machineOnlyEx, setMachineOnlyEx] = useState<Record<string, any[]>>({});
+  const [expandedMachine, setExpandedMachine] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => { sessionStorage.setItem("explore:filter", filter); }, [filter]);
   useEffect(() => {
