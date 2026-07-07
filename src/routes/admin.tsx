@@ -217,7 +217,8 @@ function AdminPage() {
   const addMachineOnlyExercise = async (machineId: string) => {
     const name = (moNewName[machineId] || "").trim();
     if (!name) { alert("Enter exercise name"); return; }
-    const video_url = moPendingVideo[machineId] || null;
+    const ytUrl = (moNewYoutubeUrl[machineId] || "").trim();
+    const video_url = moPendingVideo[machineId] || ytUrl || null;
     const { data, error } = await supabase
       .from("machine_only_exercises" as any)
       .insert({ machine_id: machineId, name, video_url, created_by: user?.id } as any)
@@ -229,7 +230,29 @@ function AdminPage() {
       return { ...m, [machineId]: list };
     });
     setMoNewName((s) => ({ ...s, [machineId]: "" }));
+    setMoNewYoutubeUrl((s) => ({ ...s, [machineId]: "" }));
     setMoPendingVideo((s) => { const n = { ...s }; delete n[machineId]; return n; });
+  };
+
+  const startEditMachineOnly = (ex: any) => {
+    setMoEditingId(ex.id);
+    setMoEditName(ex.name || "");
+    setMoEditUrl(ex.video_url || "");
+  };
+  const saveEditMachineOnly = async (machineId: string) => {
+    if (!moEditingId) return;
+    const name = moEditName.trim();
+    if (!name) { alert("Enter exercise name"); return; }
+    const patch = { name, video_url: moEditUrl.trim() || null };
+    const { error } = await supabase.from("machine_only_exercises" as any).update(patch as any).eq("id", moEditingId);
+    if (error) { alert(error.message); return; }
+    setMachineOnlyEx((m) => ({
+      ...m,
+      [machineId]: (m[machineId] || [])
+        .map((e: any) => (e.id === moEditingId ? { ...e, ...patch } : e))
+        .sort((a: any, b: any) => a.name.localeCompare(b.name)),
+    }));
+    setMoEditingId(null);
   };
 
   const deleteMachineOnlyExercise = async (machineId: string, id: string) => {
@@ -238,6 +261,7 @@ function AdminPage() {
     if (error) { alert(error.message); return; }
     setMachineOnlyEx((m) => ({ ...m, [machineId]: (m[machineId] || []).filter((e: any) => e.id !== id) }));
   };
+
 
   // ───── Exercise edit ─────
   const startEditExercise = (ex: any) => {
