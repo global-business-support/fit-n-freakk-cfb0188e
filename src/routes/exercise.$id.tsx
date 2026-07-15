@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { LiveBackground } from "@/components/LiveBackground";
@@ -7,7 +8,13 @@ import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Dumbbell, Lock, Repeat, Layers, Activity, LogIn } from "lucide-react";
 
+const exerciseSearchSchema = z.object({
+  from: z.string().optional(),
+  group: z.string().optional(),
+});
+
 export const Route = createFileRoute("/exercise/$id")({
+  validateSearch: exerciseSearchSchema,
   head: () => ({
     meta: [
       { title: "Exercise — Feet & Freakk" },
