@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { LiveBackground } from "@/components/LiveBackground";
@@ -7,7 +8,13 @@ import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Dumbbell, Lock, Repeat, Layers, Activity, LogIn } from "lucide-react";
 
+const exerciseSearchSchema = z.object({
+  from: z.string().optional(),
+  group: z.string().optional(),
+});
+
 export const Route = createFileRoute("/exercise/$id")({
+  validateSearch: exerciseSearchSchema,
   head: () => ({
     meta: [
       { title: "Exercise — Feet & Freakk" },
@@ -30,6 +37,7 @@ interface Exercise {
 
 function ExerciseDetailPage() {
   const { id } = Route.useParams();
+  const { from } = Route.useSearch();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [ex, setEx] = useState<Exercise | null>(null);
@@ -69,7 +77,9 @@ function ExerciseDetailPage() {
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
           <button
             onClick={() => {
-              if (typeof window !== "undefined" && window.history.length > 1) {
+              if (from === "workouts") {
+                navigate({ to: "/workouts" });
+              } else if (typeof window !== "undefined" && window.history.length > 1) {
                 window.history.back();
               } else {
                 navigate({ to: isLoggedIn ? "/workouts" : "/explore" });

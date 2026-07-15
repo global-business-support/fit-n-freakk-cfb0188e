@@ -427,6 +427,7 @@ function WorkoutsPage() {
                             <Link
                               to="/exercise/$id"
                               params={{ id: ex.id }}
+                              search={{ from: "workouts", group: ex.body_part }}
                               className="min-w-0 flex-1"
                             >
                               <p className="text-sm font-bold font-body truncate">{ex.name}</p>
