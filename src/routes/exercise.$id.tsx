@@ -78,7 +78,7 @@ function ExerciseDetailPage() {
           <button
             onClick={() => {
               if (from === "workouts") {
-                navigate({ to: "/workouts", search: group ? { group } : undefined });
+                navigate({ to: "/workouts" });
               } else if (typeof window !== "undefined" && window.history.length > 1) {
                 window.history.back();
               } else {
