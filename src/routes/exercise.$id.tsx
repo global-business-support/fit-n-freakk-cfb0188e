@@ -68,11 +68,18 @@ function ExerciseDetailPage() {
       <header className="sticky top-0 z-30 border-b border-sky/20 bg-background/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
           <button
-            onClick={() => (isLoggedIn ? navigate({ to: "/dashboard" }) : navigate({ to: "/explore" }))}
+            onClick={() => {
+              if (typeof window !== "undefined" && window.history.length > 1) {
+                window.history.back();
+              } else {
+                navigate({ to: isLoggedIn ? "/workouts" : "/explore" });
+              }
+            }}
             className="flex items-center gap-1.5 text-sky-200 hover:text-white font-body text-sm"
           >
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
+
           {!isLoggedIn && (
             <Link to="/login">
               <Button size="sm" className="bg-gradient-primary text-white shadow-glow">
