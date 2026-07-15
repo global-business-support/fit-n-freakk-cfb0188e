@@ -37,7 +37,7 @@ interface Exercise {
 
 function ExerciseDetailPage() {
   const { id } = Route.useParams();
-  const { from, group } = Route.useSearch();
+  const { from } = Route.useSearch();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [ex, setEx] = useState<Exercise | null>(null);
