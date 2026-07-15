@@ -77,7 +77,9 @@ function ExerciseDetailPage() {
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
           <button
             onClick={() => {
-              if (typeof window !== "undefined" && window.history.length > 1) {
+              if (from === "workouts") {
+                navigate({ to: "/workouts", search: group ? { group } : undefined });
+              } else if (typeof window !== "undefined" && window.history.length > 1) {
                 window.history.back();
               } else {
                 navigate({ to: isLoggedIn ? "/workouts" : "/explore" });
