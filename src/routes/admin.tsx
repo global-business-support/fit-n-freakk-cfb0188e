@@ -1044,9 +1044,9 @@ function AdminPage() {
                                 <div className="mt-2 grid grid-cols-2 gap-2">
                                   {ex.gif_url && (
                                     isVideoMedia(ex.gif_url) ? (
-                                      <video src={ex.gif_url} className="aspect-video w-full rounded-lg object-cover border border-border bg-secondary" autoPlay muted loop playsInline controls />
+                                      <video src={ex.gif_url} className="aspect-video w-full rounded-lg object-contain border border-border bg-black" autoPlay muted loop playsInline controls />
                                     ) : (
-                                      <img src={ex.gif_url} alt={ex.name} className="aspect-video w-full rounded-lg object-cover border border-border" />
+                                      <img src={ex.gif_url} alt={ex.name} className="aspect-video w-full rounded-lg object-contain border border-border bg-black" />
                                     )
                                   )}
                                   {ex.video_url && (
