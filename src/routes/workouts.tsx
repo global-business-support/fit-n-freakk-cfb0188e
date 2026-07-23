@@ -530,7 +530,7 @@ function ExerciseCard({ exercise }: { exercise: Exercise }) {
       {exercise.gif_url && (isVideoMedia(exercise.gif_url) ? (
         <video
           src={exercise.gif_url}
-          className="w-full aspect-video rounded-lg border border-border object-cover bg-black"
+          className="w-full aspect-video rounded-lg border border-border object-contain bg-black"
           autoPlay
           muted
           loop
@@ -542,7 +542,7 @@ function ExerciseCard({ exercise }: { exercise: Exercise }) {
           <img
             src={exercise.gif_url}
             alt={`${exercise.name} animation`}
-            className="w-full aspect-video object-cover"
+            className="w-full aspect-video object-contain"
             loading="lazy"
           />
         </div>
@@ -551,7 +551,7 @@ function ExerciseCard({ exercise }: { exercise: Exercise }) {
         isVideoMedia(exercise.video_url) && !exercise.gif_url ? (
           <video
             src={exercise.video_url}
-            className="w-full aspect-video rounded-lg border border-border object-cover bg-black"
+            className="w-full aspect-video rounded-lg border border-border object-contain bg-black"
             autoPlay
             muted
             loop

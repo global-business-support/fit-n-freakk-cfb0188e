@@ -472,7 +472,7 @@ function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
     return isDirectVideo(mediaUrl) ? (
       <video
         src={mediaUrl}
-        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
+        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-contain"
         autoPlay
         muted
         loop
@@ -484,7 +484,7 @@ function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
       <img
         src={mediaUrl}
         alt={`${exercise.name} animation`}
-        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
+        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-contain"
         loading="lazy"
       />
     );
@@ -494,7 +494,7 @@ function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
     return (
       <video
         src={exercise.video_url!}
-        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-cover"
+        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-contain"
         autoPlay
         muted
         loop
