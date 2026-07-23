@@ -245,14 +245,14 @@ export function ExerciseMotionGif({
   const nameKey = normalizeName(title || "");
   const gif = EXERCISE_GIFS[nameKey] || BODY_GIFS[key];
   return (
-    <div className="relative overflow-hidden rounded-xl border border-sky/30 bg-black shadow-card">
+    <div className="relative overflow-hidden rounded-xl border border-sky/30 bg-black shadow-card flex items-center justify-center">
       <img
         src={gif}
         alt={`${title || bodyPart} animated exercise demonstration`}
         loading="lazy"
-        className={`${compact ? "h-24" : "aspect-video"} w-full object-contain`}
+        className={`${compact ? "max-h-40" : "max-h-[70vh]"} w-full h-auto object-contain`}
       />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background/80 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-background/80 to-transparent" />
       <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2">
         <Activity className="h-3.5 w-3.5 shrink-0 text-primary animate-pulse" />
         <p className="truncate text-[10px] font-bold uppercase tracking-wider text-sky font-body">
