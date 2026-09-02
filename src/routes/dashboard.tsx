@@ -62,11 +62,18 @@ function AdminDashboard() {
 
   useEffect(() => {
     loadData();
+    const channel = supabase
+      .channel("admin-members-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => loadData())
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadData = async () => {
     const [profilesRes, feesRes, attendanceRes, exRes] = await Promise.all([
-      supabase.from("profiles").select("*"),
+      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("fees").select("*"),
       supabase.from("attendance").select("*").gte("checked_in_at", new Date().toISOString().split("T")[0]),
       supabase.from("exercises").select("*").order("body_part"),
