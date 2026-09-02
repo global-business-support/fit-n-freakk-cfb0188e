@@ -109,6 +109,7 @@ function AdminPage() {
   const [exGifUploading, setExGifUploading] = useState(false);
   const exGifInputRef = useRef<HTMLInputElement>(null);
   const [exerciseMediaUploadingId, setExerciseMediaUploadingId] = useState<string | null>(null);
+  const [exerciseVideoUploadingId, setExerciseVideoUploadingId] = useState<string | null>(null);
   const directExerciseGifInputRef = useRef<HTMLInputElement>(null);
 
   // New machine form
