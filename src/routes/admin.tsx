@@ -1090,8 +1090,25 @@ function AdminPage() {
                                   className="mt-3 w-full"
                                 >
                                   {exerciseMediaUploadingId === ex.id ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> Upload GIF / Animation</>)}
-                                </Button>
-                              </div>
+                                 </Button>
+                                 <input
+                                   id={`exercise-video-${ex.id}`}
+                                   type="file"
+                                   accept="video/mp4,video/webm,video/*"
+                                   className="hidden"
+                                   onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadVideoForExercise(ex.id, f); }}
+                                 />
+                                 <Button
+                                   type="button"
+                                   variant="outline"
+                                   size="sm"
+                                   onClick={() => document.getElementById(`exercise-video-${ex.id}`)?.click()}
+                                   disabled={exerciseVideoUploadingId === ex.id}
+                                   className="mt-2 w-full"
+                                 >
+                                   {exerciseVideoUploadingId === ex.id ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><Video className="h-4 w-4 mr-1" /> Upload Video</>)}
+                                 </Button>
+                               </div>
                               <div className="flex flex-col gap-2 shrink-0">
                                 <button onClick={() => startEditExercise(ex)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Edit">
                                   <Pencil className="h-4 w-4" />
