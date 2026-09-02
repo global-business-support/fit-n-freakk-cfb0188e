@@ -68,7 +68,7 @@ function MembersPage() {
           lastVisit: today.some((a: any) => a.user_id === p.user_id) ? "Today" : "—",
           status: "active" as const,
           gender: (p.gender || "male") as "male" | "female",
-          photoUrl: p.photo_url,
+          photoUrl: p.photo_url ?? undefined,
         };
       })
     );
