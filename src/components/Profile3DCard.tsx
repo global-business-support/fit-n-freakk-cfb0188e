@@ -175,12 +175,6 @@ export function Profile3DCard({
                   </>
                 )}
                 {weight && <span>{weight}kg</span>}
-                {gender && (
-                  <>
-                    <span className="text-border">•</span>
-                    <span className="capitalize">{gender}</span>
-                  </>
-                )}
               </div>
             </div>
           </div>

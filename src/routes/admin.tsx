@@ -7,7 +7,7 @@ import { useBranding } from "@/hooks/use-branding";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Check, X, IndianRupee, Users, Dumbbell, Plus, Trash2, Cog, ShieldCheck, CalendarDays, Settings as SettingsIcon, Loader2, Image as ImageIcon, Package, Salad, Wallet, Download, Power, Sparkles, ImagePlus, BookOpen, ChevronRight, Pencil, Save, Search } from "lucide-react";
+import { Check, X, IndianRupee, Users, Dumbbell, Plus, Trash2, Cog, ShieldCheck, CalendarDays, Settings as SettingsIcon, Loader2, Image as ImageIcon, Package, Salad, Wallet, Download, Power, Sparkles, ImagePlus, BookOpen, ChevronRight, Pencil, Save, Search, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -109,6 +109,7 @@ function AdminPage() {
   const [exGifUploading, setExGifUploading] = useState(false);
   const exGifInputRef = useRef<HTMLInputElement>(null);
   const [exerciseMediaUploadingId, setExerciseMediaUploadingId] = useState<string | null>(null);
+  const [exerciseVideoUploadingId, setExerciseVideoUploadingId] = useState<string | null>(null);
   const directExerciseGifInputRef = useRef<HTMLInputElement>(null);
 
   // New machine form
@@ -462,6 +463,25 @@ function AdminPage() {
     } finally {
       setExerciseMediaUploadingId(null);
       if (directExerciseGifInputRef.current) directExerciseGifInputRef.current.value = "";
+    }
+  };
+
+  const uploadVideoForExercise = async (exerciseId: string, file: File) => {
+    if (!file || !user) return;
+    setExerciseVideoUploadingId(exerciseId);
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const path = `${user.id}/exercise-video-${exerciseId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      const { error: saveErr } = await supabase.from("exercises").update({ video_url: pub.publicUrl } as any).eq("id", exerciseId);
+      if (saveErr) { alert("Save failed: " + saveErr.message); return; }
+      setExercises((prev) => prev.map((ex: any) => ex.id === exerciseId ? { ...ex, video_url: pub.publicUrl } : ex));
+    } finally {
+      setExerciseVideoUploadingId(null);
     }
   };
 
@@ -1070,8 +1090,25 @@ function AdminPage() {
                                   className="mt-3 w-full"
                                 >
                                   {exerciseMediaUploadingId === ex.id ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><ImagePlus className="h-4 w-4 mr-1" /> Upload GIF / Animation</>)}
-                                </Button>
-                              </div>
+                                 </Button>
+                                 <input
+                                   id={`exercise-video-${ex.id}`}
+                                   type="file"
+                                   accept="video/mp4,video/webm,video/*"
+                                   className="hidden"
+                                   onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadVideoForExercise(ex.id, f); }}
+                                 />
+                                 <Button
+                                   type="button"
+                                   variant="outline"
+                                   size="sm"
+                                   onClick={() => document.getElementById(`exercise-video-${ex.id}`)?.click()}
+                                   disabled={exerciseVideoUploadingId === ex.id}
+                                   className="mt-2 w-full"
+                                 >
+                                   {exerciseVideoUploadingId === ex.id ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading...</>) : (<><Video className="h-4 w-4 mr-1" /> Upload Video</>)}
+                                 </Button>
+                               </div>
                               <div className="flex flex-col gap-2 shrink-0">
                                 <button onClick={() => startEditExercise(ex)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20" title="Edit">
                                   <Pencil className="h-4 w-4" />
