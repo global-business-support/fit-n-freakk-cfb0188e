@@ -29,7 +29,7 @@ interface MemberRow {
   lastVisit: string;
   status: "active" | "inactive";
   gender: "male" | "female";
-  photoUrl?: string | null;
+  photoUrl?: string;
 }
 
 function MembersPage() {
