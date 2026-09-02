@@ -465,6 +465,25 @@ function AdminPage() {
     }
   };
 
+  const uploadVideoForExercise = async (exerciseId: string, file: File) => {
+    if (!file || !user) return;
+    setExerciseVideoUploadingId(exerciseId);
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const path = `${user.id}/exercise-video-${exerciseId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) { alert("Upload failed: " + upErr.message); return; }
+      const { data: pub } = supabase.storage.from("media").getPublicUrl(path);
+      const { error: saveErr } = await supabase.from("exercises").update({ video_url: pub.publicUrl } as any).eq("id", exerciseId);
+      if (saveErr) { alert("Save failed: " + saveErr.message); return; }
+      setExercises((prev) => prev.map((ex: any) => ex.id === exerciseId ? { ...ex, video_url: pub.publicUrl } : ex));
+    } finally {
+      setExerciseVideoUploadingId(null);
+    }
+  };
+
   const addExercise = async () => {
     if (!newEx.name || !newEx.body_part) return;
     await supabase.from("exercises").insert({
