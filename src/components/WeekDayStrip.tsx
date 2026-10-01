@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Pencil, Check, X, Plus, Loader2, Flame, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { insertOrQueue } from "@/lib/offline-queue";
 
 interface WeekDayStripProps {
   userId: string;
