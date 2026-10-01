@@ -229,7 +229,7 @@ function WorkoutsPage() {
       toast.error("Please sign in to track workouts");
       return;
     }
-    const { error } = await supabase.from("workout_completions").insert({
+    const { error, queued } = await insertOrQueue("workout_completions", {
       user_id: user.id,
       exercise_id: exId,
       scheduled_day: openDay ?? todayIdx,
@@ -240,7 +240,7 @@ function WorkoutsPage() {
       return;
     }
     setCompletions((c) => ({ ...c, [exId]: todayKey }));
-    toast.success("Marked complete ✔");
+    toast.success(queued ? "Marked complete ✔ — internet aate hi save hoga" : "Marked complete ✔");
   };
 
   const formatDate = (iso: string) => {

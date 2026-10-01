@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { insertOrQueue } from "@/lib/offline-queue";
 
 interface AttendanceToggleProps {
   userId: string;
@@ -37,11 +38,9 @@ export function AttendanceToggle({ userId }: AttendanceToggleProps) {
 
   const mark = async (status: "present" | "absent", reasonText?: string) => {
     setSubmitting(true);
-    const { data, error } = await supabase
-      .from("attendance")
-      .insert({ user_id: userId, status, reason: reasonText || null })
-      .select()
-      .single();
+    const { data, error, queued } = await insertOrQueue("attendance", {
+      user_id: userId, status, reason: reasonText || null,
+    });
     setSubmitting(false);
     if (error) {
       toast.error(error.message);
@@ -50,7 +49,10 @@ export function AttendanceToggle({ userId }: AttendanceToggleProps) {
     setToday(data);
     setShowReason(false);
     setReason("");
-    toast.success(status === "present" ? "Marked Present 💪" : "Marked Absent");
+    toast.success(
+      (status === "present" ? "Marked Present 💪" : "Marked Absent") +
+        (queued ? " — internet aate hi save hoga" : ""),
+    );
   };
 
   if (loading) {

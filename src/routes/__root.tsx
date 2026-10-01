@@ -3,6 +3,9 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { BrandingProvider } from "@/hooks/use-branding";
 import { LanguageProvider } from "@/hooks/use-language";
 import { GenderThemeApplier } from "@/components/GenderThemeApplier";
+import { useEffect } from "react";
+import { registerPWA } from "@/lib/pwa-register";
+import { startOfflineSync } from "@/lib/offline-queue";
 
 import appCss from "../styles.css?url";
 
@@ -61,6 +64,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  useEffect(() => {
+    registerPWA();
+    return startOfflineSync();
+  }, []);
   return (
     <LanguageProvider>
       <BrandingProvider>
