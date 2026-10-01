@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Pencil, Check, X, Plus, Loader2, Flame, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { insertOrQueue } from "@/lib/offline-queue";
 
 interface WeekDayStripProps {
   userId: string;
@@ -201,15 +202,13 @@ export function WeekDayStrip({ userId }: WeekDayStripProps) {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("workout_completions")
-      .insert({ user_id: userId, exercise_id: exerciseId, scheduled_day: selectedDay, completed_on: todayKey })
-      .select("id")
-      .single();
+    const { data, error, queued } = await insertOrQueue("workout_completions", {
+      user_id: userId, exercise_id: exerciseId, scheduled_day: selectedDay, completed_on: todayKey,
+    });
     setCompletingId(null);
-    if (error) { toast.error("Could not mark done"); return; }
-    setCompleted((prev) => ({ ...prev, [exerciseId]: data.id }));
-    toast.success("Exercise done ✔");
+    if (error || !data) { toast.error("Could not mark done"); return; }
+    setCompleted((prev) => ({ ...prev, [exerciseId]: (data as { id: string }).id }));
+    toast.success(queued ? "Exercise done ✔ — internet aate hi save hoga" : "Exercise done ✔");
   };
 
   const dayInfo = DAYS.find((d) => d.key === selectedDay)!;
