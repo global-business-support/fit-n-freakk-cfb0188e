@@ -289,6 +289,7 @@ function WorkoutsPage() {
             </button>
           ))}
         </div>
+        )}
 
         {/* Search */}
         <div className="relative">
