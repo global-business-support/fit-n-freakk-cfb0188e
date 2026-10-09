@@ -74,17 +74,32 @@ function RegisterPage() {
     }
   };
 
+  const nativeCameraRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isCameraOpen && videoRef.current && cameraStreamRef.current) {
+      videoRef.current.srcObject = cameraStreamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [isCameraOpen]);
+
   const startCamera = async () => {
     setCameraError("");
+    if (!navigator.mediaDevices?.getUserMedia) {
+      nativeCameraRef.current?.click();
+      return;
+    }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 720 } },
+        audio: false,
+      });
       cameraStreamRef.current = stream;
       setIsCameraOpen(true);
-      setTimeout(() => {
-        if (videoRef.current) videoRef.current.srcObject = stream;
-      }, 0);
     } catch {
-      setCameraError("Camera permission allow karo ya gallery se photo upload karo.");
+      // Fallback: open phone's native camera directly
+      nativeCameraRef.current?.click();
+      setCameraError("Live camera nahi khula — phone camera khul raha hai. Na khule to Gallery use karo.");
     }
   };
 
@@ -162,12 +177,16 @@ function RegisterPage() {
 
     const effectiveUserId = userId;
     if (effectiveUserId && photoFile) {
-      const ext = photoFile.name.split(".").pop();
-      const path = `${effectiveUserId}/profile.${ext}`;
-      const { data: uploadData } = await supabase.storage.from("media").upload(path, photoFile, { upsert: true });
+      const ext = (photoFile.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${effectiveUserId}/profile-${Date.now()}.${ext}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("media")
+        .upload(path, photoFile, { upsert: true, contentType: photoFile.type || "image/jpeg" });
+      if (uploadError) console.error("Photo upload failed", uploadError);
       if (uploadData) {
         const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
-        await supabase.from("profiles").update({ photo_url: publicUrl }).eq("user_id", effectiveUserId);
+        const { error: photoErr } = await supabase.from("profiles").update({ photo_url: publicUrl }).eq("user_id", effectiveUserId);
+        if (photoErr) console.error("Photo save failed", photoErr);
       }
     }
 
@@ -328,7 +347,7 @@ function RegisterPage() {
         {/* Photo Upload */}
         <div className="space-y-3">
           <div className="flex justify-center">
-            <label className="group relative cursor-pointer">
+            <button type="button" onClick={startCamera} className="group relative cursor-pointer" aria-label="Open camera">
               <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-secondary transition-colors group-hover:border-primary">
                 {photoPreview ? (
                   <img src={photoPreview} alt="Profile" className="h-full w-full object-cover" />
@@ -339,8 +358,8 @@ function RegisterPage() {
               <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
                 <Camera className="h-3.5 w-3.5" />
               </div>
-              <input type="file" accept="image/*" capture="user" className="hidden" onChange={handlePhotoChange} />
-            </label>
+            </button>
+            <input ref={nativeCameraRef} type="file" accept="image/*" capture="user" className="hidden" onChange={handlePhotoChange} />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Button type="button" variant="outline" size="sm" onClick={startCamera}>
