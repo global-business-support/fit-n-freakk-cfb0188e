@@ -271,7 +271,8 @@ function WorkoutsPage() {
       <main className="relative z-10 mx-auto max-w-lg px-4 py-4 space-y-4">
         {user && <WorkoutHistoryCalendar userId={user.id} />}
 
-        {/* Gender Toggle — male / female */}
+        {/* Gender Toggle — only for guests; logged-in users see their own gender's section */}
+        {!user && (
         <div className="grid grid-cols-2 gap-2">
           {(["male", "female"] as const).map((g) => (
             <button
@@ -288,6 +289,7 @@ function WorkoutsPage() {
             </button>
           ))}
         </div>
+        )}
 
         {/* Search */}
         <div className="relative">
