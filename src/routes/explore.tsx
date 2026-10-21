@@ -1,16 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
 import { MachineExerciseList } from "@/components/MachineExerciseList";
 import { TiltCard } from "@/components/TiltCard";
 import { useBranding } from "@/hooks/use-branding";
-import { Dumbbell, Lock, LogIn, Eye, Sparkles, Cog, List, ChevronDown, ChevronUp } from "lucide-react";
+import { Dumbbell, Lock, LogIn, Eye, Sparkles, Cog, List, ChevronDown, ChevronUp, Power, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { requestCloseApp, verifyClosePin } from "@/lib/app-close";
 
 
 export const Route = createFileRoute("/explore")({
@@ -108,6 +110,10 @@ function ExplorePage() {
     return sessionStorage.getItem("explore:showAll") === "1";
   });
   const [namesOpen, setNamesOpen] = useState(false);
+  const [closeOpen, setCloseOpen] = useState(false);
+  const [closePin, setClosePin] = useState("");
+  const [closeError, setCloseError] = useState<string | null>(null);
+  const [closing, setClosing] = useState(false);
   const [machines, setMachines] = useState<any[]>([]);
   const [machineOnlyEx, setMachineOnlyEx] = useState<Record<string, any[]>>({});
   const [expandedMachine, setExpandedMachine] = useState<Record<string, boolean>>({});
@@ -184,6 +190,21 @@ function ExplorePage() {
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [uniqueExercises]);
 
+  const handleCloseApp = async () => {
+    setCloseError(null);
+    if (!(await verifyClosePin(closePin))) {
+      setCloseError("Wrong PIN. Try again.");
+      return;
+    }
+    setClosing(true);
+    const closed = await requestCloseApp();
+    setClosing(false);
+    if (!closed) {
+      setCloseError("App can't close itself in this browser. Please close the tab manually.");
+    }
+  };
+
+
   return (
     <div className="relative min-h-screen pb-24">
       <LiveBackground />
@@ -198,6 +219,15 @@ function ExplorePage() {
             <span className="font-heading text-xl tracking-[0.18em] text-white">{appName.toUpperCase()}</span>
           </Link>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => { setCloseOpen(true); setCloseError(null); }}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-sky/40 bg-card/60 text-sky-100 hover:border-sky/70 transition"
+              aria-label="Close app"
+              title="Close app"
+            >
+              <Power className="h-4 w-4" />
+            </button>
             <LanguageToggle />
             <Link to="/login" aria-label="Sign in">
               <button
@@ -444,6 +474,32 @@ function ExplorePage() {
           </div>
         </section>
       </main>
+      <Dialog open={closeOpen} onOpenChange={(o) => { setCloseOpen(o); if (!o) { setClosePin(""); setCloseError(null); } }}>
+        <DialogContent className="max-w-xs rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-lg tracking-[0.15em] text-sky">CLOSE APP</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs font-body text-sky-200/80">Enter your PIN to close the app.</p>
+          <Input
+            type="password"
+            inputMode="numeric"
+            maxLength={8}
+            placeholder="PIN"
+            className="bg-secondary/60 border-border text-center text-lg tracking-[0.5em] font-body"
+            value={closePin}
+            onChange={(e) => setClosePin(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && closePin.trim()) handleCloseApp(); }}
+            autoFocus
+          />
+          {closeError && <p className="text-xs font-body text-destructive">{closeError}</p>}
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setCloseOpen(false)}>Cancel</Button>
+            <Button className="flex-1 bg-gradient-primary text-white" onClick={handleCloseApp} disabled={closing || closePin.trim().length < 4}>
+              {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Power className="h-4 w-4 mr-1" /> Close</>}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <BottomNav />
     </div>
   );
@@ -465,22 +521,47 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
+/** Muted looping video that plays only while visible in the viewport (keeps long pages smooth). */
+function ViewportAutoVideo({ src, className }: { src: string; className?: string }) {
+  const ref = useRef<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) el.play().catch(() => {});
+          else el.pause();
+        }
+      },
+      { threshold: 0.35 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <video
+      ref={ref}
+      src={src}
+      className={className}
+      muted
+      loop
+      playsInline
+      controls={false}
+      preload="metadata"
+      onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
+    />
+  );
+}
+
 function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
   const isDirectVideo = (u?: string | null) => !!u && /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u);
   const mediaUrl = exercise.gif_url;
+  if (mediaUrl && isDirectVideo(mediaUrl)) {
+    return <ViewportAutoVideo src={mediaUrl} className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-contain" />;
+  }
   if (mediaUrl) {
-    return isDirectVideo(mediaUrl) ? (
-      <video
-        src={mediaUrl}
-        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-contain"
-        autoPlay
-        muted
-        loop
-        playsInline
-        controls={false}
-        preload="metadata"
-      />
-    ) : (
+    return (
       <img
         src={mediaUrl}
         alt={`${exercise.name} animation`}
@@ -489,20 +570,9 @@ function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
       />
     );
   }
-  // Auto-play direct mp4/webm video previews (no click needed)
+  // Auto-play direct mp4/webm video previews (only while on screen)
   if (isDirectVideo(exercise.video_url)) {
-    return (
-      <video
-        src={exercise.video_url!}
-        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-contain"
-        autoPlay
-        muted
-        loop
-        playsInline
-        controls
-        preload="metadata"
-      />
-    );
+    return <ViewportAutoVideo src={exercise.video_url!} className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-contain" />;
   }
   return exercise.video_url ? <InlineVideoPlayer url={exercise.video_url} title={exercise.name} thumbnailUrl={exercise.thumbnail_url} /> : null;
 }

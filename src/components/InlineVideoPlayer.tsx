@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, ExternalLink, Loader2 } from "lucide-react";
 
 /** Default: no cap (full video). Pass previewSeconds to enable a hard cut for locked/public surfaces. */
 function toYouTubeEmbed(url: string, opts?: { previewSeconds?: number }): string | null {
@@ -47,7 +47,7 @@ function getThumbnail(url: string): string | null {
   return null;
 }
 
-interface InlineVideoPlayerProps {
+export interface InlineVideoPlayerProps {
   url: string;
   title?: string;
   thumbnailUrl?: string | null;
@@ -59,13 +59,24 @@ interface InlineVideoPlayerProps {
 /**
  * Inline video that plays right in place when clicked — no popups, no new tabs.
  * Shows thumbnail with play button, replaces with embedded iframe on click.
+ * URLs that can't be embedded (Instagram, etc.) open externally instead of failing.
  */
 export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", previewSeconds }: InlineVideoPlayerProps) {
   const [playing, setPlaying] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+  const [buffering, setBuffering] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerId = useId();
   // 0 / undefined = no cap (full video with seek). Positive = locked preview.
   const cap = previewSeconds && previewSeconds > 0 ? previewSeconds : 0;
+
+  const youtube = toYouTubeEmbed(url, { previewSeconds: cap });
+  const drive = toDriveEmbed(url);
+  const embed = youtube ?? drive;
+  const isDirect = !embed && /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(url);
+  // Not YouTube/Drive/direct-file (e.g. Instagram) — can only be opened externally.
+  const externalOnly = !embed && !isDirect;
+  const thumb = thumbnailUrl || getThumbnail(url);
 
   // Hard-cut only when a positive cap is set
   useEffect(() => {
@@ -86,50 +97,58 @@ export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", pr
 
   const startPlaying = () => {
     window.dispatchEvent(new CustomEvent("feet-freakk-video-play", { detail: playerId }));
+    setVideoError(false);
     setPlaying(true);
   };
 
   if (!url) return null;
 
-  const youtube = toYouTubeEmbed(url, { previewSeconds: cap });
-  const drive = toDriveEmbed(url);
-  const embed = youtube ?? drive;
-  const isDirect = !embed && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
-  const thumb = thumbnailUrl || getThumbnail(url);
-
-  if (!playing) {
-    return (
-      <button
-        type="button"
-        onClick={startPlaying}
-        className={`group relative aspect-video w-full overflow-hidden rounded-xl border border-sky/30 bg-black ${className}`}
-        aria-label={`Play ${title || "video"}`}
-      >
-        {thumb ? (
-          <img
-            src={thumb}
-            alt={title || "Video"}
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-card to-sky/20" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-primary shadow-glow ring-4 ring-white/20 group-hover:scale-110 transition-transform">
+  // Poster card shown before play (or for external-only links).
+  const posterCard = (
+    <button
+      type="button"
+      onClick={externalOnly ? () => window.open(url, "_blank", "noopener,noreferrer") : startPlaying}
+      className={`group relative aspect-video w-full overflow-hidden rounded-xl border border-sky/30 bg-black ${className}`}
+      aria-label={externalOnly ? `Open ${title || "video"} externally` : `Play ${title || "video"}`}
+    >
+      {thumb ? (
+        <img
+          src={thumb}
+          alt={title || "Video"}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-card to-sky/20" />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-primary shadow-glow ring-4 ring-white/20 group-hover:scale-110 transition-transform">
+          {externalOnly ? (
+            <ExternalLink className="h-6 w-6 text-white" />
+          ) : (
             <Play className="h-7 w-7 text-white fill-white ml-1" />
-          </div>
+          )}
         </div>
-        {title && (
-          <div className="absolute bottom-0 left-0 right-0 p-3">
-            <p className="text-white font-heading text-base tracking-wider truncate drop-shadow-lg">
-              {title.toUpperCase()}
-            </p>
-          </div>
-        )}
-      </button>
-    );
-  }
+      </div>
+      {title && (
+        <div className="absolute bottom-0 left-0 right-0 p-3">
+          <p className="text-white font-heading text-base tracking-wider truncate drop-shadow-lg">
+            {title.toUpperCase()}
+          </p>
+        </div>
+      )}
+      {externalOnly && (
+        <div className="absolute top-2 left-2 z-10 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-body uppercase tracking-wider text-white backdrop-blur-sm">
+          Opens externally
+        </div>
+      )}
+    </button>
+  );
+
+  if (externalOnly) return posterCard;
+
+  if (!playing) return posterCard;
 
   return (
     <div className={`relative aspect-video w-full overflow-hidden rounded-xl border border-primary/40 bg-black shadow-glow ${className}`}>
@@ -142,27 +161,47 @@ export function InlineVideoPlayer({ url, title, thumbnailUrl, className = "", pr
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
         />
-      ) : isDirect ? (
-        <video
-          ref={videoRef}
-          src={url}
-          autoPlay
-          playsInline
-          controls
-          preload="metadata"
-          controlsList="nodownload"
-          className="absolute inset-0 h-full w-full"
-          onTimeUpdate={(e) => {
-            if (cap > 0 && e.currentTarget.currentTime >= cap) {
-              e.currentTarget.pause();
-              setPlaying(false);
-            }
-          }}
-        />
       ) : (
-        <div className="flex h-full items-center justify-center text-white/70 text-sm font-body p-6 text-center">
-          Unsupported video URL.
-        </div>
+        <>
+          {buffering && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-white/80" />
+            </div>
+          )}
+          <video
+            ref={videoRef}
+            src={url}
+            autoPlay
+            playsInline
+            controls
+            preload="metadata"
+            controlsList="nodownload"
+            className="absolute inset-0 h-full w-full"
+            onWaiting={() => setBuffering(true)}
+            onPlaying={() => setBuffering(false)}
+            onCanPlay={() => setBuffering(false)}
+            onTimeUpdate={(e) => {
+              if (cap > 0 && e.currentTarget.currentTime >= cap) {
+                e.currentTarget.pause();
+                setPlaying(false);
+              }
+            }}
+            onError={() => setVideoError(true)}
+          />
+          {videoError && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/90 p-4 text-center">
+              <p className="text-sm font-body text-white/80">Video yahan play nahi ho raha.</p>
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-primary px-4 py-2 text-xs font-body uppercase tracking-wider text-white"
+              >
+                <ExternalLink className="h-4 w-4" /> Open video
+              </a>
+            </div>
+          )}
+        </>
       )}
       {cap > 0 && (
         <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-body uppercase tracking-wider text-sky-100 backdrop-blur-sm">
