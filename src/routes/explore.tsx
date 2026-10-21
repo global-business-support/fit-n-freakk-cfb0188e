@@ -110,6 +110,10 @@ function ExplorePage() {
     return sessionStorage.getItem("explore:showAll") === "1";
   });
   const [namesOpen, setNamesOpen] = useState(false);
+  const [closeOpen, setCloseOpen] = useState(false);
+  const [closePin, setClosePin] = useState("");
+  const [closeError, setCloseError] = useState<string | null>(null);
+  const [closing, setClosing] = useState(false);
   const [machines, setMachines] = useState<any[]>([]);
   const [machineOnlyEx, setMachineOnlyEx] = useState<Record<string, any[]>>({});
   const [expandedMachine, setExpandedMachine] = useState<Record<string, boolean>>({});
