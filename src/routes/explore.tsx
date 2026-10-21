@@ -1,16 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LiveBackground } from "@/components/LiveBackground";
 import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
 import { MachineExerciseList } from "@/components/MachineExerciseList";
 import { TiltCard } from "@/components/TiltCard";
 import { useBranding } from "@/hooks/use-branding";
-import { Dumbbell, Lock, LogIn, Eye, Sparkles, Cog, List, ChevronDown, ChevronUp } from "lucide-react";
+import { Dumbbell, Lock, LogIn, Eye, Sparkles, Cog, List, ChevronDown, ChevronUp, Power, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { requestCloseApp, verifyClosePin } from "@/lib/app-close";
 
 
 export const Route = createFileRoute("/explore")({
