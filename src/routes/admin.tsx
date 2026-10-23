@@ -85,15 +85,21 @@ function AdminPage() {
   const [autoLogoutMinutes, setAutoLogoutMinutes] = useState("2");
   const [savingLogout, setSavingLogout] = useState(false);
 
+  // Close-app PIN state
+  const [closePin, setClosePin] = useState("1234");
+  const [savingClosePin, setSavingClosePin] = useState(false);
+  const [closePinSaved, setClosePinSaved] = useState(false);
+
   useEffect(() => {
     supabase
       .from("app_settings")
       .select("key,value")
-      .in("key", ["auto_logout_enabled", "auto_logout_minutes"])
+      .in("key", ["auto_logout_enabled", "auto_logout_minutes", "close_pin"])
       .then(({ data }) => {
         const map = Object.fromEntries((data ?? []).map((r: any) => [r.key, r.value]));
         setAutoLogoutEnabled(map.auto_logout_enabled === "true");
         if (map.auto_logout_minutes) setAutoLogoutMinutes(map.auto_logout_minutes);
+        if (map.close_pin) setClosePin(map.close_pin);
       });
   }, []);
 
@@ -658,6 +664,26 @@ function AdminPage() {
       ]);
     } finally {
       setSavingLogout(false);
+    }
+  };
+
+  const saveClosePin = async () => {
+    if (!user) return;
+    const pin = closePin.trim();
+    if (pin.length < 4) return;
+    setSavingClosePin(true);
+    setClosePinSaved(false);
+    try {
+      const { error } = await supabase.from("app_settings").upsert(
+        { key: "close_pin", value: pin, updated_at: new Date().toISOString(), updated_by: user.id },
+        { onConflict: "key" }
+      );
+      if (!error) {
+        setClosePinSaved(true);
+        setTimeout(() => setClosePinSaved(false), 2500);
+      }
+    } finally {
+      setSavingClosePin(false);
     }
   };
 
@@ -1798,6 +1824,38 @@ function AdminPage() {
               <p className="text-[10px] text-muted-foreground font-body">
                 Admins are exempt. Members will be signed out after {autoLogoutMinutes} min of no activity.
               </p>
+            </div>
+
+            {/* Close-app PIN settings */}
+            <div className="rounded-2xl border border-sky/30 bg-gradient-card p-4 space-y-3 shadow-card">
+              <div>
+                <h3 className="font-heading text-lg tracking-wider text-sky mb-1">CLOSE APP PIN</h3>
+                <p className="text-xs text-muted-foreground font-body">
+                  Explore page ka power button ye PIN maangta hai — sirf jo PIN jaanta hai wahi app band kar sakta hai
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={8}
+                  value={closePin}
+                  onChange={(e) => setClosePin(e.target.value)}
+                  placeholder="New PIN (min 4 digits)"
+                  className="bg-secondary/40 border-sky/20 text-sky-100"
+                />
+                <Button
+                  size="sm"
+                  onClick={saveClosePin}
+                  disabled={savingClosePin || closePin.trim().length < 4}
+                  className="shrink-0 bg-gradient-primary text-primary-foreground"
+                >
+                  {savingClosePin ? <Loader2 className="h-4 w-4 animate-spin" /> : closePinSaved ? <Check className="h-4 w-4" /> : "Save PIN"}
+                </Button>
+              </div>
+              {closePinSaved && (
+                <p className="text-[11px] font-body text-emerald-400">PIN saved — ab explore page naya PIN maangega.</p>
+              )}
             </div>
           </div>
         )}
