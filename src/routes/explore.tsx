@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LiveBackground } from "@/components/LiveBackground";
-import { InlineVideoPlayer } from "@/components/InlineVideoPlayer";
+import { ExerciseMedia } from "@/components/ExerciseMedia";
 import { MachineExerciseList } from "@/components/MachineExerciseList";
 import { TiltCard } from "@/components/TiltCard";
 import { useBranding } from "@/hooks/use-branding";
