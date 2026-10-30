@@ -521,58 +521,16 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
-/** Muted looping video that plays only while visible in the viewport (keeps long pages smooth). */
-function ViewportAutoVideo({ src, className }: { src: string; className?: string }) {
-  const ref = useRef<HTMLVideoElement | null>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) el.play().catch(() => {});
-          else el.pause();
-        }
-      },
-      { threshold: 0.35 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
   return (
-    <video
-      ref={ref}
-      src={src}
-      className={className}
-      muted
-      loop
-      playsInline
-      controls={false}
-      preload="metadata"
-      onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
+    <ExerciseMedia
+      gifUrl={exercise.gif_url}
+      videoUrl={exercise.video_url}
+      thumbnailUrl={exercise.thumbnail_url}
+      title={exercise.name}
+      mode="viewport"
+      imgClassName="w-full h-auto object-contain rounded-xl border border-sky/30"
+      videoClassName="w-full aspect-video rounded-xl border border-sky/30 bg-black object-contain"
     />
   );
-}
-
-function AutoExerciseMedia({ exercise }: { exercise: Exercise }) {
-  const isDirectVideo = (u?: string | null) => !!u && /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u);
-  const mediaUrl = exercise.gif_url;
-  if (mediaUrl && isDirectVideo(mediaUrl)) {
-    return <ViewportAutoVideo src={mediaUrl} className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-contain" />;
-  }
-  if (mediaUrl) {
-    return (
-      <img
-        src={mediaUrl}
-        alt={`${exercise.name} animation`}
-        className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-contain"
-        loading="lazy"
-      />
-    );
-  }
-  // Auto-play direct mp4/webm video previews (only while on screen)
-  if (isDirectVideo(exercise.video_url)) {
-    return <ViewportAutoVideo src={exercise.video_url!} className="aspect-video w-full rounded-xl border border-sky/30 bg-black object-contain" />;
-  }
-  return exercise.video_url ? <InlineVideoPlayer url={exercise.video_url} title={exercise.name} thumbnailUrl={exercise.thumbnail_url} /> : null;
 }
